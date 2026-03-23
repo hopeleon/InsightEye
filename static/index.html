@@ -1,0 +1,169 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>慧眼识人 Demo</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">InsightEye Interview Demo</p>
+          <h1>慧眼识人</h1>
+          <p class="subtitle">
+            面向面试官的实时辅助界面。目标不是展示更多分析，而是帮助你更快判断：候选人风格、风险、以及下一步该问什么。
+          </p>
+        </div>
+        <div class="hero-card">
+          <p>输入格式示例</p>
+          <pre>面试官：请你介绍一个推进难度比较高的项目。
+候选人：我之前负责一个增长项目，当时拉新成本很高...
+面试官：你具体是怎么判断问题出在渠道结构上的？
+候选人：我先拆了不同渠道的人群和转化数据...</pre>
+        </div>
+      </section>
+
+      <section class="panel input-panel">
+        <div class="panel-header">
+          <h2>面试输入</h2>
+          <span id="status">本地规则分析模式</span>
+        </div>
+        <label for="sampleSelect">样例库</label>
+        <div class="sample-toolbar">
+          <select id="sampleSelect">
+            <option value="">请选择样例</option>
+          </select>
+          <button id="sampleBtn" type="button">填充示例</button>
+        </div>
+        <label for="jobHint">岗位提示（可选）</label>
+        <input id="jobHint" type="text" placeholder="例如：产品经理 / 销售 / 研发" />
+        <label for="transcript">整段面试文本</label>
+        <textarea id="transcript"></textarea>
+        <div class="actions">
+          <button id="analyzeBtn" type="button">开始分析</button>
+        </div>
+      </section>
+
+      <section id="results" class="results hidden">
+        <article class="panel decision-panel">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">第一层 / 结论层</p>
+              <h2>候选人画像总结</h2>
+            </div>
+            <div id="analysisSource" class="source-badge"></div>
+          </div>
+          <div class="decision-layout">
+            <div class="decision-main">
+              <div class="decision-card hero-decision">
+                <div class="decision-label">一句话风格总结</div>
+                <div id="candidateStyle" class="decision-title"></div>
+                <p id="candidateStyleNote" class="decision-note"></p>
+              </div>
+              <div class="decision-grid">
+                <div class="decision-card risk-card">
+                  <div class="decision-label">风险提示</div>
+                  <div id="riskHeadline" class="decision-subtitle"></div>
+                  <p id="riskDetail" class="decision-note"></p>
+                </div>
+                <div class="decision-card action-card">
+                  <div class="decision-label">推荐动作</div>
+                  <div id="nextAction" class="decision-subtitle"></div>
+                  <p id="nextActionDetail" class="decision-note"></p>
+                </div>
+              </div>
+            </div>
+            <aside class="decision-side">
+              <div class="side-block">
+                <div class="decision-label">建议追问</div>
+                <div id="topFollowups" class="question-stack"></div>
+              </div>
+            </aside>
+          </div>
+        </article>
+
+        <div class="grid three quick-metrics">
+          <article class="panel metric-panel">
+            <div class="section-head compact">
+              <div>
+                <p class="section-kicker">第二层 / 关键指标</p>
+                <h2>DISC 风格排序</h2>
+              </div>
+            </div>
+            <div id="discBars" class="disc-bars"></div>
+          </article>
+
+          <article class="panel metric-panel">
+            <div class="section-head compact">
+              <div>
+                <p class="section-kicker">第二层 / 关键指标</p>
+                <h2>真实性与风险</h2>
+              </div>
+            </div>
+            <div id="riskMeter" class="risk-meter"></div>
+            <div id="riskTags" class="tag-list"></div>
+          </article>
+
+          <article class="panel metric-panel">
+            <div class="section-head compact">
+              <div>
+                <p class="section-kicker">第二层 / 关键指标</p>
+                <h2>表达与结构能力</h2>
+              </div>
+            </div>
+            <div id="capabilityTags" class="tag-list"></div>
+            <div id="capabilitySummary" class="summary-box compact"></div>
+          </article>
+        </div>
+
+        <article class="panel interview-panel">
+          <div class="section-head compact">
+            <div>
+              <p class="section-kicker">辅助视图</p>
+              <h2>面试结构速览</h2>
+            </div>
+          </div>
+          <div id="overview" class="chips"></div>
+          <div id="turns" class="turn-list compact"></div>
+        </article>
+
+        <details class="panel detail-panel">
+          <summary>
+            <span>第三层 / 详细分析</span>
+            <span>展开查看 D / I / S / C 证据、NLP 特征与模型细节</span>
+          </summary>
+          <div class="detail-content">
+            <div class="grid two">
+              <article class="subpanel">
+                <h3>维度详细分析</h3>
+                <div id="dimensions" class="dimension-grid"></div>
+              </article>
+              <article class="subpanel">
+                <h3>原子特征</h3>
+                <div id="features" class="feature-list"></div>
+              </article>
+            </div>
+            <div class="grid two">
+              <article class="subpanel">
+                <h3>行为假设</h3>
+                <div id="hypotheses" class="list-block"></div>
+              </article>
+              <article class="subpanel">
+                <h3>更多追问建议</h3>
+                <div id="followups" class="list-block"></div>
+              </article>
+            </div>
+            <article class="subpanel">
+              <h3>模型状态与原始返回</h3>
+              <div id="llmStatus" class="summary-box"></div>
+              <pre id="llmOutput" class="json-box"></pre>
+            </article>
+          </div>
+        </details>
+      </section>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,547 @@
+version: "1.0"
+model: "DISC"
+scenario: "job_interview"
+purpose: "infer DISC behavioral tendencies from interview language and atomic NLP features"
+disclaimer:
+  - "DISC scores are probabilistic tendencies, not deterministic personality diagnoses."
+  - "Inference must be based on repeated language evidence, not isolated keywords."
+  - "Interview context may induce self-presentation bias."
+
+global_rules:
+  minimum_sample_words: 120
+  preferred_sample_words: 300
+  confidence_rules:
+    low:
+      - "sample too short"
+      - "answers overly generic"
+      - "single topic only"
+      - "strong rehearsal signals"
+    medium:
+      - "multiple answers available"
+      - "some repeated style cues"
+      - "partial consistency"
+    high:
+      - "multiple segments across different interview topics"
+      - "stable repeated signals"
+      - "enough spontaneous detail"
+  anti_overclaim:
+    - "avoid deterministic labels"
+    - "use tendency language"
+    - "state uncertainty explicitly"
+
+input_features:
+  lexical:
+    - action_verbs_ratio
+    - adjective_ratio
+    - emotional_words_ratio
+    - social_words_ratio
+    - certainty_words_ratio
+    - hedge_words_ratio
+    - achievement_words_ratio
+    - process_words_ratio
+    - detail_words_ratio
+    - risk_words_ratio
+  pronouns:
+    - first_person_singular_ratio
+    - first_person_plural_ratio
+    - second_person_ratio
+    - third_person_ratio
+  syntax:
+    - avg_sentence_length
+    - imperative_like_ratio
+    - question_ratio
+    - qualifier_ratio
+    - logical_connector_ratio
+    - contrast_connector_ratio
+    - modal_verb_ratio
+  discourse:
+    - star_structure_score
+    - topic_stability_score
+    - self_vs_team_orientation
+    - problem_vs_people_focus
+    - action_vs_reflection_balance
+    - abstraction_level
+  paralinguistic_optional:
+    - speech_rate
+    - pause_density
+    - interruption_tendency
+    - pitch_variability
+
+dimensions:
+  D:
+    label: "Dominance"
+    core_motives:
+      - "control"
+      - "results"
+      - "speed"
+      - "impact"
+      - "challenge"
+    interview_behavior_hypothesis:
+      - "likely to frame stories around goals, decisions, wins, obstacles, and ownership"
+      - "may emphasize action, outcomes, and influence over process"
+      - "may speak in compressed, decisive, low-hedge language"
+    positive_language_cues:
+      lexical:
+        strong_keywords:
+          - "推进"
+          - "拿下"
+          - "结果"
+          - "目标"
+          - "效率"
+          - "主导"
+          - "拍板"
+          - "负责"
+          - "攻克"
+          - "落地"
+          - "提升"
+          - "达成"
+          - "解决"
+          - "突破"
+          - "优先级"
+        semantic_patterns:
+          - "goal-first framing"
+          - "obstacle-to-solution framing"
+          - "ownership-heavy language"
+          - "competition or challenge orientation"
+      syntax:
+        - "short decisive sentences"
+        - "conclusion before explanation"
+        - "low frequency of hedging"
+        - "directive or imperative tendency"
+      discourse:
+        - "emphasis on decision moments"
+        - "emphasis on personal agency"
+        - "frequent references to speed and outcomes"
+        - "less dwell time on emotional nuance"
+      pronouns:
+        supportive:
+          - "我"
+        contextual:
+          - "我们" 
+      emotional_style:
+        - "controlled confidence"
+        - "frustration toward inefficiency"
+    negative_or_counter_cues:
+      lexical:
+        - "too much deference"
+        - "overuse of caution or waiting language"
+        - "excessively process-bound language"
+      syntax:
+        - "heavy qualification"
+        - "indirect or hesitant sentence openings"
+      discourse:
+        - "avoids ownership"
+        - "avoids conflict discussion"
+        - "rarely mentions decisions made under pressure"
+    common_false_positive_sources:
+      - "management interview coaching"
+      - "sales-scripted confidence"
+      - "role expectation for leadership positions"
+    distinguishing_rules:
+      vs_I:
+        - "D is more result-first than relationship-first"
+        - "D is more forceful than expressive"
+      vs_C:
+        - "D prioritizes speed and decision more than precision"
+      vs_S:
+        - "D tolerates confrontation more than S"
+    feature_rules:
+      strong_positive:
+        - "action_verbs_ratio high"
+        - "achievement_words_ratio high"
+        - "hedge_words_ratio low"
+        - "imperative_like_ratio high"
+        - "problem_vs_people_focus leans problem"
+        - "action_vs_reflection_balance leans action"
+      soft_positive:
+        - "first_person_singular_ratio moderately high"
+        - "star_structure_score strong in action/result sections"
+      negative:
+        - "qualifier_ratio high"
+        - "detail_words_ratio very high with low decisiveness"
+        - "topic_stability_score low due to impulsive incoherence"
+    score_interpretation:
+      low: "less evidence of assertive control-oriented style"
+      medium: "some signs of decisiveness and outcome orientation"
+      high: "repeated strong evidence of direct, forceful, goal-led style"
+    probe_questions:
+      confirm:
+        - "讲一个你必须快速拍板、且承担后果的例子。你当时怎么权衡？"
+        - "当团队效率很低时，你通常会怎么推动改变？"
+      challenge:
+        - "说一个你放慢速度、先听取他人意见再决策的案例。"
+        - "有没有你主动放弃主导权的时候？为什么？"
+
+  I:
+    label: "Influence"
+    core_motives:
+      - "connection"
+      - "recognition"
+      - "expression"
+      - "enthusiasm"
+      - "engagement"
+    interview_behavior_hypothesis:
+      - "likely to tell vivid stories and highlight collaboration, atmosphere, persuasion, and motivation"
+      - "may sound warm, animated, optimistic, and people-energized"
+      - "may use socially expansive language"
+    positive_language_cues:
+      lexical:
+        strong_keywords:
+          - "大家"
+          - "一起"
+          - "沟通"
+          - "氛围"
+          - "激励"
+          - "带动"
+          - "影响"
+          - "分享"
+          - "热情"
+          - "有趣"
+          - "兴奋"
+          - "合作"
+          - "信任"
+          - "感染"
+          - "关系"
+        semantic_patterns:
+          - "people-first storytelling"
+          - "emotionally vivid description"
+          - "social connection emphasis"
+          - "persuasion and inspiration framing"
+      syntax:
+        - "expansive expressive phrasing"
+        - "more modifiers and affective wording"
+        - "storytelling rhythm"
+      discourse:
+        - "frequent mention of team atmosphere"
+        - "mentions how others felt or reacted"
+        - "high narrative color and social texture"
+      pronouns:
+        supportive:
+          - "我们"
+          - "大家"
+      emotional_style:
+        - "optimistic"
+        - "animated"
+        - "expressive"
+    negative_or_counter_cues:
+      lexical:
+        - "emotionally flat wording"
+        - "overly dry technical language"
+      syntax:
+        - "minimal descriptive richness"
+      discourse:
+        - "little mention of people or influence"
+        - "few social or motivational elements"
+    common_false_positive_sources:
+      - "prepared behavioral interview charm"
+      - "customer-facing role training"
+      - "surface friendliness masking low depth"
+    distinguishing_rules:
+      vs_D:
+        - "I seeks engagement more than control"
+        - "I is more expressive and relational"
+      vs_S:
+        - "I is more energetic and outwardly animated"
+      vs_C:
+        - "I is less precision-bound and less qualification-heavy"
+    feature_rules:
+      strong_positive:
+        - "emotional_words_ratio high"
+        - "social_words_ratio high"
+        - "first_person_plural_ratio high"
+        - "pitch_variability high if audio available"
+      soft_positive:
+        - "adjective_ratio moderately high"
+        - "story richness high"
+      negative:
+        - "detail_words_ratio high with low social reference"
+        - "abstraction_level too technical and detached"
+    score_interpretation:
+      low: "limited evidence of expressive or socially expansive style"
+      medium: "some signs of engagement and interpersonal orientation"
+      high: "repeated evidence of persuasive, animated, people-energized style"
+    probe_questions:
+      confirm:
+        - "讲一个你通过沟通影响别人改变想法的经历。"
+        - "当团队士气低的时候，你会怎么带动氛围？"
+      challenge:
+        - "有没有你刻意减少表达、只靠结构和事实推进事情的时候？"
+        - "面对不熟的人群，你通常会主动破冰还是先观察？"
+
+  S:
+    label: "Steadiness"
+    core_motives:
+      - "stability"
+      - "support"
+      - "cooperation"
+      - "predictability"
+      - "harmony"
+    interview_behavior_hypothesis:
+      - "likely to speak in calm, cooperative, reliable, support-oriented ways"
+      - "may emphasize patience, consistency, listening, and team continuity"
+      - "may avoid aggressive self-promotion or conflict-heavy framing"
+    positive_language_cues:
+      lexical:
+        strong_keywords:
+          - "稳定"
+          - "支持"
+          - "配合"
+          - "耐心"
+          - "持续"
+          - "协作"
+          - "照顾"
+          - "平衡"
+          - "可靠"
+          - "稳妥"
+          - "长期"
+          - "维护"
+          - "跟进"
+          - "倾听"
+          - "信任"
+        semantic_patterns:
+          - "support-first framing"
+          - "continuity and reliability language"
+          - "conflict de-escalation language"
+      syntax:
+        - "measured pacing"
+        - "moderate hedging without confusion"
+        - "non-confrontational wording"
+      discourse:
+        - "emphasis on team cohesion"
+        - "mentions patience and follow-through"
+        - "less dramatic swings in tone"
+      pronouns:
+        supportive:
+          - "我们"
+          - "同事"
+          - "团队"
+      emotional_style:
+        - "calm"
+        - "steady"
+        - "contained"
+    negative_or_counter_cues:
+      lexical:
+        - "strong competitive or confrontational words"
+        - "high novelty-seeking language"
+      syntax:
+        - "abrupt, forceful transitions"
+      discourse:
+        - "frequent self-assertive dominance framing"
+        - "low patience for process or others"
+    common_false_positive_sources:
+      - "politeness norms"
+      - "interview caution"
+      - "culture-driven modesty"
+    distinguishing_rules:
+      vs_I:
+        - "S is warm but less outwardly animated"
+      vs_D:
+        - "S avoids unnecessary force or confrontation"
+      vs_C:
+        - "S values harmony more than strict correctness"
+    feature_rules:
+      strong_positive:
+        - "topic_stability_score high"
+        - "self_vs_team_orientation leans team"
+        - "action_vs_reflection_balance balanced"
+        - "interruption_tendency low if audio available"
+      soft_positive:
+        - "hedge_words_ratio moderate"
+        - "speech_rate stable"
+      negative:
+        - "achievement_words_ratio very high with strong assertive tone"
+        - "imperative_like_ratio high"
+    score_interpretation:
+      low: "little evidence of stable supportive cooperative style"
+      medium: "some signs of patience, reliability, and harmony orientation"
+      high: "repeated evidence of calm, consistent, support-centered style"
+    probe_questions:
+      confirm:
+        - "讲一个你长期支持团队、但未必最显眼的贡献案例。"
+        - "当团队里有人情绪激烈时，你通常怎么处理？"
+      challenge:
+        - "有没有你必须强硬推进、甚至制造冲突来达成结果的时候？"
+        - "你怎么面对频繁变化和不确定性？"
+
+  C:
+    label: "Conscientiousness"
+    core_motives:
+      - "accuracy"
+      - "quality"
+      - "logic"
+      - "standards"
+      - "risk control"
+    interview_behavior_hypothesis:
+      - "likely to answer in structured, careful, precise, evidence-aware ways"
+      - "may define terms, add conditions, and distinguish scenarios"
+      - "may prefer correctness over speed"
+    positive_language_cues:
+      lexical:
+        strong_keywords:
+          - "分析"
+          - "标准"
+          - "流程"
+          - "验证"
+          - "准确"
+          - "细节"
+          - "依据"
+          - "风险"
+          - "复盘"
+          - "假设"
+          - "边界"
+          - "逻辑"
+          - "规范"
+          - "数据"
+          - "证据"
+        semantic_patterns:
+          - "condition-based reasoning"
+          - "precision and qualification"
+          - "error prevention orientation"
+          - "stepwise explanation"
+      syntax:
+        - "clear logical connectors"
+        - "qualified statements"
+        - "definition and framing before conclusion"
+      discourse:
+        - "process integrity emphasis"
+        - "mentions trade-offs, assumptions, edge cases"
+        - "structured decomposition"
+      pronouns:
+        supportive:
+          - "我"
+          - "我们"
+      emotional_style:
+        - "controlled"
+        - "analytical"
+        - "low affect volatility"
+    negative_or_counter_cues:
+      lexical:
+        - "vague claims without support"
+        - "overconfident intuition-only language"
+      syntax:
+        - "fragmented or loosely organized responses"
+      discourse:
+        - "dismissive toward detail or standards"
+        - "acts-first without reasoning trail"
+    common_false_positive_sources:
+      - "technical interview format"
+      - "candidate rehearsed STAR answers"
+      - "domain expertise temporarily boosting structure"
+    distinguishing_rules:
+      vs_D:
+        - "C prefers correctness and control of error; D prefers speed and impact"
+      vs_S:
+        - "C centers standards more than harmony"
+      vs_I:
+        - "C is less affective and less socially expansive"
+    feature_rules:
+      strong_positive:
+        - "logical_connector_ratio high"
+        - "detail_words_ratio high"
+        - "qualifier_ratio moderately high"
+        - "star_structure_score high"
+        - "abstraction_level balanced with evidence"
+      soft_positive:
+        - "avg_sentence_length moderate to high with coherence"
+        - "risk_words_ratio high"
+      negative:
+        - "topic_stability_score low"
+        - "hedge_words_ratio too low with unsupported certainty"
+        - "emotional_words_ratio very high without structure"
+    score_interpretation:
+      low: "limited evidence of precise, systematic, standards-aware style"
+      medium: "some signs of structure, care, and analytical discipline"
+      high: "repeated evidence of careful, evidence-led, quality-focused style"
+    probe_questions:
+      confirm:
+        - "讲一个你通过细节校验或流程优化，避免了明显风险的案例。"
+        - "当信息不完整时，你通常怎么做判断？"
+      challenge:
+        - "有没有你在信息不足的情况下先行动、后补验证的时候？"
+        - "你会为了效率主动接受多少不确定性？"
+
+cross_dimension_patterns:
+  D_plus_I:
+    description: "assertive and expressive"
+    cues:
+      - "high action language"
+      - "strong influence/persuasion framing"
+      - "energetic, people-engaging, goal-oriented stories"
+    risks:
+      - "may overstate impact"
+      - "may appear polished or charisma-heavy"
+  D_plus_C:
+    description: "driving and structured"
+    cues:
+      - "results orientation plus analytical rigor"
+      - "decisive but evidence-based"
+    risks:
+      - "may sound controlling or perfectionistic"
+  I_plus_S:
+    description: "warm and relational"
+    cues:
+      - "people-centered, cooperative, emotionally accessible"
+    risks:
+      - "may understate conflict capability"
+  S_plus_C:
+    description: "stable and careful"
+    cues:
+      - "reliable, process-respecting, low-drama, detail-aware"
+    risks:
+      - "may seem conservative or too cautious"
+
+interview_topic_modifiers:
+  self_introduction:
+    notes:
+      - "often inflated for I and D"
+      - "lower confidence if only self-introduction is available"
+  project_experience:
+    notes:
+      - "useful for D and C evidence"
+  conflict_handling:
+    notes:
+      - "useful for D vs S differentiation"
+  teamwork:
+    notes:
+      - "useful for I and S differentiation"
+  failure_reflection:
+    notes:
+      - "useful for C and authenticity assessment"
+  pressure_question:
+    notes:
+      - "useful for D, C, and masking risk"
+
+risk_flags:
+  impression_management:
+    cues:
+      - "excessive perfect narratives"
+      - "highly polished generic buzzwords"
+      - "claims without operational detail"
+      - "inconsistency across segments"
+  low_sample_validity:
+    cues:
+      - "short answers"
+      - "single scenario only"
+      - "interviewer-led yes/no responses"
+  role_bias:
+    cues:
+      - "sales candidates artificially boosting I"
+      - "manager candidates artificially boosting D"
+      - "technical candidates artificially boosting C"
+
+output_mapping:
+  score_bands:
+    "0_24": "weak evidence"
+    "25_49": "mild tendency"
+    "50_74": "moderate tendency"
+    "75_100": "strong tendency"
+  confidence_factors:
+    increase:
+      - "repetition across multiple questions"
+      - "alignment between transcript and atomic features"
+      - "specific spontaneous detail"
+    decrease:
+      - "generic buzzwords"
+      - "script-like STAR formula without texture"
+      - "contradictions"
+      - "insufficient transcript length"

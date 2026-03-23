@@ -1,0 +1,14 @@
+﻿# 在这里填写你的模型配置。
+# 程序会优先读取本文件；如果留空，则回退到环境变量。
+
+OPENAI_API_KEY = ""
+OPENAI_BASE_URL = "https://api.zhizengzeng.com/v1"
+
+# 轻量解析模型：负责 transcript 切分、问题类型归类、岗位猜测。
+OPENAI_PARSER_MODEL = "gpt-5-mini"
+
+# 主分析模型：负责最终 DISC 判定、证据归纳、追问建议。
+OPENAI_ANALYSIS_MODEL = "gpt-5.4"
+
+# 外部模型请求超时，单位秒。网络异常时建议保持较小，避免页面长时间卡住。
+OPENAI_REQUEST_TIMEOUT = 8

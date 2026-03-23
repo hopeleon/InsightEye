@@ -1,0 +1,1 @@
+"""InsightEye demo application package."""

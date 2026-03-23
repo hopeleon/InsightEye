@@ -1,0 +1,65 @@
+﻿[
+  {
+    "id": "pm_growth_case",
+    "title": "产品经理：增长项目推进",
+    "job_hint": "产品经理",
+    "filename": "pm_growth_case.txt",
+    "description": "包含项目推进、阻力处理、判断失误应对三个典型问题。"
+  },
+  {
+    "id": "sales_tob_key_account",
+    "title": "销售岗位：ToB 难客户拿单",
+    "job_hint": "销售",
+    "filename": "sales_tob_key_account.txt",
+    "description": "包含难客户突破、信任建立、成交判断、失败复盘与关系地图。"
+  },
+  {
+    "id": "backend_order_refactor",
+    "title": "研发岗位：后端订单系统重构",
+    "job_hint": "研发",
+    "filename": "backend_order_refactor.txt",
+    "description": "包含系统重构、灰度迁移、数据一致性、稳定性保障与取舍判断。"
+  },
+  {
+    "id": "operations_growth_content",
+    "title": "运营岗位：内容平台增长项目",
+    "job_hint": "运营",
+    "filename": "operations_growth_content.txt",
+    "description": "包含渠道优化、路径优化、跨团队协作、数据回看与自我复盘。"
+  },
+  {
+    "id": "sales_hollow_long_negative",
+    "title": "反面案例：销售岗空洞长文本",
+    "job_hint": "销售",
+    "filename": "sales_hollow_long_negative.txt",
+    "description": "长文本但缺少关键动作、决策点和量化结果。"
+  },
+  {
+    "id": "engineering_shallow_negative",
+    "title": "反面案例：研发岗技术浅层表述",
+    "job_hint": "研发",
+    "filename": "engineering_shallow_negative.txt",
+    "description": "有技术词但缺少深度、因果链和架构决策。"
+  },
+  {
+    "id": "operations_baseline_neutral",
+    "title": "中立案例：运营岗普通完整样本",
+    "job_hint": "运营",
+    "filename": "operations_baseline_neutral.txt",
+    "description": "结构完整但亮点弱，适合作为 baseline 样本。"
+  },
+  {
+    "id": "sales_cautious_weaker",
+    "title": "中立偏弱：销售岗谨慎无推动力",
+    "job_hint": "销售",
+    "filename": "sales_cautious_weaker.txt",
+    "description": "明显低 D，中低 I，偏 S 但证据不强。"
+  },
+  {
+    "id": "project_polished_low_info",
+    "title": "伪装案例：高级话术低信息密度",
+    "job_hint": "产品经理",
+    "filename": "project_polished_low_info.txt",
+    "description": "话术成熟但信息密度低，适合测试包装识别能力。"
+  }
+]
