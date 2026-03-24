@@ -147,6 +147,111 @@ def _impression_management_risk(features: dict, word_count: int) -> tuple[str, l
     return risk, notes
 
 
+def _build_critical_findings(features: dict, scores: dict[str, int], word_count: int) -> tuple[list[dict], list[str], list[str]]:
+    findings: list[dict] = []
+    hire_risks: list[str] = []
+    evidence_gaps: list[str] = []
+
+    if word_count >= 120 and features["story_richness_score"] < 0.45:
+        findings.append(
+            {
+                "finding": "Long answer but low information density.",
+                "severity": "high",
+                "basis": ["limited narrative detail", "few verifiable actions or mechanisms"],
+                "impact": "It is hard to verify whether the candidate has real execution depth.",
+            }
+        )
+        hire_risks.append("Long answer with limited high-value information")
+        evidence_gaps.append("Missing detailed walk-through of key actions")
+
+    if features["star_structure_score"] < 0.55:
+        findings.append(
+            {
+                "finding": "The task-action-result chain is incomplete.",
+                "severity": "medium",
+                "basis": ["weak STAR structure", "the answer sounds like a summary rather than a replay"],
+                "impact": "Confidence in ownership and execution depth should be lowered.",
+            }
+        )
+        evidence_gaps.append("Missing a complete task-action-result loop")
+
+    if features["achievement_words_ratio"] < 0.006:
+        findings.append(
+            {
+                "finding": "Outcome evidence is weak and lacks measurable comparison.",
+                "severity": "medium",
+                "basis": ["few outcome terms", "no clear before-after proof"],
+                "impact": "It is difficult to confirm whether the candidate created real value.",
+            }
+        )
+        hire_risks.append("Insufficient evidence of results")
+        evidence_gaps.append("Missing quantified results or before-after comparison")
+
+    if features["action_verbs_ratio"] < 0.015:
+        findings.append(
+            {
+                "finding": "Personal actions and decision details are thin.",
+                "severity": "medium",
+                "basis": ["low action-verb density", "the answer sounds more participatory than owner-led"],
+                "impact": "A supporting role may be overstated as a leading role.",
+            }
+        )
+        hire_risks.append("Ownership and personal contribution need validation")
+        evidence_gaps.append("Missing evidence of specific personal decisions and actions")
+
+    if features["buzzword_density"] >= 0.012 and features["story_richness_score"] < 0.5:
+        findings.append(
+            {
+                "finding": "The answer sounds polished, but mechanism detail is thin.",
+                "severity": "high" if features["buzzword_density"] >= 0.018 else "medium",
+                "basis": ["high buzzword density", "abstract claims are not backed by detail"],
+                "impact": "If follow-up questions still get abstract answers, authenticity risk rises.",
+            }
+        )
+        hire_risks.append("Possible impression-management or rehearsed-answer risk")
+
+    if scores.get("C", 0) >= 70 and features["detail_words_ratio"] < 0.012:
+        evidence_gaps.append("The answer sounds structured, but the detail density is still not enough for a high-C read")
+
+    unique_hire_risks = list(dict.fromkeys(hire_risks))
+    unique_evidence_gaps = list(dict.fromkeys(evidence_gaps))
+    return findings[:4], unique_hire_risks[:4], unique_evidence_gaps[:5]
+
+
+
+def _build_decision_outputs(scores: dict[str, int], critical_findings: list[dict], evidence_gaps: list[str], confidence: str, impression_risk: str) -> tuple[str, str, str]:
+    ranking = sorted(scores, key=scores.get, reverse=True)
+    top, second = ranking[:2]
+    top_label = f"{top}/{second}"
+    high_finding = next((item for item in critical_findings if item["severity"] == "high"), None)
+    medium_finding = next((item for item in critical_findings if item["severity"] == "medium"), None)
+
+    if high_finding:
+        decision_summary = f"The surface style looks {top_label}, but the stronger signal is: {high_finding['finding']}"
+    elif evidence_gaps:
+        decision_summary = f"The style leans toward {top_label}, but the main blocker is: {evidence_gaps[0]}"
+    else:
+        decision_summary = f"The candidate currently leans toward a {top_label} style mix with relatively stable signals."
+
+    if high_finding:
+        risk_summary = "High-priority weaknesses are present and should be verified before giving credit."
+    elif impression_risk == "high":
+        risk_summary = "Authenticity risk is elevated and should be validated first."
+    elif medium_finding or impression_risk == "medium":
+        risk_summary = "Medium-level risk is present; verify key details before trusting the story."
+    else:
+        risk_summary = "No major red flag yet, but spot-checking is still required."
+
+    if high_finding:
+        recommended_action = "Continue the interview, but challenge the top weakness before moving on."
+    elif confidence == "low":
+        recommended_action = "Collect more samples before making a continue / stop decision."
+    else:
+        recommended_action = "Continue, but verify ownership, key actions, and outcome evidence first."
+
+    return decision_summary, risk_summary, recommended_action
+
+
 def analyze_disc(transcript: str, turns: list[dict], features: dict, knowledge: dict) -> dict:
     word_count = len(transcript.replace("\n", ""))
     sample_quality = _sample_quality(knowledge, word_count, len(turns))
@@ -216,11 +321,15 @@ def analyze_disc(transcript: str, turns: list[dict], features: dict, knowledge: 
             {
                 "target_dimension": dim,
                 "question": _dimension_probe(knowledge, dim, "challenge")[0],
-                "purpose": f"测试该候选人在 {dim} 维度上的反向行为边界。",
+                "purpose": f"Test the candidate's lower-bound behavior on {dim}.",
             }
         )
 
-    style_summary = f"当前样本更偏 {ranking[0]}-{ranking[1]} 组合，{ranking[0]} 得分最高，{ranking[-1]} 相对较弱。"
+    critical_findings, hire_risks, evidence_gaps = _build_critical_findings(features, scores, word_count)
+    decision_summary, risk_summary, recommended_action = _build_decision_outputs(
+        scores, critical_findings, evidence_gaps, confidence, impression_risk
+    )
+    style_summary = f"Current sample leans toward a {ranking[0]}-{ranking[1]} mix, with {ranking[0]} highest and {ranking[-1]} relatively weaker."
 
     return {
         "meta": {
@@ -229,9 +338,15 @@ def analyze_disc(transcript: str, turns: list[dict], features: dict, knowledge: 
             "impression_management_risk": impression_risk,
             "notes": confidence_notes + risk_notes,
         },
+        "critical_findings": critical_findings,
+        "hire_risks": hire_risks,
+        "evidence_gaps": evidence_gaps,
         "scores": scores,
         "ranking": ranking,
         "dimension_analysis": dimension_analysis,
+        "decision_summary": decision_summary,
+        "risk_summary": risk_summary,
+        "recommended_action": recommended_action,
         "overall_style_summary": style_summary,
         "behavioral_hypotheses": hypotheses,
         "follow_up_questions": follow_up_questions,

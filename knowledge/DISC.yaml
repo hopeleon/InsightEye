@@ -10,6 +10,11 @@ disclaimer:
 global_rules:
   minimum_sample_words: 120
   preferred_sample_words: 300
+  critique_priority:
+    - "missing evidence is a negative signal, not neutral"
+    - "long but hollow answers should be criticized explicitly"
+    - "generic process language without mechanism should reduce credibility"
+    - "interview evaluation should surface doubts before compliments"
   confidence_rules:
     low:
       - "sample too short"
@@ -518,6 +523,8 @@ risk_flags:
       - "highly polished generic buzzwords"
       - "claims without operational detail"
       - "inconsistency across segments"
+      - "fluent but low-information answers"
+      - "high abstraction with weak verifiable evidence"
   low_sample_validity:
     cues:
       - "short answers"
@@ -528,6 +535,61 @@ risk_flags:
       - "sales candidates artificially boosting I"
       - "manager candidates artificially boosting D"
       - "technical candidates artificially boosting C"
+
+negative_evaluation_patterns:
+  hollow_answer:
+    cues:
+      - "long answer with repeated generic verbs such as follow up / communicate / optimize / push forward but no mechanism"
+      - "no clear turning point or decision moment"
+      - "no concrete constraint, trade-off, or obstacle handling detail"
+      - "summary language dominates over observable action detail"
+    should_trigger:
+      - "critical finding: information density is low"
+      - "evidence gap: actual execution capability remains unverified"
+  weak_result_evidence:
+    cues:
+      - "result is described vaguely"
+      - "no measurable outcome where measurement should reasonably exist"
+      - "success claimed without before/after contrast"
+    should_trigger:
+      - "critical finding: result evidence is weak"
+      - "hire risk: impact may be overstated"
+  shallow_technicality:
+    cues:
+      - "mentions logs, monitoring, cache, optimization, architecture terms without mechanism detail"
+      - "cannot explain failure mode, trade-off, or design rationale"
+      - "technical nouns exceed causal explanation"
+    should_trigger:
+      - "critical finding: technical depth is insufficient relative to claimed project complexity"
+      - "hire risk: may be execution participant rather than technical owner"
+  weak_sales_progression:
+    cues:
+      - "relationship maintenance language without stakeholder map"
+      - "no clear progression signal toward conversion"
+      - "no buying signal, no decision-chain logic, no conversion trigger"
+    should_trigger:
+      - "critical finding: sales advancement logic is unclear"
+      - "hire risk: may rely on passive follow-up rather than active deal control"
+  weak_growth_reasoning:
+    cues:
+      - "mentions data analysis without metrics, experiment design, or iteration logic"
+      - "describes optimization but not hypothesis or validation loop"
+    should_trigger:
+      - "critical finding: growth reasoning is shallow"
+      - "hire risk: execution appears tactical but not insight-driven"
+
+evaluation_checks:
+  required_checks:
+    - "action specificity"
+    - "decision specificity"
+    - "measurable outcome"
+    - "causal chain clarity"
+    - "personal ownership clarity"
+    - "trade-off or failure reflection"
+  downgrade_rules:
+    - "if 3 or more required checks are weak, add medium-to-high critical findings"
+    - "if answer is polished but fails ownership + outcome + decision checks, raise impression-management risk"
+    - "if technical/project scope sounds senior but evidence remains generic, reduce credibility explicitly"
 
 output_mapping:
   score_bands:
