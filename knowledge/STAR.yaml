@@ -1,0 +1,743 @@
+version: "1.0"
+model: "STAR"
+scenario: "behavioral_interview"
+purpose: "local rule engine for STAR structure scoring, defect detection, authenticity assessment, and behavioral probe generation"
+
+disclaimer:
+  - "STAR quality scores are linguistic indicators, not proof of actual experience."
+  - "Repeatable structured narratives with consistent detail are stronger authenticity signals."
+  - "Self-presentation bias in interviews may inflate action and result scores."
+  - "Contextual cues (exact dates, team size, budget numbers) are the most verifiable signals."
+
+# ═══════════════════════════════════════════════════
+# 全局规则
+# ═══════════════════════════════════════════════════
+
+global_rules:
+  # 单条回答字数基准（供本地规则参考）
+  min_answer_length: 20
+  preferred_answer_length: 80
+
+  # 真实性综合加权（A/R 各 35%，S/T 各 15%，与 star_analyzer.py 的 STARScore 权重一致）
+  weight_overall: { S: 0.15, T: 0.15, A: 0.35, R: 0.35 }
+
+  # 置信度等级判定规则
+  # 由 star_analyzer.py 在生成 authenticity_summary 时读取
+  confidence_rules:
+    low:
+      - "样本总字数低于 60 字，或单条回答低于 20 字"
+      - "所有回答结构高度相似，缺乏变异性"
+      - "出现明显模板套用痕迹"
+      - "出现自我矛盾的归因叙述"
+    medium:
+      - "有 2-3 条结构较完整的 STAR 回答"
+      - "缺陷与强信号并存，样本量尚不足以定论"
+      - "存在明显的部分维度缺失（如 R 高但 A 低）"
+    high:
+      - "3 条以上回答各有特色，且细节丰富"
+      - "量化指标、时间标记、角色边界在各条中一致"
+      - "真实性风险评估为 low，且无高严重度缺陷"
+
+  # 防过度声明规则（供人工解读参考，不影响评分）
+  anti_overclaim:
+    - "避免将单一回答的结构完整等同于候选人整体能力"
+    - "A/R 维度高分时需验证是否存在行动与结果的内部一致性"
+    - "当多个缺陷并存时，优先采信缺陷覆盖更多的维度得分"
+    - "警惕「完美叙事」：高 S+T+A+R 同时出现可能是经过精心准备的模板"
+
+  # 缺陷高阶组合交互规则
+  # 由 star_analyzer.py 在生成 authenticity_summary 时读取并输出结论
+  defect_interactions:
+    - trigger:
+        defects: ["situation_missing", "action_vague"]
+      conclusion: "可能是记忆模糊或经历不深，而非刻意掩饰，建议追问真实细节。"
+    - trigger:
+        defects: ["fake_star", "result_attribution_error"]
+      conclusion: "高风险信号，可能是经历美化或夸大，建议后续面试重点验证。"
+    - trigger:
+        defects: ["team_substitution", "result_abstract"]
+      conclusion: "集体叙事加结果泛化并存的经典套路特征，需多次追问确认。"
+    - trigger:
+        defects: ["fake_star", "situation_missing", "result_abstract"]
+      conclusion: "可能对经历的掌握程度较浅，建议试探另一个完整 STAR。"
+
+# ═══════════════════════════════════════════════════
+# 输入特征（与 app/features.py extract_features() 保持严格对齐）
+# 标注 [已实现] 的特征可直接被 star_analyzer.py 使用；
+# 标注 [待实现] 的特征目前 star_analyzer.py 用正则独立计算
+# ═══════════════════════════════════════════════════
+
+input_features:
+  lexical:
+    - first_person_singular_ratio    # [已实现] features.py 第 105 行
+    - first_person_plural_ratio       # [已实现] features.py 第 106 行
+    - action_verbs_ratio             # [已实现] features.py 第 95 行
+    - achievement_words_ratio         # [已实现] features.py 第 101 行
+    - buzzword_density               # [已实现] features.py 第 122 行
+    - detail_words_ratio              # [已实现] features.py 第 103 行
+    - risk_words_ratio               # [已实现] features.py 第 104 行
+    - certainty_words_ratio           # [已实现] features.py 第 99 行
+    - hedge_words_ratio              # [已实现] features.py 第 100 行
+    - emotional_words_ratio           # [已实现] features.py 第 97 行
+    - social_words_ratio              # [已实现] features.py 第 98 行
+    - adjective_ratio                 # [已实现] features.py 第 96 行
+    - quantitative_words_ratio        # [待实现] 数字/比例词密度，建议在 features.py 添加
+    - temporal_words_ratio            # [待实现] 时间词密度，建议在 features.py 添加
+    - constraint_words_ratio          # [待实现] 约束词密度，建议在 features.py 添加
+    - vague_result_words_ratio        # [待实现] 泛化结果词密度，建议在 features.py 添加
+    - tool_method_words_ratio         # [待实现] 工具/方法词密度，建议在 features.py 添加
+  syntax:
+    - avg_sentence_length             # [待实现] 平均句长，建议在 features.py 添加
+    - step_connector_ratio            # [待实现] 步骤连接词密度，建议在 features.py 添加
+    - contrast_connector_ratio        # [已实现] features.py 第 113 行
+    - modal_verb_ratio                # [已实现] features.py 第 114 行
+    - logical_connector_ratio         # [已实现] features.py 第 112 行
+    - qualifier_ratio                 # [已实现] features.py 第 111 行
+    - imperative_like_ratio           # [已实现] features.py 第 109 行
+    - question_ratio                  # [已实现] features.py 第 110 行
+  discourse:
+    - star_structure_score            # [已实现] features.py 第 115 行
+    - topic_stability_score           # [已实现] features.py 第 116 行
+    - self_vs_team_orientation        # [已实现] features.py 第 117 行；值为 "self" | "team"
+    - problem_vs_people_focus          # [已实现] features.py 第 118 行
+    - action_vs_reflection_balance    # [已实现] features.py 第 119 行
+    - abstraction_level               # [已实现] features.py 第 120 行
+    - story_richness_score            # [已实现] features.py 第 121 行
+    - context_marker_density          # [待实现] 情境标记词密度，star_analyzer 暂用正则
+    - result_attribution_self_ratio   # [待实现] 自我归因词密度，star_analyzer 暂用正则
+    - team_result_attribution_ratio   # [待实现] 团队归因词密度，star_analyzer 暂用正则
+    - detail_density                  # [已实现] detail_words_ratio 近似
+    - repetition_ratio                # [待实现] 句子重复率，建议在 features.py 添加
+
+# ═══════════════════════════════════════════════════
+# S 维度 — 情境（Situation）
+# ═══════════════════════════════════════════════════
+
+dimensions:
+  S:
+    label: "情境 Situation"
+    core_signals:
+      - "候选人对事件的时空背景有清晰感知"
+      - "能感知到客观约束（时间/资源/团队规模）"
+      - "能识别出问题发生的业务或数据背景"
+    interview_behavior_hypothesis:
+      - "高 S 候选人通常在回答中先铺垫背景再说个人行动，说明其思维有全局观"
+      - "低 S 候选人容易直接跳到行动，造成跳步感"
+    positive_language_cues:
+      lexical:
+        strong_keywords:
+          - "当时"
+          - "那段时间"
+          - "接手时"
+          - "上线前"
+          - "入职时"
+          - "项目初期"
+          - "从零开始"
+          - "人手不够"
+          - "预算有限"
+          - "技术难点"
+          - "跨部门"
+          - "紧急"
+          - "deadline"
+        semantic_patterns:
+          - "从【差的状态】到【问题出现】"
+          - "在【某种资源约束】下"
+          - "那时候团队面临的问题是……"
+          - "业务数据的背景是……"
+      syntax:
+        - "用时间状语从句开头（当……时）"
+        - "背景交代句通常在回答前 2-3 句"
+      discourse:
+        - "情境描述通常出现在回答的前 30% 字"
+        - "约束条件越具体，可信度越高"
+      pronouns:
+        supportive: ["当时", "那时候", "那段时间"]
+        weak: ["后来", "然后"]
+    negative_or_counter_cues:
+      lexical:
+        - "\"后来\"（直接跳到结果，跳过背景）"
+        - "\"有一次\"（无具体时间锚点）"
+        - "\"我们\"（从团队开始叙述，跳过个人情境）"
+      syntax:
+        - "行动句直接开头，无任何背景铺垫"
+        - "回答总字数 < 60 字但没有时间词"
+      discourse:
+        - "第一句就是「我做了……」"
+        - "背景信息需要追问才能补出"
+    common_false_positive_sources:
+      - "候选人用套话代替真实情境（例：在工作中」"
+      - "将团队情境说成个人情境"
+      - "情境描述来自公开信息而非亲历（例：「当时公司业绩下滑」）"
+    distinguishing_rules:
+      vs_T:
+        - "S 关注客观背景，T 关注候选人自己的职责边界；S 好不等于 T 好"
+      vs_A:
+        - "S 是「为什么做」，A 是「怎么做」；S 偏向判断问题真实性，A 偏向验证执行深度"
+    score_interpretation:
+      high: "情境描述完整：有时间锚点、业务背景、客观约束，能让人判断该经历的合理性。"
+      medium: "有部分情境信息，但不够具体（缺少时间或约束），仍可追问时空与限制条件。"
+      low: "情境单薄或缺失：回答直接跳步，无法判断决策前提是否存在，真实性存疑。"
+    probe_questions:
+      confirm:
+        - "这件事大约发生在什么时间段？当时团队有多少人？"
+        - "你刚说「当时情况很紧急」，那个紧急程度是怎么定义的？DDL 是谁定的？"
+        - "你接手前，这个项目或任务已经进展到什么程度了？"
+      challenge:
+        - "你说的这个背景，其他人当时的感受是什么？你怎么知道你感知到的就是事实？"
+        - "这件事和公司那段时间的整体战略有什么关系？你是怎么知道的？"
+
+  # ═══════════════════════════════════════════════════
+  # T 维度 — 任务（Task）
+  # ═══════════════════════════════════════════════════
+
+  T:
+    label: "任务 Task"
+    core_signals:
+      - "候选人对自己的职责边界有清晰认识"
+      - "能区分「我负责的」与「团队共担的」"
+      - "能描述自己的具体目标和 KPI 或 OKR"
+    interview_behavior_hypothesis:
+      - "高 T 候选人倾向于用角色标签开头（「我作为……」"
+      - "低 T 候选人容易被「我们」叙事淹没"
+      - "T 维度是区分「真实参与者」和「旁观者」的核心信号"
+    positive_language_cues:
+      lexical:
+        strong_keywords:
+          - "我作为"
+          - "我的职责是"
+          - "我主要负责"
+          - "我这边"
+          - "不在我职责内"
+          - "超出我的范围"
+          - "我接手时"
+          - "我被安排"
+          - "我的目标是"
+          - "KPI 是"
+          - "OKR 是"
+        semantic_patterns:
+          - "我负责的模块是……"
+          - "当时我的角色是……"
+          - "我这边的情况是……"
+          - "这个需求是我的职责范围"
+          - "我与某位的分工是……"
+      syntax:
+        - "用角色声明句开头（「我是……」"
+        - "职责边界词出现（只负责/主要/这边）"
+      discourse:
+        - "个人任务描述通常紧接情境之后"
+        - "能主动说明「不属于我的部分」"
+        - "有目标数字或可量化任务描述"
+      pronouns:
+        supportive: ["我", "我的"]
+        weak: ["我们", "团队"]
+    negative_or_counter_cues:
+      lexical:
+        - "我们一起"
+        - "大家一起"
+        - "团队协作"
+        - "分工配合"
+        - "协调推进"
+      syntax:
+        - "全程主语为「我们」，无「我」"
+        - "角色声明词全无"
+      discourse:
+        - "提到目标时用「我们要……」而非「我要……」"
+        - "无法区分哪些是个人任务，哪些是团队任务"
+    common_false_positive_sources:
+      - "候选人混淆了「参与」和「负责」"
+      - "将团队目标说成个人目标（例：把部门 KPI 说成自己的 KPI）"
+      - "引用招聘描述中的职责而非真实经历"
+    distinguishing_rules:
+      vs_S:
+        - "S 是外部背景，T 是候选人的内部定位；S 回答「发生了什么」，T 回答「你的角色是什么」"
+      vs_A:
+        - "T 是「要做什么」（目标），A 是「实际做了什么」（过程）；T 清晰不等于 A 清晰"
+      vs_team_substitution_defect:
+        - "team_substitution 的本质是 T 维度失分；如果 T 清晰，「我们」叙事不构成缺陷"
+    score_interpretation:
+      high: "个人角色与职责边界清晰：能明确说「我」负责什么，个人与团队分工清楚。"
+      medium: "能感知到任务，但个人与团队的边界较模糊，「我」和「我们」混用，需追问个人具体贡献。"
+      low: "职责边界模糊：全程以「我们」叙事，无法判断候选人的实际角色与不可替代性。"
+    probe_questions:
+      confirm:
+        - "在这件事里，你个人的目标是什么？有没有一个具体的数字？"
+        - "这个任务里，哪个部分必须是你亲自做，换别人可能就做不了？"
+        - "你刚说的这些，你和某位的分工是怎么划分的？"
+      challenge:
+        - "我注意到你全程说的是「我们」，有没有哪件事是你一个人拍板的？"
+        - "你提到的目标，是公司给你的 KPI，还是你自己定的？能区分吗？"
+
+  # ═══════════════════════════════════════════════════
+  # A 维度 — 行动（Action）
+  # ═══════════════════════════════════════════════════
+
+  A:
+    label: "行动 Action"
+    core_signals:
+      - "候选人对自己的行动步骤有具体记忆"
+      - "能说出工具、文档、决策点"
+      - "能描述行动之间的取舍逻辑"
+    interview_behavior_hypothesis:
+      - "高 A 候选人的回答有「画面感」：能用具体动词加具体对象"
+      - "低 A 候选人倾向用抽象动词堆砌（推进/优化/完善）"
+      - "A 维度是区分「真实经历」和「旁听转述」的最强信号"
+    positive_language_cues:
+      lexical:
+        strong_keywords:
+          # 具体执行词（高信息量，宾语明确）
+          - "我搭建了"
+          - "我写了"
+          - "我画了"
+          - "我改了"
+          - "我提了"
+          - "我选了"
+          - "我谈了"
+          - "我拒了"
+          - "我删了"
+          - "我重做了"
+          - "我拍板"
+          - "我分配了"
+          - "我顶着压力"
+          - "我独自"
+          - "我熬夜"
+          - "我先斩后奏"
+        weak_keywords:
+          # 抽象动词（低信息量，无宾语则空洞）
+          - "推进了"
+          - "完善了"
+          - "优化了"
+          - "改进了"
+          - "加强了"
+          - "搭建了"  # 无宾语时为弱
+        semantic_patterns:
+          - "我用了【工具或系统】来【做某事】"
+          - "第一步……第二步……第三步……"
+          - "我先……然后……最后……"
+          - "我和他或团队对齐了……"
+          - "我拒绝了【某方案】，因为……"
+      syntax:
+        - "有明确的宾语（我做了什么加做的对象）"
+        - "有步骤连接词（首先/然后/接着/最后）"
+        - "有否定词（没有/不是/拒绝了）"
+      discourse:
+        - "行动链完整：从问题识别到方案选择到执行到修正"
+        - "有决策点描述（例：「我选择了 A 方案，因为 B 原因」）"
+        - "有取舍逻辑（例：「没有用原来的方案，因为……」）"
+        - "提及具体的工具或文档名称"
+      pronouns:
+        supportive: ["我", "我自己", "我独自", "我先", "我最后"]
+    negative_or_counter_cues:
+      lexical:
+        - "抽象动词连续堆砌且无宾语（推进了，优化了，完善了）"
+        - "全是集体行动词（我们讨论了，我们决定了）"
+        - "全是感受词（觉得，感到，认为）"
+      syntax:
+        - "每句都以「我」开头但无具体宾语"
+        - "连续使用相同的动词"
+      discourse:
+        - "行动链残缺（直接跳到结果，没有行动过程）"
+        - "行动描述和结果描述之间无因果连接词"
+    common_false_positive_sources:
+      - "用了「正确」的动词但没有宾语（推进了 vs 推进了什么）"
+      - "行动描述来自公开项目文档而非亲历（例：「我主导了 OKR 制定」）"
+      - "将团队行动说成个人行动（尤其是 PM 岗位）"
+      - "候选人在描述一个理想化的行动，而非真实的"
+    distinguishing_rules:
+      vs_T:
+        - "T 是职责声明（要做什么），A 是执行细节（实际做了什么）；T 清晰不等于 A 清晰"
+      vs_R:
+        - "A 描述过程，R 描述结果；两者都强才构成完整 STAR"
+        - "A 强但 R 弱：行动丰富但结果不量化，可能是经历属实但表达不全"
+        - "A 弱但 R 强：结果描述精彩但过程空洞，可能是美化了结果"
+    score_interpretation:
+      high: "行动细节丰富：有具体步骤、工具或文档、决策点与取舍逻辑，可复盘、可验证。"
+      medium: "有行动描述但颗粒度一般（多为抽象动词），可追问关键动作、工具和决策依据。"
+      low: "行动空洞：多为动词堆砌而无具体对象，缺乏可操作细节，真实性存疑。"
+    probe_questions:
+      confirm:
+        - "你说的「推进了」，具体是怎么推进的？有没有一个你印象最深的具体动作？"
+        - "当时你用了什么工具？有没有一个文档或系统的名字你能记得？"
+        - "从发现问题到最终落地，你亲自主导的三个关键动作是什么？"
+        - "有没有一个你「拍板」或「拒绝」的时刻？当时怎么权衡的？"
+      challenge:
+        - "你说「我们讨论决定」，这中间你的意见是什么？你投了什么票？"
+        - "你描述的这几步，有没有一步是你其实没参与的？如果重来你会怎么改？"
+
+  # ═══════════════════════════════════════════════════
+  # R 维度 — 结果（Result）
+  # ═══════════════════════════════════════════════════
+
+  R:
+    label: "结果 Result"
+    core_signals:
+      - "候选人对结果有量化或可对比的描述"
+      - "归因逻辑清晰：哪些是自己的，哪些是团队或外部的"
+      - "能说明验证方式与时间窗口"
+    interview_behavior_hypothesis:
+      - "高 R 候选人倾向用数据结尾（提升了 X%，从 A 到 B）"
+      - "低 R 候选人用主观感受结尾（效果很好/还不错/比较满意）"
+      - "R 是检验候选人「自我认知」和「结果导向」的最终标尺"
+    positive_language_cues:
+      lexical:
+        strong_keywords:
+          # 量化词
+          - "提升了"
+          - "降低了"
+          - "增长"
+          - "减少了"
+          - "完成了"
+          - "达成了"
+          - "超额"
+          - "倍"
+          - "%"
+          - "万元"
+          - "NPS"
+          - "DAU"
+          - "MAU"
+          - "转化率"
+          - "留存率"
+          # 归因词
+          - "在我的推动下"
+          - "我的方案"
+          - "我的决策"
+          - "我主导"
+          - "我带团队"
+          - "独立完成"
+        weak_keywords:
+          - "效果很好"
+          - "还不错"
+          - "挺满意的"
+          - "有提升"
+          - "有所改善"
+          - "完成得很好"
+          - "比较成功"
+          - "还可以"
+        semantic_patterns:
+          - "最终达到了【量化指标】，其中【我的贡献】贡献了【比例或数值】"
+          - "上线后【N 天或周或月】，通过【什么数据】验证了效果"
+          - "从【基线】到【结果】，增长了或减少了【X】"
+          - "没有达到预期的是……（能说不足是高成熟的信号）"
+      syntax:
+        - "结果描述通常在回答最后 1-2 句"
+        - "有对比基准（之前/后来/最终）"
+        - "有归因明确词（因为我的/由我主导）"
+      discourse:
+        - "有量化指标（数字/比例/绝对值）"
+        - "有验证方式说明（用什么数据验证的）"
+        - "有对比基准（与原来/与目标/与行业水平）"
+        - "能主动说不足（说明经历过真实结果评估）"
+      pronouns:
+        supportive: ["我的", "我主导的", "在我任内"]
+    negative_or_counter_cues:
+      lexical:
+        - "泛化结果词加无数字"
+        - "全是感受词（不错/很好/满意）"
+        - "归因全是团队（我们/团队）"
+      syntax:
+        - "结果句很短（小于 10 字）"
+        - "结果描述无任何对比词"
+      discourse:
+        - "结果描述和行动之间无因果词"
+        - "结果没有验证方式（怎么知道有效的）"
+        - "结果说「很好」但无具体依据"
+    common_false_positive_sources:
+      - "把公司或团队整体结果说成个人结果"
+      - "结果描述来自公开数据而非个人经历（例：「公司业绩增长了 30%」）"
+      - "用比率替代绝对值（例：「提升了 3 倍」但没说原来多少）"
+      - "无法说明结果归因（说不清是自己的还是团队的）"
+    distinguishing_rules:
+      vs_A:
+        - "A 是过程，R 是终点；两者都强才构成有效 STAR"
+        - "R 强但 A 弱：可能结果属实但过程被美化了"
+        - "A 强但 R 弱：可能经历真实但候选人不善于表达成果"
+      vs_team_substitution_defect:
+        - "result_attribution_error 是 R 维度的严重失分；需区分团队结果中个人的贡献比例"
+    score_interpretation:
+      high: "结果量化清晰：有具体数字或比例，有验证方式，归因逻辑正确，真实性信号强。"
+      medium: "有结果描述但量化不足（如「提升了不少」），或归因部分含混，需追问具体数字和归因。"
+      low: "结果空洞或泛化：停留在「效果不错」等主观感受，缺乏可验证指标，难以核验真实性。"
+    probe_questions:
+      confirm:
+        - "你说的「提升了」，能给我一个具体数字吗？原来是多少，现在是多少？"
+        - "这个数据是谁统计的？什么口径？你自己核实过吗？"
+        - "上线后多久看到的这个效果？有没有回撤或波动？"
+      challenge:
+        - "这个成果里，有多少是归功于你的个人决策？你觉得比例大概是多少？"
+        - "有没有哪个结果是你「没做到位」的？或者说一个你觉得还可以做得更好的地方？"
+
+# ═══════════════════════════════════════════════════
+# 缺陷定义（Defects）
+# ═══════════════════════════════════════════════════
+
+defects:
+  fake_star:
+    label: "假 STAR（结构残缺）"
+    definition: |
+      STAR 四个维度中缺少三个以上，且无法从文本中推断出完整结构。
+      回答可能是一个泛泛的感悟、一段团队叙事、或一句口号。
+    # severity 由 star_analyzer.py 的 _detect_defects() 逻辑驱动，读 YAML 仅作展示参考
+    severity_rules:
+      high:
+        - "综合评分 < 0.4 且 R < 0.3"
+        - "全文无任何量化指标"
+      medium:
+        - "综合评分 0.4-0.5"
+        - "A 和 R 任一 < 0.35"
+      low:
+        - "综合评分 0.5-0.6"
+        - "仅有一个维度明显偏弱"
+    evidence_patterns:
+      - "综合评分偏低（< 0.45）"
+      - "S/T/A/R 中有 2 个以上维度 < 0.4"
+      - "全文字数 > 100 字但结构仍然残缺"
+      - "问答与 STAR 无关（例：纯理念阐述）"
+    related_dimensions: ["S", "T", "A", "R"]
+    authenticity_impact: "高：整体真实性存疑，建议重点追问"
+    probe_questions:
+      confirm:
+        - "你刚才讲的这件事里，最先卡住你的具体环节是什么？你个人做了哪三步把它推进下去？"
+        - "如果让你用一分钟只讲「你怎么做的」，去掉背景，你会按什么顺序讲？"
+        - "当时有没有一个你拍板的决定？备选方案是什么，你为什么选现在这个？"
+      challenge:
+        - "你能用「当时」「我」「具体」三个词开头各说一句话，还原这件事的真实经过吗？"
+        - "你有没有一件「不是特别成功」的 STAR 经历可以分享？"
+
+  team_substitution:
+    label: "团队代答"
+    definition: |
+      候选人大量使用「我们」叙事，个人贡献被稀释，难以判断其实际能力。
+      关键信号是「我」和「我们」比例失衡，且缺乏「必须是我」的理由。
+    severity_rules:
+      high:
+        - "'我们'出现 >= 5 次 且 '我'出现 <= 2 次"
+        - "self_vs_team_orientation 为 'team' 且 '我'/'我们' 比值 < 0.5"
+      medium:
+        - "'我们'出现 >= 3 次 且 '我'出现 < '我们'出现"
+      low:
+        - "叙事以团队为主但偶尔有个人亮点"
+    evidence_patterns:
+      - "'我们'出现次数显著多于'我'"
+      - "所有动词主语均为集体（例：「我们讨论」「我们决定」）"
+      - "提到成就时用「我们」开头（而非「我带领」）"
+    related_dimensions: ["T", "A"]
+    authenticity_impact: "中高：需通过追问剥离个人贡献"
+    probe_questions:
+      confirm:
+        - "这件事里，哪些部分必须是你来做？如果换成另一位同事，哪里会明显做不下去？"
+        - "请单独用「我」开头复述一遍：你个人交付了什么可验收产出？"
+        - "你在这件事里「拍板」或「否决」了哪个决定？当时怎么说服团队的？"
+      challenge:
+        - "我注意到你全程说的是「我们」，有没有一个决定是你一个人做的，后果也由你一个人担？"
+        - "如果给你团队里的另一位同事打分（1-10），你会给他打多少分？给你自己呢？差在哪里？"
+
+  situation_missing:
+    label: "情境缺失"
+    definition: |
+      回答缺乏时间或背景或约束条件，直接跳步到行动或结果。
+      常见于候选人对背景本身记忆模糊，或有意省略背景以隐藏决策前提。
+    severity_rules:
+      high:
+        - "全文无任何时间标记词 且 全文 < 80 字"
+        - "context_marker_density = 0 且 temporal 无匹配"
+      medium:
+        - "有 1 个时间词但无约束条件"
+        - "情境描述极简短（< 20 字）"
+      low:
+        - "有时间背景但描述模糊"
+        - "有背景但与行动结果不匹配"
+    evidence_patterns:
+      - "无时间或背景标记词"
+      - "第一句就是行动或结果，无铺垫"
+      - "约束条件全无（无预算或资源或时间或团队规模）"
+    related_dimensions: ["S"]
+    authenticity_impact: "中：情境缺失会增加其他维度可信度的质疑"
+    probe_questions:
+      confirm:
+        - "这件事大概发生在什么时间段？当时团队规模、预算或排期上有什么硬约束？"
+        - "当时业务或数据上，最刺眼的一个现象是什么？你怎么确认问题出在那儿？"
+        - "你接手这件事之前，它已经进展到什么程度了？是什么触发了你的介入？"
+      challenge:
+        - "你说的这件事，当时公司或部门的大环境是什么？你怎么知道那个背景的？"
+        - "如果换一个时间点（例：早半年或晚半年），这件事还能做成吗？为什么？"
+
+  result_attribution_error:
+    label: "结果归因存疑"
+    definition: |
+      候选人将团队或外部因素的结果说成个人功劳，或将客观条件好（风口或市场）归结为自己的决策。
+      也可能是反过来：把自己的真实贡献归功于团队（谦虚偏差）。
+    severity_rules:
+      high:
+        - "结果描述用「我」开头但实际是团队成果"
+        - "归因词中团队词密度 > 0.5 且个人词密度异常"
+        - "提到外部红利（市场好或风口）但全归因于自己"
+      medium:
+        - "个人贡献和团队贡献混淆"
+        - "team_result_attribution_ratio 与 result_attribution_self_ratio 均高"
+      low:
+        - "归因略有模糊但整体可接受"
+        - "有团队描述但个人贡献也明确"
+    evidence_patterns:
+      - "团队结果表述后紧跟个人成功归因"
+      - "无法区分哪些指标是个人贡献，哪些是团队贡献"
+      - "提到成功时用「在我的带领下」但团队规模 > 10 人"
+    related_dimensions: ["R", "T"]
+    authenticity_impact: "高：归因错误是最严重的自我评价失准信号"
+    probe_questions:
+      confirm:
+        - "这个成果里，哪些指标能明确归功于你的决策？团队其他角色分别贡献了什么？"
+        - "如果由你一人复盘，哪一条结果是你「没做到位」或依赖了他人补位的？"
+        - "当时有没有一个方向是你坚持但团队其他人反对的？后来验证了谁的判断更准确？"
+      challenge:
+        - "你说「我们一起完成了」，有没有一个数字是你一个人做的贡献能拆出来的？"
+        - "当时的市场或行业背景，对这个结果有没有影响？影响有多大？你是怎么处理这个变量的？"
+
+  action_vague:
+    label: "行动空洞"
+    definition: |
+      行动描述为动词堆砌，无具体对象（宾语）、工具、步骤或决策依据。
+      「我推进了」「我优化了」「我完善了」等表述看似有动作，实则空洞。
+    severity_rules:
+      high:
+        - "连续 >= 3 个抽象动词堆砌"
+        - "强行动词数量 = 0"
+        - "step_connector_ratio = 0 且 tool_method 词密度 = 0"
+      medium:
+        - "有 1-2 个强行动词但无宾语"
+        - "action_verbs_ratio 高但宾语匹配数极少"
+      low:
+        - "行动有步骤但步骤间跳跃"
+        - "有行动但工具或方法不明"
+    evidence_patterns:
+      - "发现 N 处连续动词堆砌"
+      - "行动描述无宾语（推进了 vs 推进了什么）"
+      - "全文无任何具体工具或文档名"
+    related_dimensions: ["A"]
+    authenticity_impact: "中高：行动空洞是虚假经历的重要特征之一"
+    probe_questions:
+      confirm:
+        - "从发现问题到落地，你亲自经手的三个关键动作分别是什么？"
+        - "当时用过什么工具、系统或文档？谁和你对齐过接口或依赖？"
+        - "你说的「优化了」，具体优化了什么？原来的方案是什么，你改成了什么？"
+      challenge:
+        - "我注意到你说了很多「推进」「协调」，能不能告诉我其中一件事你「推不动」了？当时怎么办的？"
+        - "如果让你把刚才说的重做一遍，有哪一步你会做得不一样？"
+
+  result_abstract:
+    label: "结果泛化"
+    definition: |
+      结果描述停留在主观感受层面（效果不错或很满意），无任何可量化或可验证的指标。
+      常见于候选人真实经历过结果但无法量化，或刻意模糊以避免追问。
+    severity_rules:
+      high:
+        - "全文无任何数字词 且 vague_result_words_ratio > 0"
+      medium:
+        - "有数字但极简（例：只说「提升了不少」）"
+        - "有结果词但无验证方式"
+      low:
+        - "有泛化描述但也有一句量化"
+        - "结果有对比但无具体数字"
+    evidence_patterns:
+      - "使用泛化结果词"
+      - "全文无数字词"
+      - "无法说明验证方式"
+    related_dimensions: ["R"]
+    authenticity_impact: "中：泛化的结果难以核验，需追问具体数字"
+    probe_questions:
+      confirm:
+        - "能否给一个你记得住的数字：提升或下降了多少比例或多少绝对值？谁口径下统计的？"
+        - "上线或落地后，你们用什么数据在多长时间内确认有效？"
+        - "这件事做完之后，你直属上级或客户或老板给了什么样的反馈？有没有具体说法？"
+      challenge:
+        - "如果让你给这件事打一个 1-10 分，你会打几分？差距在哪里？"
+        - "你说「效果不错」，不错是指比什么好？你的竞品或同事做得怎么样？"
+
+# ═══════════════════════════════════════════════════
+# 追问模板（Followup Probes）
+# 每种缺陷 5 条，按出现顺序轮换；
+# 同文案在 star_analyzer.py 的 _merge_duplicate_star_followups() 中去重合并
+# ═══════════════════════════════════════════════════
+
+followup_probes:
+  fake_star:
+    - question: "你刚才讲的这件事里，最先卡住你的具体环节是什么？你个人做了哪三步把它推进下去？"
+      purpose: "补全行动链，验证是否真有执行细节而非套话。"
+    - question: "如果让你用一分钟只讲「你怎么做的」，去掉背景，你会按什么顺序讲？"
+      purpose: "强迫压缩叙事，暴露是否掌握真实过程。"
+    - question: "当时有没有一个你拍板的决定？备选方案是什么，你为什么选现在这个？"
+      purpose: "检验决策点与个人主导性。"
+    - question: "你说「我们」，其中「我」具体做了什么？你能单独用三句话描述你个人做的事情吗？"
+      purpose: "从团队叙事中剥离个人贡献。"
+    - question: "这件事做完之后，你直属领导怎么评价你的？你能复述一个他原话吗？"
+      purpose: "用第三方反馈锚定结果真实性。"
+
+  team_substitution:
+    - question: "这件事里，哪些部分必须是你来做？如果换成另一位同事，哪里会明显做不下去？"
+      purpose: "从团队叙事中剥离个人不可替代性。"
+    - question: "请单独用「我」开头复述一遍：你个人交付了什么可验收产出？"
+      purpose: "强制第一人称，区分个人产出与集体成果。"
+    - question: "你在这件事里「否决」过或「坚持」过一个方案吗？当时团队其他人什么反应？"
+      purpose: "检验个人立场与决策主导性。"
+    - question: "如果给你团队里的任意一位成员打分（1-10），你给自己打几分？与他们的差距在哪里？"
+      purpose: "通过自我评分校准个人贡献比例。"
+    - question: "这件事里，你个人做的和团队一起做的，大概各占多少比例？有没有一个数字？"
+      purpose: "强制量化个人贡献比例。"
+
+  situation_missing:
+    - question: "这件事大概发生在什么时间段？当时团队规模、预算或排期上有什么硬约束？"
+      purpose: "锚定情境，判断背景是否自洽。"
+    - question: "当时业务或数据上，最刺眼的一个现象是什么？你怎么确认问题出在那儿？"
+      purpose: "从现象到问题的因果，补全情境。"
+    - question: "你接手这件事之前，它已经进展到什么程度了？是什么触发了你的介入？"
+      purpose: "补充背景自洽性，确认候选人是中途介入还是全程参与。"
+    - question: "当时公司的整体战略或部门目标是什么？这件事和它们有什么关系？"
+      purpose: "从宏观背景到个人任务，补全 S 到 T 的链条。"
+    - question: "这件事是在什么类型的公司或行业背景下做的？你还记得当时的营收规模或团队人数吗？"
+      purpose: "用具体规模数字锚定情境真实性。"
+
+  result_attribution_error:
+    - question: "这个成果里，哪些指标能明确归功于你的决策？团队其他角色分别贡献了什么？"
+      purpose: "校准个人与团队对结果的贡献比例。"
+    - question: "如果由你一人复盘，哪一条结果是你「没做到位」或依赖了他人补位的？"
+      purpose: "反向检验归因是否过度美化。"
+    - question: "当时的市场或行业背景，对这个结果有没有影响？你是怎么把这个变量剥离出来的？"
+      purpose: "追问外部归因是否合理。"
+    - question: "这件事做完之后，你自己觉得最得意的一个决策是什么？有没有一个你重来会改的决定？"
+      purpose: "用「失败假设」检验决策真实归因。"
+    - question: "你同事或上级事后有没有给你过反馈？有没有一句话是你记得很清楚的？"
+      purpose: "用第三方反馈锚定归因准确性。"
+
+  result_abstract:
+    - question: "能否给一个你记得住的数字：提升或下降了多少比例或多少绝对值？谁口径下统计的？"
+      purpose: "把主观「不错」落到可验证指标。"
+    - question: "上线或落地后，你们用什么数据在多长时间内确认有效？"
+      purpose: "追问验证方式与观测窗口。"
+    - question: "这件事做完之后，你的上级或客户或用户给了什么反馈？有没有一句你印象最深的话？"
+      purpose: "用定性反馈补充定量缺失。"
+    - question: "这件事和同期类似项目比，结果是更好还是更差？你怎么评价自己在其中的贡献？"
+      purpose: "通过对比锚定结果的意义。"
+    - question: "如果给这件事的结果打 1-10 分，你打几分？差距在哪里？"
+      purpose: "强制主观量化，为追问做准备。"
+
+  action_vague:
+    - question: "从发现问题到落地，你亲自经手的三个关键动作分别是什么？"
+      purpose: "拆解空洞动词，要求逐步展开。"
+    - question: "当时用过什么工具、系统或文档？谁和你对齐过接口或依赖？"
+      purpose: "用工具与协作对象锚定真实执行。"
+    - question: "你说的「推进了」，具体推进了什么？原来是什么状态，推进后又是什么状态？"
+      purpose: "要求宾语，补全动词的内容对象。"
+    - question: "这件事里，有没有一步是你推不动的？后来怎么解决的？"
+      purpose: "用困难时刻检验是否真的有行动细节。"
+    - question: "如果让你把刚才说的重来一遍，有哪一步你会做得不一样？具体怎么改？"
+      purpose: "反向追问，暴露是否掌握真实过程。"
+
+# ═══════════════════════════════════════════════════
+# 缺陷标签（前端展示用）
+# ═══════════════════════════════════════════════════
+
+defect_labels:
+  fake_star: "假 STAR（结构残缺）"
+  team_substitution: "团队代答"
+  situation_missing: "情境缺失"
+  result_attribution_error: "结果归因存疑"
+  action_vague: "行动空洞"
+  result_abstract: "结果泛化"

@@ -1,0 +1,266 @@
+version: "1.0"
+purpose: >
+  建立岗位胜任力与 DISC 行为维度之间的映射，供分析引擎判断候选人的行为
+  模式是否符合目标岗位的核心要求，并生成有针对性的岗位适配性评语。
+
+# ═══════════════════════════════════════════════════
+# DISC 维度 → 岗位胜任力指标
+# ═══════════════════════════════════════════════════
+disc_to_competency:
+  D:
+    high_label: "执行力 / 推动力"
+    medium_label: "有推动意愿但证据不强"
+    indicators:
+      high:
+        - "主动发起项目或有明确的个人推动证据"
+        - "在阻力面前不退缩，有拍板行为"
+        - "结果导向，有明确目标达成"
+        - "自我驱动，不等指令"
+        - "主动承担责任"
+      medium:
+        - "有一定推动行为但未独立主导"
+        - "结果导向但不清晰"
+      low:
+        - "回避冲突，常说'看情况'"
+        - "被动等待指令"
+        - "缺乏明确的个人结果"
+
+  I:
+    high_label: "影响力 / 沟通力"
+    medium_label: "有沟通意愿但说服力不足"
+    indicators:
+      high:
+        - "能清晰说服他人接受方案"
+        - "跨团队协作有具体过程而非仅结果"
+        - "对他人产生影响的具体证据"
+        - "建立并维护客户关系的证据"
+        - "有谈判或推动决策的经历"
+      medium:
+        - "有协作行为但过程描述不清晰"
+        - "被动响应多，主动推动少"
+      low:
+        - "表达单一视角，缺乏与他人互动的描述"
+        - "无任何说服或影响他人的证据"
+        - "回避人际场景"
+
+  S:
+    high_label: "协作力 / 稳定性"
+    medium_label: "协作意识存在但不够稳定"
+    indicators:
+      high:
+        - "长期维护关系或在团队中稳定支撑"
+        - "协调多方利益的证据"
+        - "关注他人需求的表述"
+        - "长期项目持续跟进的证据"
+      medium:
+        - "有协作行为但缺乏持续性"
+        - "被要求协作多，主动协作少"
+      low:
+        - "缺乏团队协作细节"
+        - "不关注或回避协作场景"
+        - "过度强调个人能力"
+
+  C:
+    high_label: "专业力 / 严谨性"
+    medium_label: "有严谨意识但系统性不够"
+    indicators:
+      high:
+        - "有质量标准、设计规范或流程意识"
+        - "有验证机制或风险预案"
+        - "有量化标准和结果校验"
+        - "技术深度有体系支撑"
+        - "有架构设计/方案选型讨论"
+      medium:
+        - "有一定质量意识但未建立系统"
+        - "验证行为不完整"
+      low:
+        - "缺乏量化意识"
+        - "没有质量/标准/验证相关的描述"
+        - "做事凭直觉无验证"
+
+# ═══════════════════════════════════════════════════
+# 岗位胜任力雷达
+# key: job_family_id（与 job_hint 匹配的核心词）
+# ═══════════════════════════════════════════════════
+job_families:
+  # ─── 技术类 ───────────────────────────────────────
+  backend:
+    label: "后端工程师"
+    alias: ["后端", "服务端", "Java", "Python", "Go", "后端开发", "服务端开发"]
+    must_have: ["C"]
+    important: ["D"]
+    nice_to_have: ["I", "S"]
+    # 权重：总分100，C维权重最大
+    competency_weight: {D: 0.25, I: 0.10, S: 0.15, C: 0.50}
+    # DISC 各维度在岗位上的及格线（满分100）
+    dimension_threshold: {D: 30, I: 20, S: 30, C: 60}
+    description: "核心考察技术深度、系统思维、质量意识和Owner意识"
+
+  frontend:
+    label: "前端工程师"
+    alias: ["前端", "FE", "前端开发", "H5"]
+    must_have: ["C"]
+    important: ["I"]
+    nice_to_have: ["D", "S"]
+    competency_weight: {D: 0.20, I: 0.25, S: 0.15, C: 0.40}
+    dimension_threshold: {D: 25, I: 35, S: 30, C: 55}
+    description: "核心考察工程意识、用户体验意识和协作沟通能力"
+
+  data_engineer:
+    label: "数据工程师 / 分析师"
+    alias: ["数据", "BI", "数据分析", "数据开发", "DA", "算法"]
+    must_have: ["C"]
+    important: ["D", "I"]
+    nice_to_have: ["S"]
+    competency_weight: {D: 0.20, I: 0.20, S: 0.10, C: 0.50}
+    dimension_threshold: {D: 25, I: 30, S: 25, C: 60}
+    description: "核心考察数据准确性、技术深度和分析思维"
+
+  devops:
+    label: "DevOps / 基础架构"
+    alias: ["运维", "SRE", "基础架构", "DBA", "平台"]
+    must_have: ["C"]
+    important: ["D"]
+    nice_to_have: ["S"]
+    competency_weight: {D: 0.25, I: 0.10, S: 0.15, C: 0.50}
+    dimension_threshold: {D: 30, I: 15, S: 30, C: 65}
+    description: "核心考察稳定性意识、系统可靠性和自动化能力"
+
+  # ─── 产品 / 项目类 ────────────────────────────────
+  product_manager:
+    label: "产品经理"
+    alias: ["产品", "PM", "产品经理", "策划"]
+    must_have: ["D", "I"]
+    important: ["C"]
+    nice_to_have: ["S"]
+    competency_weight: {D: 0.30, I: 0.30, S: 0.15, C: 0.25}
+    dimension_threshold: {D: 50, I: 45, S: 30, C: 40}
+    description: "核心考察推动力、跨部门影响力和数据决策能力"
+
+  product_owner:
+    label: "项目经理 / 项目负责人"
+    alias: ["项目", "PM", "项目经理", "项目负责人", "项目协调"]
+    must_have: ["D", "S"]
+    important: ["I"]
+    nice_to_have: ["C"]
+    competency_weight: {D: 0.30, I: 0.20, S: 0.30, C: 0.20}
+    dimension_threshold: {D: 50, I: 35, S: 50, C: 35}
+    description: "核心考察多方协调、推动交付和风险管理能力"
+
+  # ─── 运营 / 销售类 ───────────────────────────────
+  operations:
+    label: "运营"
+    alias: ["运营", "增长", "内容运营", "用户运营", "活动运营", "电商运营"]
+    must_have: ["I", "S"]
+    important: ["D", "C"]
+    nice_to_have: []
+    competency_weight: {D: 0.20, I: 0.30, S: 0.30, C: 0.20}
+    dimension_threshold: {D: 30, I: 45, S: 45, C: 35}
+    description: "核心考察数据分析、用户洞察和跨团队协作能力"
+
+  sales:
+    label: "销售 / BD"
+    alias: ["销售", "BD", "客户经理", "Account", "KA", "大客户"]
+    must_have: ["D", "I"]
+    important: ["S"]
+    nice_to_have: ["C"]
+    competency_weight: {D: 0.35, I: 0.35, S: 0.20, C: 0.10}
+    dimension_threshold: {D: 55, I: 55, S: 30, C: 20}
+    description: "核心考察拿单能力、客户关系建立和谈判影响力"
+
+  customer_success:
+    label: "客户成功 / 客服"
+    alias: ["客服", "客户成功", "CSM", "客户运营", "售后"]
+    must_have: ["S", "I"]
+    important: ["C"]
+    nice_to_have: ["D"]
+    competency_weight: {D: 0.15, I: 0.30, S: 0.35, C: 0.20}
+    dimension_threshold: {D: 25, I: 40, S: 55, C: 35}
+    description: "核心考察客户关系维护、问题解决和满意度管理"
+
+  # ─── 管理 / 通用类 ────────────────────────────────
+  manager:
+    label: "管理岗位"
+    alias: ["管理", "总监", "经理", "Leader", "组长", "主管", "负责人"]
+    must_have: ["D", "S"]
+    important: ["I"]
+    nice_to_have: ["C"]
+    competency_weight: {D: 0.35, I: 0.25, S: 0.25, C: 0.15}
+    dimension_threshold: {D: 55, I: 40, S: 50, C: 30}
+    description: "核心考察团队领导、战略推动和多维度协调能力"
+
+  # ─── 默认 ────────────────────────────────────────
+  default:
+    label: "通用岗位"
+    alias: []
+    must_have: ["D"]
+    important: ["I", "S", "C"]
+    nice_to_have: []
+    competency_weight: {D: 0.30, I: 0.25, S: 0.25, C: 0.20}
+    dimension_threshold: {D: 40, I: 35, S: 35, C: 35}
+    description: "基于通用胜任力模型评估"
+
+# ═══════════════════════════════════════════════════
+# 岗位适配性评价模板
+# ═══════════════════════════════════════════════════
+fit_assessment_templates:
+  # 各岗位 {fit_level} 可用值: strong_fit / moderate_fit / weak_fit / unknown
+  strong_fit:
+    template: "行为模式与{job_label}的核心要求匹配度高，{strong_signal}表现突出。"
+    strong_signal_fields:
+      backend: "技术深度、Owner意识和系统思维"
+      frontend: "工程意识、用户体验敏感度和协作沟通"
+      data_engineer: "数据严谨性、技术深度和分析体系"
+      devops: "稳定性意识、自动化能力和系统可靠性"
+      product_manager: "推动力、跨部门影响力和数据决策"
+      product_owner: "多方协调、推动交付和风险管理"
+      operations: "数据分析能力、增长思维和跨团队协作"
+      sales: "拿单能力、客户关系和谈判影响力"
+      customer_success: "客户关系维护、问题解决和用户共情"
+      manager: "团队领导、战略推动和多维度协调"
+      default: "综合素质和目标导向"
+
+  moderate_fit:
+    template: "基本符合{job_label}要求，{moderate_signal}表现尚可，{gap_signal}需关注。"
+    moderate_signal_fields:
+      backend: "有一定的技术基础"
+      frontend: "有用户体验意识"
+      data_engineer: "有数据分析能力"
+      devops: "有稳定性意识"
+      product_manager: "有推动意愿"
+      product_owner: "有协调能力"
+      operations: "有协作意识"
+      sales: "有一定影响力"
+      customer_success: "有服务意识"
+      manager: "有管理潜力"
+      default: "有基础能力"
+    gap_signal_fields:
+      backend: "技术深度、系统思维或量化意识"
+      frontend: "工程意识或协作沟通"
+      data_engineer: "数据严谨性或技术深度"
+      devops: "稳定性意识或自动化能力"
+      product_manager: "推动力、跨部门影响力或数据决策"
+      product_owner: "推动交付、多方协调或风险管理"
+      operations: "数据意识或增长思维"
+      sales: "拿单能力、客户洞察或谈判影响力"
+      customer_success: "长期关系维护或问题解决能力"
+      manager: "团队领导力或战略推动"
+      default: "关键胜任力"
+
+  weak_fit:
+    template: "与{job_label}的匹配度较弱，{gap_signal}表现明显不足，建议进一步考察。"
+    gap_signal_fields:
+      backend: "技术深度、系统思维或C维度（严谨性）"
+      frontend: "工程意识或用户体验关注"
+      data_engineer: "数据严谨性或技术深度"
+      devops: "稳定性意识或自动化能力"
+      product_manager: "推动力（D）或跨部门影响力（I）"
+      product_owner: "推动交付（D）或多方协调（S）"
+      operations: "数据意识（C）或增长思维"
+      sales: "D/I维度得分偏低，缺乏主动推动和影响力"
+      customer_success: "S维度得分偏低，缺乏客户关系维护意愿"
+      manager: "D/S维度偏低，缺乏领导推动力"
+      default: "DISC核心维度"
+
+  unknown:
+    template: "样本信息不足以评估与{job_label}的匹配度，建议补充STAR行为面试。"

@@ -24,7 +24,19 @@ class WorkflowContext:
     disc_analysis: dict[str, Any] = field(default_factory=dict)
     analysis_output: dict[str, Any] | None = None
     analysis_error: str | None = None
+    # 人格分析新增字段
+    bigfive_result: dict[str, Any] | None = None
+    enneagram_result: dict[str, Any] | None = None
+    personality_mapping_result: dict[str, Any] | None = None
+    llm_bigfive_output: dict[str, Any] | None = None
+    llm_enneagram_output: dict[str, Any] | None = None
+    # STAR 分析字段
+    star_result: dict[str, Any] | None = None
     stage_trace: list[dict[str, Any]] = field(default_factory=list)
+    # 行业上下文（知识增强用）
+    industry_context: dict[str, Any] = field(default_factory=dict)
+    # 行业知识库（注入特征提取）
+    industry_knowledge: dict[str, Any] = field(default_factory=dict)
 
     def mark_stage(self, name: str, status: str, detail: str = "") -> None:
         self.stage_trace.append({"stage": name, "status": status, "detail": detail})

@@ -103,6 +103,40 @@ const DEFAULT_REPORT = {
     ],
     feature_highlights: ["\u6709\u4e00\u5b9a\u7ed3\u6784\u611f", "\u4e3b\u8981\u98ce\u9669\u662f\u4fe1\u606f\u5bc6\u5ea6\u548c\u7ed3\u679c\u8bc1\u660e\u4e0d\u8db3"],
   },
+  star_analysis: {
+    dimension_scores: {
+      S: { score: 62, band: "medium", interpretation: "\u60c5\u5883\u6709\u4e00\u5b9a\u80cc\u666f\uff0c\u4f46\u7f3a\u5c11\u5177\u4f53\u7ea6\u675f\u6761\u4ef6\u548c\u56f4\u5883\u8bf4\u660e\u3002" },
+      T: { score: 35, band: "low", interpretation: "\u89d2\u8272\u5b9a\u4f4d\u6a21\u7cca\uff0c\u201c\u6211\u201d\u548c\u201c\u6211\u4eec\u201d\u6df7\u6dc6\uff0c\u4efb\u52a1\u8303\u56f4\u4e0d\u6e05\u3002" },
+      A: { score: 28, band: "low", interpretation: "\u884c\u52a8\u591f\u63cf\u8ff0\u6d89\u5c3d\uff0c\u4f46\u7f3a\u5c11\u5177\u4f53\u6b65\u9aa4\u548c\u5de5\u5177\u65b9\u6cd5\u8bf4\u660e\u3002" },
+      R: { score: 40, band: "medium", interpretation: "\u6709\u7ed3\u679c\u8c08\u53d6\uff0c\u4f46\u6ca1\u6709\u91cf\u5316\u6307\u6807\u548c\u5bf9\u6bd4\uff0c\u4ec5\u4f5c\u4e3a\u53c2\u8003\u3002" },
+    },
+    overall_score: 39.05,
+    defects: [
+      { defect_id: "action_vague", severity: "medium", label: "\u884c\u52a8\u7a7a\u6d1e", reason: "\u884c\u52a8\u591f\u63cf\u8ff0\u4f46\u7a76\u6784\u67b6\u4e0d\u6e05\uff0c\u7f3a\u5c11\u5177\u4f53\u6b65\u9aa4\u548c\u5de5\u5177\u3002" },
+      { defect_id: "situation_missing", severity: "low", label: "\u60c5\u5883\u7f3a\u5931", reason: "\u6709\u65f6\u95f4\u6807\u8bb0\u4f46\u65e0\u7ea6\u675f\u6761\u4ef6\u548c\u56f4\u5883\u8bf4\u660e\u3002" },
+    ],
+    authenticity_summary: { overall: 39.05, confidence: "medium", confidence_notes: ["\u7f3a\u9677\u4e0e\u5f3a\u4fe1\u53f7\u5e76\u5b58\uff0c\u6837\u672c\u91cf\u4e0d\u8db3\u4ee5\u5f62\u6210\u5f3a\u7ed3\u8bba"], risk_signals: [] },
+    star_disc_auxiliary_signals: ["STAR-\u9ad8\u5206\u4f46\u60c5\u5883\u504f\u5f31\uff0c\u5efa\u8bae\u5728DISC\u5206\u6790\u4e2d\u8c28\u614e\u89c2\u5bdf\u3002"],
+    followup_questions: [],
+    defect_interactions: [],
+    meta: { sample_words: 118, turn_count: 2, star_structure_score: 0.46 },
+  },
+  bigfive_analysis: {
+    scores: { openness: 0.72, conscientiousness: 0.65, extraversion: 0.38, agreeableness: 0.55, neuroticism: 0.42 },
+    ranking: ["openness", "conscientiousness", "agreeableness", "neuroticism", "extraversion"],
+    behavioral_hypotheses: [
+      { hypothesis: "\u5019\u9009\u4eba\u5f00\u653e\u6027\u9ad8\uff0c\u611f\u5199\u80fd\u529b\u5f3a\uff0c\u559c\u6b22\u63a5\u89e6\u65b0\u4e8b\u7269\u3002", strength: "\u4e2d", basis: ["\u63d0\u5230\u65b0\u6280\u672f\uff0c\u63a5\u89e6\u4e86\u7f13\u5b58\u3001\u76d1\u63a7\u7b49\u65b0\u65b9\u6cd5"] },
+      { hypothesis: "\u8d28\u7f1d\u6027\u5c3d\u8f83\u9ad8\uff0c\u6709\u7ec6\u81ea\u548c\u8ba1\u5212\u6027\uff0c\u4f46\u7ec6\u8282\u6267\u884c\u529b\u5c1a\u5f85\u9a8c\u8bc1\u3002", strength: "\u4e2d", basis: ["\u63d0\u5230\u4e86\u8ba1\u5212\u6027\u63aa\u65bd\uff0c\u4f46\u672a\u8bc1\u660e\u6267\u884c\u7ed3\u679c"] },
+    ],
+  },
+  enneagram_analysis: {
+    top_types: [
+      { type: "5", score: 71, description: "\u89c2\u5bdf\u8005\u2014\u2014\u559c\u6b22\u63a2\u7d22\u3001\u6570\u636e\u5206\u6790\uff0c\u5f80\u5f80\u6709\u6df1\u5ea6\u7684\u4e13\u4e1a\u80fd\u529b\u3002" },
+      { type: "1", score: 58, description: "\u6539\u5584\u8005\u2014\u2014\u9ad8\u6807\u51c6\u3001\u8c28\u614e\u6027\uff0c\u6ce8\u91cd\u89c4\u5219\u548c\u7ec6\u8282\u6267\u884c\u3002" },
+      { type: "3", score: 44, description: "\u8bbe\u8ba1\u8005\u2014\u2014\u8fdb\u53d6\u5fc3\uff0c\u6ce8\u91cd\u6210\u5c31\u3002" },
+    ],
+    cross_model_notes: ["\u4e09\u578b\u516c\u5f00\u80fd\u529b\u4e0eDICS\u7c7b\u578b\u8868\u73b0\u57fa\u672c\u4e00\u81f4\uff0c\u5efa\u8bae\u5173\u6ce8\u5173\u6ce8\u6280\u672f\u6df1\u5ea6\u548c\u7ed3\u679c\u5f52\u56fe\u80fd\u529b\u3002"],
+  },
   llm_analysis: null,
   llm_status: { enabled: false, parser_model: "gpt-5-mini", analysis_model: "gpt-5.4", parser_error: null, analysis_error: null, parser_output_available: false },
   workflow: {
@@ -111,6 +145,7 @@ const DEFAULT_REPORT = {
     stage_trace: [
       { stage: "parse_stage", status: "completed", detail: "\u5df2\u62c6\u5206\u4e3a 2 \u8f6e\u95ee\u7b54" },
       { stage: "feature_stage", status: "completed", detail: "\u5df2\u63d0\u53d6\u539f\u5b50\u7279\u5f81" },
+      { stage: "star_stage", status: "completed", detail: "\u5df2\u5b8c\u6210 STAR \u7ed3\u6784\u5206\u6790" },
       { stage: "disc_evidence_stage", status: "completed", detail: "\u5df2\u6784\u5efa D/I/S/C \u8bc1\u636e\u5305" },
       { stage: "masking_stage", status: "completed", detail: "\u8bc6\u522b\u5230 2 \u4e2a\u5173\u952e\u7f3a\u9677" },
       { stage: "decision_stage", status: "completed", detail: "\u5df2\u751f\u6210\u51b3\u7b56\u8f7d\u8377" },
@@ -156,6 +191,250 @@ function renderDiscBars(analysis) {
   return rankDimensions(analysis.scores).map(({ key, value }) => `<div class="metric-bar"><div class="metric-bar-head"><span>${DISC_META[key]?.label || key}</span><strong>${value}</strong></div><div class="bar-track"><div class="bar-fill ${DISC_META[key]?.className || ""}" style="width:${Math.max(8, value)}%"></div></div></div>`).join("");
 }
 
+const BIGFIVE_LABELS = {
+  openness: { label: "\u5f00\u653e", desc: "\u654f\u611f\u3001\u597d\u5947\u5fc3" },
+  conscientiousness: { label: "\u5c3d\u8d23", desc: "\u8c28\u614e\u3001\u81ea\u5f8b" },
+  extraversion: { label: "\u5916\u5411", desc: "\u6d3b\u6cfc\u3001\u4e92\u52a8" },
+  agreeableness: { label: "\u5b9c\u4eba", desc: "\u4fe1\u4efb\u3001\u5408\u4f5c" },
+  neuroticism: { label: "\u795e\u7ecf\u8d28", desc: "\u60c5\u7eea\u3001\u62c5\u5fe7" },
+};
+
+/** \u672c\u5730 bigfive_engine \u7528 scores{O,C,E,A,N}\uff1bLLM \u8fd4\u56de bigfive_scores\u3002\u7edf\u4e00\u4e3a UI \u957f\u952e\u540d + 0\u20131\u3002 */
+function normalizeBigFiveForUi(bf) {
+  if (!bf) return bf;
+  const s = bf.scores ?? bf.bigfive_scores;
+  if (!s) return bf;
+  const letterMap = { O: "openness", C: "conscientiousness", E: "extraversion", A: "agreeableness", N: "neuroticism" };
+  if (s.O !== undefined || s.C !== undefined || s.E !== undefined || s.A !== undefined || s.N !== undefined) {
+    const next = { ...bf, scores: {} };
+    for (const [letter, name] of Object.entries(letterMap)) {
+      const v = Number(s[letter]);
+      if (Number.isFinite(v)) next.scores[name] = v > 1 ? v / 100 : v;
+    }
+    return next;
+  }
+  const longKeys = Object.values(letterMap);
+  if (longKeys.some((k) => s[k] !== undefined && Number(s[k]) > 1)) {
+    const next = { ...bf, scores: { ...s } };
+    for (const k of longKeys) {
+      const v = Number(next.scores[k]);
+      if (Number.isFinite(v) && v > 1) next.scores[k] = v / 100;
+    }
+    return next;
+  }
+  return { ...bf, scores: s };
+}
+
+function pickBigFiveForSecondary(report) {
+  const local = report.bigfive_analysis;
+  const llm = report.llm_bigfive_analysis;
+  if (llm && llm.bigfive_scores && typeof llm.bigfive_scores === "object") {
+    return normalizeBigFiveForUi({
+      ...local,
+      scores: llm.bigfive_scores,
+      behavioral_hypotheses: local?.behavioral_hypotheses,
+    });
+  }
+  return normalizeBigFiveForUi(local);
+}
+
+/** \u672c\u5730/LMM \u4e5d\u578b\u7528 top_two_types\uff1b\u65e7\u6f14\u793a\u6570\u636e\u7528 top_types\uff08type / score\uff09\u3002 */
+function normalizeEnneagramForUi(en) {
+  if (!en) return en;
+  if (en.top_types && en.top_types.length) return en;
+  const two = en.top_two_types;
+  if (two && two.length) {
+    return {
+      ...en,
+      top_types: two.map((t) => ({
+        type: String(t.type_number ?? t.type ?? ""),
+        score: t.raw_score ?? t.score,
+        description: (Array.isArray(t.key_evidence) ? t.key_evidence.join("\uff1b") : "") || t.label || "",
+      })),
+    };
+  }
+  const p = en.primary_type;
+  if (p && p.type_number != null && p.type_number !== "") {
+    const types = [
+      {
+        type: String(p.type_number),
+        score: p.raw_score,
+        description: p.interpretation || p.label || "",
+      },
+    ];
+    const s = en.secondary_type;
+    if (s && s.type_number != null && s.type_number !== "" && String(s.type_number) !== String(p.type_number)) {
+      types.push({
+        type: String(s.type_number),
+        score: s.raw_score,
+        description: s.interpretation || s.label || "",
+      });
+    }
+    return { ...en, top_types: types };
+  }
+  return en;
+}
+
+function pickEnneagramForSecondary(report) {
+  const local = report.enneagram_analysis;
+  const llm = report.llm_enneagram_analysis;
+  if (llm && typeof llm === "object" && (llm.top_two_types?.length || llm.primary_type)) {
+    return normalizeEnneagramForUi({
+      ...local,
+      ...llm,
+      cross_model_notes: local?.cross_model_notes ?? llm.cross_model_notes,
+    });
+  }
+  return normalizeEnneagramForUi(local);
+}
+
+/** \u5408\u5e76 API / \u7f13\u5b58\u5f02\u5e38\u7684 dimension_scores\uff1b\u7f3a\u5931\u65f6\u7528 atomic_features \u7684 star_*_score \u5c55\u793a\u3002 */
+function normalizeStarForSecondary(report) {
+  const star = report.star_analysis;
+  const rawDs =
+    star && typeof star === "object" && star.dimension_scores && typeof star.dimension_scores === "object"
+      ? star.dimension_scores
+      : {};
+  const letters = ["S", "T", "A", "R"];
+  const featKeys = { S: "star_s_score", T: "star_t_score", A: "star_a_score", R: "star_r_score" };
+  const normalizedDs = {};
+  for (const dim of letters) {
+    const cell = rawDs[dim] ?? rawDs[dim.toLowerCase()];
+    if (cell && typeof cell === "object") {
+      const sc = Number(cell.score);
+      if (Number.isFinite(sc)) {
+        normalizedDs[dim] = {
+          score: sc,
+          band: cell.band || (sc >= 75 ? "high" : sc >= 50 ? "medium" : "low"),
+          interpretation: String(cell.interpretation || ""),
+        };
+      }
+    }
+  }
+  const f = report.atomic_features || {};
+  for (const dim of letters) {
+    if (normalizedDs[dim]) continue;
+    const raw = Number(f[featKeys[dim]]);
+    if (!Number.isFinite(raw)) continue;
+    const pct = raw <= 1 ? Math.round(raw * 100) : Math.round(raw);
+    const band = pct >= 75 ? "high" : pct >= 50 ? "medium" : "low";
+    normalizedDs[dim] = {
+      score: pct,
+      band,
+      interpretation: "\u6839\u636e\u539f\u5b50\u7279\u5f81\u5c55\u793a",
+    };
+  }
+  if (Object.keys(normalizedDs).length === 0) return null;
+  const base = star && typeof star === "object" ? star : {};
+  return {
+    ...base,
+    dimension_scores: normalizedDs,
+    defects: Array.isArray(base.defects) ? base.defects : [],
+    authenticity_summary: base.authenticity_summary || {
+      confidence: "medium",
+      overall: Number.isFinite(Number(f.star_structure_score)) ? Math.round(Number(f.star_structure_score) * 100) : undefined,
+    },
+  };
+}
+
+const ENNEAGRAM_LABELS = {
+  "1": { label: "1\u53f7", name: "\u6539\u5584\u8005", desc: "\u539f\u5219\u3001\u8d23\u4efb\u5fc3" },
+  "2": { label: "2\u53f7", name: "\u52a9\u4eba\u8005", desc: "\u70ed\u60c5\u3001\u8983\u8c31" },
+  "3": { label: "3\u53f7", name: "\u8bbe\u8ba1\u8005", desc: "\u8fdb\u53d6\u3001\u6210\u5c31\u5fc3" },
+  "4": { label: "4\u53f7", name: "\u7406\u60f3\u8005", desc: "\u60c5\u611f\u3001\u72ec\u7279" },
+  "5": { label: "5\u53f7", name: "\u63a2\u7d22\u8005", desc: "\u89c2\u5bdf\u3001\u77e5\u8bc6" },
+  "6": { label: "6\u53f7", name: "\u5b88\u671b\u8005", desc: "\u5ba1\u614e\u3001\u5b89\u5168" },
+  "7": { label: "7\u53f7", name: "\u73a9\u56fe\u8005", desc: "\u4e50\u89c2\u3001\u5192\u9669" },
+  "8": { label: "8\u53f7", name: "\u4fdd\u62a4\u8005", desc: "\u81ea\u4fe8\u3001\u6297\u4e89" },
+  "9": { label: "9\u53f7", name: "\u548c\u89e3\u8005", desc: "\u4fdd\u548c\u3001\u987a\u4ece" },
+};
+
+function renderPersonalitySecondary(report) {
+  // ── Big Five ────────────────────────────────────────────────────────────────
+  const bf = pickBigFiveForSecondary(report);
+  if (bf && bf.scores) {
+    const items = Object.entries(BIGFIVE_LABELS).map(([key, meta]) => {
+      const score = Number(bf.scores[key] || 0);
+      const pct = Math.round(score * 100);
+      const band = pct >= 70 ? "\u9ad8" : pct >= 40 ? "\u4e2d" : "\u4f4e";
+      return `<div class="personality-dim">
+        <span>${meta.label} <small style="opacity:.5">${meta.desc}</small></span>
+        <strong>${pct}</strong>
+        <div class="personality-dim-bar" style="width:${pct}%"></div>
+        <span class="risk-badge ${riskLevelClass(band)}">${band}</span>
+      </div>`;
+    }).join("");
+    const hypotheses = (bf.behavioral_hypotheses || []).slice(0, 2).map(h =>
+      `<div class="personality-star-item" style="border-left:3px solid #4fc3f7;padding:5px 8px;margin-top:4px;border-radius:4px">
+        <strong>${h.hypothesis || ""}</strong>
+        <div style="opacity:.7;font-size:.78rem">${(h.basis || []).slice(0,2).join("\uff1b")}</div>
+      </div>`
+    ).join("");
+    setHtml("bigfiveCards", items + hypotheses || `<div class="list-item">${TEXT.na}</div>`);
+  } else {
+    setHtml("bigfiveCards", `<div class="list-item">${TEXT.na}</div>`);
+  }
+
+  // ── Enneagram ──────────────────────────────────────────────────────────────
+  const en = pickEnneagramForSecondary(report);
+  if (en && en.top_types) {
+    const top = en.top_types[0];
+    const topMeta = ENNEAGRAM_LABELS[top?.type] || {};
+    const topHtml = top ? `<div class="personality-star-item high" style="padding:8px;border-radius:5px;margin-bottom:6px">
+      <strong>${topMeta.label || top.type} ${topMeta.name || ""}</strong>
+      <div style="font-size:.78rem;opacity:.7">${topMeta.desc || ""}</div>
+      <div style="font-size:.8rem;margin-top:3px">\u7b49\u7ea7\uff1a<strong>${top.score || ""}</strong></div>
+    </div>` : "";
+    const others = (en.top_types || []).slice(1, 3).map(t => {
+      const m = ENNEAGRAM_LABELS[t?.type] || {};
+      return `<div class="personality-star-item" style="border-left:3px solid #4fc3f7;padding:4px 8px;border-radius:4px;margin-top:3px">
+        <span>${m.label || t?.type} ${m.name || ""} <strong>${t.score || ""}</strong></span>
+      </div>`;
+    }).join("");
+    const mapping = en.cross_model_notes?.length
+      ? `<div style="font-size:.78rem;opacity:.6;margin-top:6px">${en.cross_model_notes[0]}</div>`
+      : "";
+    setHtml("enneagramCards", topHtml + others + mapping || `<div class="list-item">${TEXT.na}</div>`);
+  } else {
+    setHtml("enneagramCards", `<div class="list-item">${TEXT.na}</div>`);
+  }
+
+  // ── STAR ───────────────────────────────────────────────────────────────────
+  const star = normalizeStarForSecondary(report);
+  if (star && star.dimension_scores && Object.keys(star.dimension_scores).length) {
+    const dims = [["S", "\u60c5\u5883"], ["T", "\u4efb\u52a1"], ["A", "\u884c\u52a8"], ["R", "\u7ed3\u679c"]].map(([dim, name]) => {
+      const s = star.dimension_scores[dim];
+      if (!s) return "";
+      const pct = s.score || 0;
+      const band = s.band === "high" ? "\u9ad8" : s.band === "medium" ? "\u4e2d" : "\u4f4e";
+      return `<div class="personality-star-item ${s.band === "high" ? "high" : s.band === "medium" ? "medium" : "low"}">
+        <strong>${dim} ${name}</strong> \u5f97\u5206\uff1a${pct}
+        <div class="personality-dim-bar" style="width:${pct}%;margin-top:3px"></div>
+        <div style="font-size:.78rem;opacity:.7;margin-top:2px">${safeText(s.interpretation, "").slice(0, 36)}</div>
+      </div>`;
+    }).join("");
+
+    const defects = (star.defects || []).slice(0, 3).map(d => {
+      const cls = d.severity === "high" ? "high" : d.severity === "medium" ? "medium" : "low";
+      return `<div class="personality-star-item ${cls}" style="padding:4px 8px;border-radius:4px;margin-top:4px;font-size:.78rem">
+        <strong>${safeText(d.label, d.defect_id)}</strong> ${safeText(d.reason, "").slice(0, 40)}
+      </div>`;
+    }).join("");
+
+    const meta = star.authenticity_summary || {};
+    const confidenceTag = `<div style="margin-top:6px">
+      <span class="risk-badge ${riskLevelClass(meta.confidence === "high" ? "\u9ad8" : meta.confidence === "medium" ? "\u4e2d" : "\u4f4e")}">
+        \u771f\u5b9e\u6027\u7f6e\u4fe1\u5ea6\uff1a${safeText(meta.confidence)}
+      </span>
+    </div>`;
+
+    const body = (dims || TEXT.na) + defects + confidenceTag;
+    setHtml("starCards", body.trim() ? body : `<div class="list-item">${TEXT.na}</div>`);
+  } else {
+    setHtml("starCards", `<div class="list-item">${TEXT.na}</div>`);
+  }
+}
+
 function renderDiscPie(analysis) {
   const scores = analysis.scores || {};
   const total = Object.values(scores).reduce((sum, value) => sum + Number(value || 0), 0) || 1;
@@ -188,11 +467,12 @@ function renderDecisionLayer(report, analysis, source) { setText("analysisSource
 function renderMetricsLayer(report, analysis) { setHtml("discPie", renderDiscPie(analysis)); setHtml("discBars", renderDiscBars(analysis)); const riskClass = riskLevelClass(analysis.meta?.impression_management_risk); setHtml("riskMeter", `<div class="risk-head"><strong>${buildRiskHeadline(analysis)}</strong><span class="risk-badge ${riskClass}">${safeText(analysis.meta?.impression_management_risk, "\u4f4e")}</span></div><p class="card-note">${buildRiskDetail(analysis)}</p>`); setHtml("riskTags", createList([...(analysis.hire_risks || []), ...(analysis.evidence_gaps || []), ...((analysis.meta?.notes || []).slice(0, 2))].slice(0, 4), (note) => `<div class="tag">${note}</div>`, "\u6682\u65e0\u98ce\u9669\u6807\u7b7e")); const capabilityTags = buildCapabilityTags(report); setHtml("capabilityTags", capabilityTags.map((tag) => `<div class="tag">${tag}</div>`).join("")); setHtml("capabilitySummary", `${capabilityTags.join(" / ")}\u3002${TEXT.validateEvidence}`); }
 function renderInterviewOverview(report) { setText("turnCountTop", String(report.input_overview?.turn_count || 0)); setHtml("overview", [`<div class="chip">\u5c97\u4f4d\u731c\u6d4b\uff1a${report.interview_map?.job_inference?.value || TEXT.unknown}</div>`,`<div class="chip">\u95ee\u7b54\u8f6e\u6b21\uff1a${report.input_overview?.turn_count || 0}</div>`,`<div class="chip">\u5019\u9009\u4eba\u5b57\u6570\uff1a${report.input_overview?.candidate_char_count || 0}</div>`,`<div class="chip">\u6837\u672c\u8d28\u91cf\uff1a${safeText(report.llm_analysis?.meta?.sample_quality || report.disc_analysis?.meta?.sample_quality)}</div>`,`<div class="chip">\u89e3\u6790\u6765\u6e90\uff1a${safeText(report.interview_map?.parse_source)}</div>`].join("")); setHtml("turns", createList(report.interview_map?.turns, (turn) => `<div class="turn-item"><div class="type">\u7b2c ${turn.turn_id} \u8f6e \u00b7 ${safeText(turn.question_type)}</div><p><strong>\u95ee\u9898\uff1a</strong>${safeText(turn.question, TEXT.na)}</p><p><strong>\u56de\u7b54\u6458\u8981\uff1a</strong>${safeText(turn.answer_summary)}</p></div>`, "\u6682\u65e0\u95ee\u7b54\u6620\u5c04")); }
 function renderDetailedLayer(report, analysis, source) { renderDimensionCards("dimensions", analysis.dimension_analysis || {}); setHtml("criticalFindings", createList(analysis.critical_findings, (item) => `<div class="list-item"><div class="type">${safeText(item.severity)}</div><p><strong>${safeText(item.finding)}</strong></p><p>${(item.basis || []).join("\uff1b") || "\u6682\u65e0\u4f9d\u636e"}</p><p>${safeText(item.impact, "\u6682\u65e0\u5f71\u54cd\u8bf4\u660e")}</p></div>`, "\u6682\u65e0\u5173\u952e\u7f3a\u9677")); setHtml("evidenceGaps", createList(analysis.evidence_gaps, (item) => `<div class="list-item"><p>${safeText(item)}</p></div>`, "\u6682\u65e0\u8bc1\u636e\u7f3a\u53e3")); setHtml("features", createList(report.atomic_features ? [{ label: "STAR \u5b8c\u6574\u5ea6", value: `${Math.round((report.atomic_features.star_structure_score || 0) * 100)}%` },{ label: "\u903b\u8f91\u8fde\u63a5\u8bcd\u6bd4\u4f8b", value: report.atomic_features.logical_connector_ratio },{ label: "\u52a8\u4f5c\u52a8\u8bcd\u6bd4\u4f8b", value: report.atomic_features.action_verbs_ratio },{ label: "\u6545\u4e8b\u4e30\u5bcc\u5ea6", value: `${Math.round((report.atomic_features.story_richness_score || 0) * 100)}%` },{ label: "\u4e2a\u4eba / \u56e2\u961f\u53d6\u5411", value: report.atomic_features.self_vs_team_orientation },{ label: "\u95ee\u9898 / \u4eba\u9645\u53d6\u5411", value: report.atomic_features.problem_vs_people_focus }] : [], (item) => `<div class="feature-item"><strong>${item.label}</strong><div>${item.value}</div></div>`, "\u6682\u65e0\u539f\u5b50\u7279\u5f81")); setHtml("hypotheses", createList(analysis.behavioral_hypotheses, (item) => `<div class="list-item"><div class="type">${safeText(item.strength)}</div><p>${safeText(item.hypothesis)}</p><p>${(item.basis || []).join("\uff1b")}</p></div>`, "\u6682\u65e0\u884c\u4e3a\u5047\u8bbe")); setHtml("followups", createList(analysis.follow_up_questions, (item) => `<div class="list-item"><div class="type">${safeText(item.target_dimension)}</div><p>${safeText(item.question)}</p><p>${safeText(item.purpose)}</p></div>`, "\u6682\u65e0\u8ffd\u95ee\u5efa\u8bae")); const llmStatus = report.llm_status?.enabled ? [`\u5f53\u524d\u4e3b\u89c6\u56fe\uff1a${source}`,`\u89e3\u6790\u6a21\u578b\uff1a${report.llm_status.parser_model}`,`\u4e3b\u5206\u6790\u6a21\u578b\uff1a${report.llm_status.analysis_model}`,report.llm_status.parser_error ? `\u89e3\u6790\u9519\u8bef\uff1a${report.llm_status.parser_error}` : "\u89e3\u6790\u6a21\u578b\u53ef\u7528\u3002",report.llm_status.analysis_error ? `\u5206\u6790\u9519\u8bef\uff1a${report.llm_status.analysis_error}` : "\u5206\u6790\u6a21\u578b\u53ef\u7528\u3002"].join("<br />") : TEXT.defaultStatus; setHtml("llmStatus", llmStatus); setText("llmOutput", JSON.stringify(report.llm_analysis || report.disc_analysis, null, 2)); }
-function renderReport(report) { const primary = getPrimaryAnalysis(report); resultsEl.classList.remove("hidden"); statusEl.textContent = report.llm_status?.enabled ? `\u89e3\u6790\u6a21\u578b\uff1a${report.llm_status.parser_model} / \u4e3b\u5206\u6790\u6a21\u578b\uff1a${report.llm_status.analysis_model}` : TEXT.defaultStatus; renderDecisionLayer(report, primary.analysis, primary.source); renderMetricsLayer(report, primary.analysis); renderWorkflow(report); renderInterviewOverview(report); renderDetailedLayer(report, primary.analysis, primary.source); }
+function renderReport(report) { const primary = getPrimaryAnalysis(report); resultsEl.classList.remove("hidden"); statusEl.textContent = report.llm_status?.enabled ? `\u89e3\u6790\u6a21\u578b\uff1a${report.llm_status.parser_model} / \u4e3b\u5206\u6790\u6a21\u578b\uff1a${report.llm_status.analysis_model}` : TEXT.defaultStatus; renderDecisionLayer(report, primary.analysis, primary.source); renderMetricsLayer(report, primary.analysis); renderPersonalitySecondary(report); renderWorkflow(report); renderInterviewOverview(report); renderDetailedLayer(report, primary.analysis, primary.source); }
 async function loadSampleLibrary() { try { const response = await fetch("/samples/index.json"); if (!response.ok) throw new Error(TEXT.sampleLoadFailed); sampleLibrary = await response.json(); sampleSelectEl.innerHTML = [`<option value="">${TEXT.selectSample}</option>`].concat(sampleLibrary.map((item) => `<option value="${item.id}">${item.title}</option>`)).join(""); if (!defaultSampleLoaded && sampleLibrary.length) { sampleSelectEl.value = sampleLibrary[0].id; await fillSelectedSample(); defaultSampleLoaded = true; } } catch { sampleSelectEl.innerHTML = `<option value="">${TEXT.sampleLoadFailed}</option>`; } }
 async function fillSelectedSample() { const selectedId = sampleSelectEl.value; if (!selectedId) { transcriptEl.value = DEFAULT_TRANSCRIPT; jobHintEl.value = "\u540e\u7aef\u7814\u53d1"; return; } const item = sampleLibrary.find((entry) => entry.id === selectedId); if (!item) return; sampleBtn.disabled = true; sampleBtn.textContent = TEXT.loading; try { const response = await fetch(`/samples/${item.filename}`); if (!response.ok) throw new Error(TEXT.sampleTextLoadFailed); transcriptEl.value = await response.text(); jobHintEl.value = item.job_hint || ""; } catch { transcriptEl.value = DEFAULT_TRANSCRIPT; jobHintEl.value = item.job_hint || "\u540e\u7aef\u7814\u53d1"; } finally { sampleBtn.disabled = false; sampleBtn.textContent = TEXT.fill; } }
 sampleBtn.addEventListener("click", fillSelectedSample);
-analyzeBtn.addEventListener("click", async () => { const interview_transcript = transcriptEl.value.trim(); if (!interview_transcript) { window.alert(TEXT.pasteTranscriptFirst); return; } analyzeBtn.disabled = true; analyzeBtn.textContent = TEXT.analyzing; try { const response = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ interview_transcript, job_hint_optional: jobHintEl.value.trim() }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || TEXT.requestFailed); renderReport(data); } catch (error) { window.alert(error.message); } finally { analyzeBtn.disabled = false; analyzeBtn.textContent = TEXT.run; } });
+// /api/analyze/full：含大五/九型/STAR 本地规则；/api/analyze 仅 DISC，次要映射字段为 null
+analyzeBtn.addEventListener("click", async () => { const interview_transcript = transcriptEl.value.trim(); if (!interview_transcript) { window.alert(TEXT.pasteTranscriptFirst); return; } analyzeBtn.disabled = true; analyzeBtn.textContent = TEXT.analyzing; try { const response = await fetch("/api/analyze/full", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ interview_transcript, job_hint_optional: jobHintEl.value.trim() }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || TEXT.requestFailed); renderReport(data); } catch (error) { window.alert(error.message); } finally { analyzeBtn.disabled = false; analyzeBtn.textContent = TEXT.run; } });
 renderReport(DEFAULT_REPORT);
 transcriptEl.value = DEFAULT_TRANSCRIPT;
 jobHintEl.value = "\u540e\u7aef\u7814\u53d1";

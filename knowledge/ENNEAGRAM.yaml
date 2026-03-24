@@ -1,0 +1,863 @@
+version: "1.0"
+model: "Enneagram"
+scenario: "job_interview"
+purpose: "infer Enneagram personality type from interview language, behavioral patterns, and motivational cues"
+disclaimer:
+  - "Enneagram typing is based on core motivation patterns, not surface behaviors."
+  - "The dominant type is inferred from repeated motivational language, not single answers."
+  - "Types 1-9 are not hierarchical — each type is equally valuable."
+  - "Most individuals have a primary type and a wing (Type XwY or Type XwZ)."
+  - "Interview self-presentation may distort type presentation, especially for Types 3, 6, and 8."
+  - "These inferences are behavioral tendency estimates, not clinical or accurate personality diagnoses."
+
+# ═══════════════════════════════════════════════════════════════════════
+# 全局规则
+# ═══════════════════════════════════════════════════════════════════════
+
+global_rules:
+  minimum_sample_words: 150
+  preferred_sample_words: 350
+  output_strategy: "top_two"    # 始终输出 Top-2 类型及其置信度
+  critique_priority:
+    - "Type 3 candidates are the most likely to present a polished but rehearsed image"
+    - "Type 6 candidates may contradict themselves as they shift between loyalty and anxiety"
+    - "Type 9 candidates may understate their actual involvement and preference"
+    - "Wing inference requires at least 2 types with clear secondary signals"
+  confidence_rules:
+    low:
+      - "only 1-2 answers available"
+      - "signals too mixed across 3+ types"
+      - "too polished without authentic detail"
+      - "candidate shows strong awareness of Enneagram (self-typing risk)"
+    medium:
+      - "2-3 answers with some consistent motivational patterns"
+      - "top type has clear signal but wing is ambiguous"
+      - "some contradictory signals present"
+    high:
+      - "multiple answers showing consistent core motivation"
+      - "top type and wing both clearly identifiable"
+      - "behavioral examples align with stated motivations"
+      - "consistent across diverse question types"
+
+# ═══════════════════════════════════════════════════════════════════════
+# 输入特征（与 features.py extract_features() 严格对齐）
+# ═══════════════════════════════════════════════════════════════════════
+
+input_features:
+  lexical:
+    - action_verbs_ratio          # 已实现 features.py:95
+    - achievement_words_ratio       # 已实现 features.py:101
+    - emotional_words_ratio        # 已实现 features.py:97
+    - social_words_ratio           # 已实现 features.py:98
+    - certainty_words_ratio        # 已实现 features.py:99
+    - hedge_words_ratio            # 已实现 features.py:100
+    - detail_words_ratio           # 已实现 features.py:103
+    - risk_words_ratio             # 已实现 features.py:104
+    - buzzword_density             # 已实现 features.py:122
+    - process_words_ratio          # 已实现 features.py:102
+  syntax:
+    - avg_sentence_length          # 已实现 features.py:94
+    - imperative_like_ratio        # 已实现 features.py:109
+    - question_ratio               # 已实现 features.py:110
+    - qualifier_ratio              # 已实现 features.py:111
+    - logical_connector_ratio       # 已实现 features.py:112
+    - contrast_connector_ratio      # 已实现 features.py:113
+  pronouns:
+    - first_person_singular_ratio  # 已实现 features.py:105
+    - first_person_plural_ratio    # 已实现 features.py:106
+  discourse:
+    - star_structure_score         # 已实现 features.py:115
+    - topic_stability_score       # 已实现 features.py:116
+    - self_vs_team_orientation    # 已实现 features.py:117
+    - problem_vs_people_focus     # 已实现 features.py:118
+    - action_vs_reflection_balance  # 已实现 features.py:119
+    - abstraction_level            # 已实现 features.py:120
+    - story_richness_score         # 已实现 features.py:121
+
+# ═══════════════════════════════════════════════════════════════════════
+# 九型人格类型定义（Type 1-9）
+# ═══════════════════════════════════════════════════════════════════════
+
+types:
+  # ─────────────────────────────────────────────────────────────────
+  # Type 1 — 改革者 The Reformer / Perfectionist
+  # 核心恐惧：做错事、不正直、不道德
+  # 核心欲望：成为好人、正确、有价值
+  # 核心动机：追求正确、按原则行事、让一切有序
+  # ─────────────────────────────────────────────────────────────────
+  type_1:
+    label: "Type 1 改革者"
+    core_fear: "犯错、不正直、道德有瑕疵"
+    core_desire: "成为好人、做正确的事、让世界变得更好"
+    core_motivation: "按内在原则生活，追求完美和正直，让一切有序可控"
+    basic_weakness: "愤怒（对不完美的愤怒，常压抑）"
+    interview_language_signature:
+      keywords:
+        strong:
+          - "应该"
+          - "必须"
+          - "正确"
+          - "标准"
+          - "原则"
+          - "规范"
+          - "对错"
+          - "责任"
+          - "良心"
+          - "正道"
+          - "公平"
+          - "公正"
+          - "做好"
+          - "该做"
+          - "合理"
+        weak:
+          - "差不多"
+          - "无所谓"
+          - "怎么都行"
+      patterns:
+        - "这件事应该是……（而非实际描述）"
+        - "我有一个原则……"
+        - "按道理应该这样做"
+        - "不对的做法是……"
+    behavioral_cues:
+      positive:
+        - "描述做事有明确标准，会说「我的底线是」"
+        - "对错误有具体分析，常说「不应该」"
+        - "表达中带有道德判断色彩（「这样不对」）"
+        - "提到对质量的坚持，超出岗位要求"
+        - "对流程规范有主动优化意识"
+      negative:
+        - "过度使用「应该」而缺乏具体行为描述"
+        - "过于强调对错而忽略实际效果"
+        - "较少提及失败经历（因为难以面对错误）"
+    distinguishing_markers:
+      vs_type_3: "Type 1 强调「正确」，Type 3 强调「成功」——前者是原则驱动，后者是成就驱动"
+      vs_type_6: "Type 1 和 Type 6 都有规则意识，但 Type 1 是内在原则驱动，Type 6 是权威/安全驱动"
+    feature_signals:
+      strong_positive:
+        - "certainty_words_ratio high"
+        - "process_words_ratio high"
+        - "imperative_like_ratio high"
+        - "qualifier_ratio moderately high"
+        - "logical_connector_ratio high"
+      negative:
+        - "hedge_words_ratio very low"
+        - "story_richness_score low with many judgments"
+        - "buzzword_density high with moral frame"
+    probe_questions:
+      confirm:
+        - "讲一个你坚持做一件「对的事」但短期没有好结果的经历，当时你怎么想的？"
+        - "你通常怎么判断一件事做得够不够好？你的标准是什么？"
+      challenge:
+        - "你有没有一次因为过于坚持「正确」而得罪了同事或影响了效率？"
+        - "如果你发现你坚信的「正确原则」其实是错的，你怎么接受这件事？"
+
+  # ─────────────────────────────────────────────────────────────────
+  # Type 2 — 助人者 The Helper
+  # 核心恐惧：不被需要、不被爱
+  # 核心欲望：感到被爱、被需要、有价值
+  # 核心动机：通过帮助他人获得存在感和归属感
+  # ─────────────────────────────────────────────────────────────────
+  type_2:
+    label: "Type 2 助人者"
+    core_fear: "不被需要、不被爱、被拒绝"
+    core_desire: "感受到自己是有价值的、被爱的人"
+    core_motivation: "主动满足他人需求，通过被依赖来确认自我价值"
+    basic_weakness: "骄傲（以自己的帮助为荣，忽视自身需求）"
+    interview_language_signature:
+      keywords:
+        strong:
+          - "帮助"
+          - "支持"
+          - "照顾"
+          - "关心"
+          - "需要"
+          - "大家"
+          - "他们"
+          - "同事"
+          - "信任"
+          - "依赖"
+          - "付出"
+          - "温暖"
+          - "体贴"
+          - "善解人意"
+          - "主动"
+        weak:
+          - "我想要"
+          - "我的目标"
+          - "我的利益"
+      patterns:
+        - "他需要我……"
+        - "我能帮到他们……"
+        - "我当时就是想着怎么帮帮他……"
+        - "他们离不开我"
+    behavioral_cues:
+      positive:
+        - "描述事件时以他人的需求和感受为叙述中心"
+        - "主动提及帮助他人的细节"
+        - "较少谈自己「想要什么」，更多谈「别人需要什么」"
+        - "对人际关系和团队氛围描述丰富"
+      negative:
+        - "较少主动谈个人目标或成就（被问时才说）"
+        - "有讨好倾向（「其实我不太会拒绝」）"
+        - "在利益冲突场景中倾向于委屈自己"
+    distinguishing_markers:
+      vs_type_9: "Type 2 有明确的主动帮助动机；Type 9 是被动让步以避免冲突"
+      vs_type_6: "Type 2 帮助是基于情感连接；Type 6 帮助是基于对权威或群体的忠诚"
+    feature_signals:
+      strong_positive:
+        - "social_words_ratio high"
+        - "emotional_words_ratio moderately high"
+        - "first_person_plural_ratio high"
+        - "first_person_singular_ratio low (vs type_3)"
+        - "action_verbs_ratio moderate (helpful actions)"
+      negative:
+        - "first_person_singular_ratio very high with achievement focus"
+        - "imperative_like_ratio very high"
+    probe_questions:
+      confirm:
+        - "讲一个你主动帮助了一个不太好开口求助的人的经历，当时你怎么做的？"
+        - "有没有一件你为别人做的事，你自己其实并不太想做但还是做了？为什么？"
+      challenge:
+        - "你最近一次拒绝别人的请求是什么时候？你当时感觉怎么样？"
+        - "如果你发现你帮了一个人很多次，但他一直不领情，你会有什么反应？"
+
+  # ─────────────────────────────────────────────────────────────────
+  # Type 3 — 成就者 The Achiever
+  # 核心恐惧：没有价值、不成功、被认为是失败者
+  # 核心欲望：感到成功、有价值、被认可
+  # 核心动机：通过成就来定义自我价值，追求效率和成功形象
+  # ─────────────────────────────────────────────────────────────────
+  type_3:
+    label: "Type 3 成就者"
+    core_fear: "没有价值、被认为是失败者、被忽视"
+    core_desire: "感到成功、有成就、值得被认可"
+    core_motivation: "通过可量化的成果证明自己的价值，精心维护成功形象"
+    basic_weakness: "欺骗（自我推销、呈现最佳形象，可能掩盖真实自我）"
+    interview_language_signature:
+      keywords:
+        strong:
+          - "成功"
+          - "完成"
+          - "目标"
+          - "业绩"
+          - "达成"
+          - "第一"
+          - "最好"
+          - "赢了"
+          - "突破"
+          - "成就"
+          - "价值"
+          - "证明"
+          - "高效"
+          - "最佳"
+          - "领先"
+          - "赢了"
+        weak:
+          - "其实"
+          - "慢慢来"
+          - "也不一定"
+          - "无所谓"
+      patterns:
+        - "我成功完成了……"
+        - "达成了X%的增长"
+        - "我证明了自己……"
+        - "当时我就是冲着第一去的"
+        - "这个结果是我们团队最好的"
+    behavioral_cues:
+      positive:
+        - "用具体数字和结果说话，回答有明确的成就导向"
+        - "自我描述中强调「成功」「第一」「最佳」"
+        - "对目标达成的描述比过程更详细"
+        - "形象意识强，回答经过组织和提炼"
+      negative:
+        - "在面试准备的迹象下，回答过于「完美」"
+        - "过程描述相对薄弱，更多强调结果"
+        - "对失败的描述可能回避或快速带过"
+        - "成功叙事中可能混淆团队与个人贡献"
+    distinguishing_markers:
+      vs_type_1: "Type 3 强调「成功」，Type 1 强调「正确」；前者在描述结果，后者在描述原则"
+      vs_type_8: "Type 3 和 Type 8 都有强势，但 Type 3 用成就包装，Type 8 直接用力量和权力"
+    feature_signals:
+      strong_positive:
+        - "achievement_words_ratio very high"
+        - "action_verbs_ratio high"
+        - "star_structure_score high (结果导向，STAR 往往完整）"
+        - "first_person_singular_ratio high"
+        - "buzzword_density moderately high"
+      negative:
+        - "story_richness_score low with high achievement words"
+        - "first_person_plural_ratio high but with personal credit"
+        - "hedge_words_ratio very low"
+        - "question_ratio very low (不询问，喜欢直接陈述)"
+    probe_questions:
+      confirm:
+        - "讲一个你超额完成目标的经历，当时最让你有成就感的是什么？"
+        - "你是怎么定义「成功」的？对你来说什么才算真正的成就？"
+      challenge:
+        - "有没有一次你非常努力但最终没有达到目标的经历？当时你怎么面对？"
+        - "如果有一天你发现自己一直在追求的「成功」其实不是你真正想要的，你会怎么办？"
+
+  # ─────────────────────────────────────────────────────────────────
+  # Type 4 — 自我型 The Individualist
+  # 核心恐惧：没有自我认同、没有独特价值、被忽视
+  # 核心欲望：感到独特、有意义、与众不同
+  # 核心动机：通过独特的自我表达和深度情感体验来确认存在感
+  # ─────────────────────────────────────────────────────────────────
+  type_4:
+    label: "Type 4 自我型"
+    core_fear: "没有自我认同、被认为是普通的、被忽视"
+    core_desire: "感受到独特、有意义、与众不同"
+    core_motivation: "通过独特的个人表达和深度情感体验来确认自我存在感"
+    basic_weakness: "嫉妒（渴望自己拥有的特质在别人身上）"
+    interview_language_signature:
+      keywords:
+        strong:
+          - "我"
+          - "真正"
+          - "感受"
+          - "内心"
+          - "独特"
+          - "真实"
+          - "不一样"
+          - "深刻"
+          - "意义"
+          - "个人"
+          - "自己"
+          - "情感"
+          - "不一样"
+          - "自我"
+          - "价值"
+        weak:
+          - "标准"
+          - "正常"
+          - "大家"
+          - "流程"
+      patterns:
+        - "我的感受是……"
+        - "其实这件事对我来说……"
+        - "我真正想要的是……"
+        - "和大多数人不一样"
+        - "这件事让我意识到……"
+    behavioral_cues:
+      positive:
+        - "用第一人称「我」描述，强调个人独特视角"
+        - "对情感和意义层面描述深入"
+        - "提到自己的与众不同之处"
+        - "谈论工作意义和自我价值的关系"
+      negative:
+        - "可能过于关注自我而忽视团队视角"
+        - "情感表达可能过于强烈"
+        - "在需要务实的场景中可能显得不够接地气"
+    distinguishing_markers:
+      vs_type_3: "Type 4 追求「独特」，Type 3 追求「成功」——前者关注自我认同，后者关注外界认可"
+      vs_type_9: "Type 4 强调自我与他人的差异；Type 9 追求与群体的融合"
+    feature_signals:
+      strong_positive:
+        - "first_person_singular_ratio very high"
+        - "emotional_words_ratio high"
+        - "abstraction_level high (意义层面)"
+        - "avg_sentence_length high"
+        - "detail_words_ratio moderate (情感细节而非过程细节)"
+      negative:
+        - "first_person_plural_ratio very low"
+        - "social_words_ratio low (vs type_2/type_9)"
+        - "process_words_ratio low"
+    probe_questions:
+      confirm:
+        - "讲一件你觉得和大多数人的想法不太一样的经历，你当时怎么想的？"
+        - "什么事情对你来说特别有意义，值得你全身心投入？"
+      challenge:
+        - "有没有一次你觉得自己太强调「不同」反而影响了团队协作？你怎么处理的？"
+        - "如果你的工作完全按照流程来做，没有什么特别的意义，你会有什么感觉？"
+
+  # ─────────────────────────────────────────────────────────────────
+  # Type 5 — 探索者 The Investigator
+  # 核心恐惧：无知、无能、无用
+  # 核心欲望：变得有能力、有知识、有洞察力
+  # 核心动机：追求知识和理解，通过专业深度建立自信
+  # ─────────────────────────────────────────────────────────────────
+  type_5:
+    label: "Type 5 探索者"
+    core_fear: "无知、被认为是无能的、缺乏洞察力"
+    core_desire: "变得有能力、有知识、有深度理解"
+    core_motivation: "通过深入研究和专业能力来建立存在价值，减少社交消耗"
+    basic_weakness: "贪婪（渴望知道更多，情感上保持距离以保存精力）"
+    interview_language_signature:
+      keywords:
+        strong:
+          - "分析"
+          - "理解"
+          - "研究"
+          - "理论"
+          - "逻辑"
+          - "本质"
+          - "原理"
+          - "机制"
+          - "数据"
+          - "洞察"
+          - "假设"
+          - "深度"
+          - "底层"
+          - "为什么"
+          - "原因"
+          - "认知"
+        weak:
+          - "差不多就行"
+          - "管它呢"
+          - "先做了再说"
+          - "感觉"
+      patterns:
+        - "我的理解是……"
+        - "从逻辑上讲……"
+        - "这件事的本质是……"
+        - "我分析了X个维度……"
+        - "背后的原因是……"
+    behavioral_cues:
+      positive:
+        - "回答偏分析性和概念性，解释「为什么」多过「怎么做」"
+        - "提到深入研究、理论框架、系统分析"
+        - "对不确定的问题表示「需要更多信息」"
+        - "专业知识细节丰富，理论扎实"
+      negative:
+        - "社交互动词较少，对人际场景描述偏弱"
+        - "回答可能过于抽象，缺乏具体行动细节"
+        - "在需要快速决策的场景中可能显得过于谨慎"
+    distinguishing_markers:
+      vs_type_6: "Type 5 和 Type 6 都关注风险，但 Type 5 用知识来应对，Type 6 用权威和同盟来应对"
+      vs_type_1: "Type 5 和 Type 1 都有标准意识，但 Type 5 的标准是「知识正确」，Type 1 是「道德正确」"
+    feature_signals:
+      strong_positive:
+        - "detail_words_ratio high"
+        - "logical_connector_ratio high"
+        - "process_words_ratio high"
+        - "qualifier_ratio moderately high"
+        - "risk_words_ratio high (知识型风险意识)"
+        - "avg_sentence_length high"
+      negative:
+        - "social_words_ratio very low"
+        - "emotional_words_ratio very low"
+        - "first_person_plural_ratio very low"
+        - "imperative_like_ratio low"
+        - "hedge_words_ratio very low (过于自信的Type 5)"
+    probe_questions:
+      confirm:
+        - "讲一个你花很长时间深入研究一个问题的经历，你最后得到了什么洞察？"
+        - "你是怎么判断一个结论「足够扎实」的？你的标准是什么？"
+      challenge:
+        - "有没有一次你因为分析太多而错过了行动的最佳时机？"
+        - "如果你需要在很短的时间内快速给出一个判断，但信息又不够，你会怎么做？"
+
+  # ─────────────────────────────────────────────────────────────────
+  # Type 6 — 忠诚型 The Loyalist
+  # 核心恐惧：不安全、被抛弃、被背叛
+  # 核心欲望：感到安全、被保护、有归属感
+  # 核心动机：在权威和规则中寻找安全感，同时警惕潜在的威胁
+  # ─────────────────────────────────────────────────────────────────
+  type_6:
+    label: "Type 6 忠诚者"
+    core_fear: "不安全和被背叛，缺乏支持和指导"
+    core_desire: "获得安全感和支持，有可依赖的权威或同盟"
+    core_motivation: "通过预判风险、建立同盟、服从可信赖的权威来获得安全感"
+    basic_weakness: "恐惧（对潜在危险的过度警觉）"
+    interview_language_signature:
+      keywords:
+        strong:
+          - "如果"
+          - "不确定"
+          - "担心"
+          - "风险"
+          - "安全"
+          - "可靠"
+          - "信任"
+          - "保证"
+          - "万一"
+          - "害怕"
+          - "怎么应对"
+          - "后备方案"
+          - "应急预案"
+          - "稳妥"
+          - "保险"
+          - "确认"
+        weak:
+          - "没问题"
+          - "放心"
+          - "没问题"
+          - "没问题"
+      patterns:
+        - "如果出现X情况……"
+        - "万一……怎么办"
+        - "我当时担心的是……"
+        - "为了保险起见……"
+        - "所以我准备了B方案"
+    behavioral_cues:
+      positive:
+        - "经常提到风险、万一、应急预案"
+        - "提到「信任」和「可靠」的次数较多"
+        - "倾向于「如果……怎么办」的思维模式"
+        - "对权威或规则的引用较多（「领导说」「公司规定」）"
+        - "提到团队中的同盟和可依赖的同事"
+      negative:
+        - "过度谨慎，可能在简单问题上消耗太多精力"
+        - "表达中不确定性词较多（「可能吧」「不好说」）"
+        - "在压力场景中可能表现出矛盾和摇摆"
+    distinguishing_markers:
+      vs_type_1: "Type 6 和 Type 1 都重视规则，但 Type 1 是内在原则驱动，Type 6 是对权威和安全的依赖"
+      vs_type_5: "Type 6 和 Type 5 都关注风险，但 Type 5 用知识来应对，Type 6 用同盟和权威来应对"
+    feature_signals:
+      strong_positive:
+        - "risk_words_ratio very high"
+        - "hedge_words_ratio high"
+        - "qualifier_ratio high"
+        - "logical_connector_ratio high (原因-结果推导)"
+        - "first_person_plural_ratio high (同盟依赖)"
+      negative:
+        - "certainty_words_ratio very high (过度自信的Type 6可能反向形成）"
+        - "imperative_like_ratio very high"
+        - "hedge_words_ratio very low (过度确定是焦虑防御)"
+    probe_questions:
+      confirm:
+        - "讲一个你提前预判到某个风险并做好准备的故事，当时你是怎么想到的？"
+        - "当你要完全信任一个人或一个系统时，你会怎么判断他是否值得信任？"
+      challenge:
+        - "有没有一次你过度担心某个风险，结果发现其实没那么严重？你从中学到了什么？"
+        - "如果你信任的人最后背叛了你的信任，你会怎么处理？"
+
+  # ─────────────────────────────────────────────────────────────────
+  # Type 7 — 活跃型 The Enthusiast
+  # 核心恐惧：被困住、痛苦、被剥夺快乐
+  # 核心欲望：感到自由、满足、快乐
+  # 核心动机：追求新鲜体验和多元可能性，避免痛苦和限制
+  # ─────────────────────────────────────────────────────────────────
+  type_7:
+    label: "Type 7 活跃者"
+    core_fear: "被困住、痛苦、错失机会"
+    core_desire: "自由、满足、体验丰富多样的生活"
+    core_motivation: "通过不断探索新想法和新体验来逃避焦虑，追求快乐和满足"
+    basic_weakness: "贪婪（渴望更多体验，无法深入单一承诺）"
+    interview_language_signature:
+      keywords:
+        strong:
+          - "有趣"
+          - "好玩"
+          - "新鲜"
+          - "体验"
+          - "可能"
+          - "探索"
+          - "尝试"
+          - "多"
+          - "各种"
+          - "太好了"
+          - "太棒了"
+          - "开心"
+          - "快乐"
+          - "丰富"
+          - "多元"
+          - "机会"
+        weak:
+          - "无聊"
+          - "必须"
+          - "没办法"
+          - "痛苦"
+          - "局限"
+      patterns:
+        - "太棒了！"
+        - "当时我同时还在做……"
+        - "还有一件也很有意思……"
+        - "这件事让我特别兴奋"
+        - "我不想被一件事绑住"
+    behavioral_cues:
+      positive:
+        - "回答充满活力，情绪积极，语调上扬"
+        - "提到多个并行项目和多元兴趣"
+        - "倾向于看到可能性而非限制"
+        - "在话题间快速跳跃，可能跳过细节"
+      negative:
+        - "过程细节可能不够深入，多停留在表面"
+        - "承诺和长期坚持的证据较弱"
+        - "遇到挫折时倾向于快速转移到新方向"
+    distinguishing_markers:
+      vs_type_3: "Type 7 和 Type 3 都追求成就，但 Type 7 追求多元体验，Type 3 追求单一目标的极致"
+      vs_type_8: "Type 7 和 Type 8 都强势，但 Type 7 是热情外放，Type 8 是掌控内压"
+    feature_signals:
+      strong_positive:
+        - "emotional_words_ratio high"
+        - "hedge_words_ratio high (多种可能性)"
+        - "avg_sentence_length high (表达丰富)"
+        - "first_person_singular_ratio high"
+        - "story_richness_score high"
+      negative:
+        - "topic_stability_score low (多话题跳跃）"
+        - "detail_words_ratio low (缺少深入细节)"
+        - "logical_connector_ratio low (跳步较多)"
+        - "risk_words_ratio very low"
+    probe_questions:
+      confirm:
+        - "讲一个你同时推进多个项目的经历，你是怎么兼顾的？"
+        - "什么事情让你感到特别兴奋和有活力？你通常怎么保持这种状态？"
+      challenge:
+        - "有没有一次你因为想尝试太多东西，结果每件事都没做到最好？你怎么看待这件事？"
+        - "如果你被困在一个必须长期专注一个方向的项目里，你会有什么感受？你会怎么处理？"
+
+  # ─────────────────────────────────────────────────────────────────
+  # Type 8 — 挑战型 The Challenger
+  # 核心恐惧：被控制、被伤害、被侵犯
+  # 核心欲望：保护自己、独立自主、掌控自己的命运
+  # 核心动机：建立掌控感，通过力量和保护来定义自我价值
+  # ─────────────────────────────────────────────────────────────────
+  type_8:
+    label: "Type 8 挑战者"
+    core_fear: "被控制、被侵犯、软弱无力"
+    core_desire: "保护自己、独立自主、掌控局面"
+    core_motivation: "通过掌控、力量和保护来建立存在价值，不允许被他人控制"
+    basic_weakness: "欲望（对权力和控制的过度追求）"
+    interview_language_signature:
+      keywords:
+        strong:
+          - "我说了算"
+          - "按我的来"
+          - "控制"
+          - "主导"
+          - "强势"
+          - "保护"
+          - "不服"
+          - "直接"
+          - "不怕"
+          - "压住"
+          - "掌控"
+          - "拿主意"
+          - "决定"
+          - "权利"
+          - "底线"
+          - "界限"
+        weak:
+          - "都可以"
+          - "随便"
+          - "无所谓"
+          - "让步"
+          - "商量"
+          - "我不管了"
+      patterns:
+        - "这件事我说了算"
+        - "不行就是不行"
+        - "我会保护团队……"
+        - "当时我就直接拍板了"
+        - "我不允许这种事发生"
+    behavioral_cues:
+      positive:
+        - "回答直接果断，较少拐弯抹角"
+        - "对控制和主导有明确表达"
+        - "提到保护他人或自己免受不公对待"
+        - "在冲突场景中表现出主动对抗而非回避"
+      negative:
+        - "较少使用缓和语和限定词"
+        - "在人际协作场景中可能表现出过度强势"
+        - "对规则和权威的态度两极化（服从或对抗）"
+    distinguishing_markers:
+      vs_type_3: "Type 8 和 Type 3 都强势，但 Type 8 是通过力量和保护来掌控，Type 3 是通过成就和形象"
+      vs_type_1: "Type 8 和 Type 1 都坚持标准，但 Type 8 是对抗不公，Type 1 是坚持原则"
+    feature_signals:
+      strong_positive:
+        - "imperative_like_ratio very high"
+        - "certainty_words_ratio high"
+        - "first_person_singular_ratio very high"
+        - "contrast_connector_ratio high"
+        - "action_verbs_ratio high"
+        - "hedge_words_ratio very low"
+      negative:
+        - "hedge_words_ratio very high"
+        - "first_person_plural_ratio very high"
+        - "social_words_ratio very low"
+        - "qualifier_ratio very low"
+    probe_questions:
+      confirm:
+        - "讲一个你为了保护团队或自己的利益而必须强势对抗的经历，当时你是怎么做的？"
+        - "当团队方向走偏时，你通常会怎么做？"
+      challenge:
+        - "有没有一次你太强势了，反而把团队推开了？你后来怎么处理的？"
+        - "如果你的上级做出了一个明显错误的决定，你会怎么处理？"
+
+  # ─────────────────────────────────────────────────────────────────
+  # Type 9 — 和平型 The Peacemaker
+  # 核心恐惧：冲突、失去联系、被排斥
+  # 核心欲望：保持内心平静、与他人和谐共处
+  # 核心动机：避免冲突，通过适应他人来维持和谐和联系感
+  # ─────────────────────────────────────────────────────────────────
+  type_9:
+    label: "Type 9 和平者"
+    core_fear: "冲突、分离、被排除在外"
+    core_desire: "内心平静、与人和睦、不被打扰"
+    core_motivation: "通过适应他人和保持表面和谐来维持内在稳定，回避深层冲突"
+    basic_weakness: "懒惰（怠惰地适应他人，忽视自我需求）"
+    interview_language_signature:
+      keywords:
+        strong:
+          - "都可以"
+          - "无所谓"
+          - "没关系"
+          - "和谐"
+          - "和平"
+          - "配合"
+          - "稳定"
+          - "不冲突"
+          - "大家都好"
+          - "差不多"
+          - "没意见"
+          - "迁就"
+          - "让步"
+          - "协调"
+          - "和气"
+        weak:
+          - "我想要"
+          - "不行"
+          - "必须"
+          - "坚持"
+          - "对抗"
+      patterns:
+        - "其实都可以"
+        - "我不怎么在意"
+        - "大家开心就好"
+        - "慢慢来吧"
+        - "不急"
+        - "我配合他就好了"
+    behavioral_cues:
+      positive:
+        - "较少主动表达强烈意见，倾向于「都可以」「无所谓」"
+        - "在冲突场景中倾向于让步和适应"
+        - "强调团队和谐和稳定"
+        - "较少主动谈及个人目标（更多谈集体目标）"
+      negative:
+        - "自我主张较弱，难以清晰表达个人立场"
+        - "回答可能过于模糊，缺乏具体细节"
+        - "在需要做决策的场景中可能显得被动"
+    distinguishing_markers:
+      vs_type_2: "Type 9 和 Type 2 都支持他人，但 Type 2 有明确的帮助动机，Type 9 是回避冲突的被动适应"
+      vs_type_5: "Type 9 和 Type 5 都安静，但 Type 5 是主动保存精力，Type 9 是被动失去自我"
+    feature_signals:
+      strong_positive:
+        - "first_person_plural_ratio very high"
+        - "social_words_ratio high"
+        - "hedge_words_ratio very high"
+        - "contrast_connector_ratio very low"
+        - "imperative_like_ratio very low"
+        - "certainty_words_ratio very low"
+      negative:
+        - "first_person_singular_ratio very high with strong opinions"
+        - "action_verbs_ratio very high"
+        - "story_richness_score very high with clear personal positions"
+        - "risk_words_ratio high (vs Type 9 低风险)"
+    probe_questions:
+      confirm:
+        - "讲一个你为了让团队保持和谐而主动做了让步的经历，当时你心里怎么想的？"
+        - "当团队里有人坚持要按他的方式做，即便你不太同意，你会怎么做？"
+      challenge:
+        - "你有没有一次因为「不计较」太多而委屈了自己？你后来怎么看待这件事？"
+        - "如果有一天你突然发现自己的意见从来没有被真正听过，你会怎么想？"
+
+# ═══════════════════════════════════════════════════════════════════════
+# 九型侧翼推断
+# ═══════════════════════════════════════════════════════════════════════
+
+wing_inference:
+  type_1_wings:
+    type_2: "1w2 — 改革型+助人型：理想的利他主义者，有热情推动改变"
+    type_9: "1w9 — 改革型+和平型：内省型理想主义者，温和但有原则"
+  type_2_wings:
+    type_1: "2w1 — 助人型+改革型：服务型理想主义者，帮助建立在原则之上"
+    type_3: "2w3 — 助人型+成就型：社交型成就者，通过关系实现成功"
+  type_3_wings:
+    type_2: "3w2 — 成就型+助人型：魅力型成就者，善于人际影响力"
+    type_4: "3w4 — 成就型+自我型：独特型成就者，追求与众不同的成功"
+  type_4_wings:
+    type_3: "4w3 — 自我型+成就型：精英型创意者，追求独特的成就"
+    type_5: "4w5 — 自我型+探索型：内省型创意者，深入探索自我"
+  type_5_wings:
+    type_4: "5w4 — 探索型+自我型：反叛型思想家，独特的专业视角"
+    type_6: "5w6 — 探索型+忠诚型：问题解决者，忠诚于知识和系统"
+  type_6_wings:
+    type_5: "6w5 — 忠诚型+探索型：冷静型忠诚者，用知识保护自己"
+    type_7: "6w7 — 忠诚型+活跃型：乐观型忠诚者，用积极态度应对焦虑"
+  type_7_wings:
+    type_6: "7w6 — 活跃型+忠诚型：盟友型探索者，关注机会与安全"
+    type_8: "7w8 — 活跃型+挑战型：挑战型探索者，充满活力地追求多元"
+  type_8_wings:
+    type_7: "8w7 — 挑战型+活跃型：充满魅力的挑战者，强势且有感染力"
+    type_9: "8w9 — 挑战型+和平型：温和型挑战者，强势但包容"
+  type_9_wings:
+    type_8: "9w8 — 和平型+挑战型：仲裁者型，在和谐中保持立场"
+    type_1: "9w1 — 和平型+改革型：理想主义者型，在平静中追求正确"
+
+# ═══════════════════════════════════════════════════════════════════════
+# DISC → 九型映射表
+# ═══════════════════════════════════════════════════════════════════════
+
+disc_to_enneagram_mapping:
+  D_dominant:
+    C_dominant: "Type 1 (改革型) 或 Type 3 (成就型)"
+    I_dominant: "Type 3 (成就型) 或 Type 7 (活跃型)"
+    S_dominant: "Type 8 (挑战型)"
+    balanced: "Type 3 (成就型) 或 Type 8 (挑战型)"
+  I_dominant:
+    S_dominant: "Type 2 (助人型) 或 Type 9 (和平型)"
+    D_dominant: "Type 3 (成就型) 或 Type 7 (活跃型)"
+    C_dominant: "Type 2 (助人型) 或 Type 4 (自我型)"
+    balanced: "Type 2 (助人型) 或 Type 7 (活跃型)"
+  S_dominant:
+    I_dominant: "Type 2 (助人型) 或 Type 9 (和平型)"
+    D_dominant: "Type 8 (挑战型) 或 Type 6 (忠诚型)"
+    C_dominant: "Type 1 (改革型) 或 Type 6 (忠诚型)"
+    balanced: "Type 9 (和平型) 或 Type 6 (忠诚型)"
+  C_dominant:
+    D_dominant: "Type 1 (改革型) 或 Type 5 (探索型)"
+    S_dominant: "Type 5 (探索型) 或 Type 6 (忠诚型)"
+    I_dominant: "Type 4 (自我型) 或 Type 5 (探索型)"
+    balanced: "Type 5 (探索型) 或 Type 1 (改革型)"
+
+# ═══════════════════════════════════════════════════════════════════════
+# 风险标记
+# ═══════════════════════════════════════════════════════════════════════
+
+risk_flags:
+  type_3_over_polished:
+    cues:
+      - "achievement_words_ratio 极高"
+      - "回答过于完美，STAR 完整度极高但缺乏过程细节"
+      - "全篇「我」开头，成功叙事占主导"
+    note: "Type 3 是最常见的面试伪装类型，需要特别注意区分真实成就与推销"
+  type_6_inconsistency:
+    cues:
+      - "同一类型问题前后回答不一致"
+      - "过度使用「如果」和「万一」"
+      - "信心和怀疑交叉出现"
+    note: "Type 6 的内在矛盾是其核心特征，但也可能是伪装信号"
+  type_9_understated:
+    cues:
+      - "自我描述极度淡化（都说「还好」「都可以」）"
+      - "第一人称单数出现频率极低"
+      - "行动描述大多为配合和适应"
+    note: "Type 9 可能被低估，需要追问来剥离真实立场"
+  type_8_fake_soft:
+    cues:
+      - "刻意使用缓和语言但底层仍是控制叙事"
+      - "温和用词但结论强硬"
+    note: "高D人群可能伪装成Type 9，需要在压力场景下观察"
+
+# ═══════════════════════════════════════════════════════════════════════
+# 输出映射
+# ═══════════════════════════════════════════════════════════════════════
+
+output_mapping:
+  score_bands:
+    "0_24": "极弱信号"
+    "25_49": "较弱信号"
+    "50_74": "中等信号"
+    "75_100": "强信号"
+  confidence_factors:
+    increase:
+      - "核心动机词汇在多个问题中出现"
+      - "行为案例与类型动机高度一致"
+      - "九型侧翼信号同时出现"
+      - "核心恐惧或核心欲望被直接提及"
+    decrease:
+      - "多个类型信号强度相近"
+      - "类型信号高度依赖单一问题"
+      - "与STAR造假信号并存（尤其是Type 3）"

@@ -181,6 +181,7 @@ h3 {
 .summary-side-grid,
 .metric-row,
 .workflow-row,
+.personality-row,
 .question-stack,
 .tag-list,
 .turn-list,
@@ -379,6 +380,61 @@ button:hover {
 .workflow-row {
   grid-template-columns: repeat(4, 1fr);
 }
+
+.personality-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.personality-row > .metric-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.personality-row > .metric-card > .panel-header {
+  flex-shrink: 0;
+}
+
+.personality-row > .metric-card > .personality-cards {
+  flex: 1;
+  min-height: 140px;
+  align-content: start;
+}
+
+.personality-cards {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.personality-dim {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 5px;
+  font-size: 0.82rem;
+}
+
+.personality-dim-bar {
+  height: 4px;
+  background: #4fc3f7;
+  border-radius: 3px;
+  margin-top: 3px;
+}
+
+.personality-star-item {
+  padding: 6px 8px;
+  border-radius: 5px;
+  font-size: 0.82rem;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.personality-star-item.high { border-left: 3px solid #ef5350; color: #ef5350; }
+.personality-star-item.medium { border-left: 3px solid #ffb74d; color: #ffb74d; }
+.personality-star-item.low { border-left: 3px solid #66bb6a; color: #66bb6a; }
 
 .workflow-stage {
   display: flex;

@@ -12,6 +12,7 @@ def run_disc_evidence_stage(context: WorkflowContext) -> WorkflowContext:
         context.turns_for_analysis,
         context.features,
         context.knowledge,
+        star_result=context.star_result,
     )
     context.disc_evidence = {
         "scores": context.local_disc_result.get("scores", {}),

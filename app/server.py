@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import mimetypes
@@ -7,7 +7,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
-from .analysis import analyze_interview
+from .analysis import analyze_interview, analyze_interview_full
 from .config import BASE_DIR, STATIC_DIR
 
 SAMPLES_DIR = BASE_DIR / "samples"
@@ -57,7 +57,8 @@ class DemoHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
-        if parsed.path != "/api/analyze":
+        route = parsed.path
+        if route not in ("/api/analyze", "/api/analyze/full"):
             self.send_error(HTTPStatus.NOT_FOUND, "Not found")
             return
 
@@ -75,7 +76,10 @@ class DemoHandler(BaseHTTPRequestHandler):
             return
 
         job_hint = (payload.get("job_hint_optional") or "").strip()
-        report = analyze_interview(transcript, job_hint)
+        if route == "/api/analyze/full":
+            report = analyze_interview_full(transcript, job_hint)
+        else:
+            report = analyze_interview(transcript, job_hint)
         _json_response(self, report)
 
     def log_message(self, format: str, *args) -> None:

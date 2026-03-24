@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from collections import defaultdict
 
@@ -147,7 +147,12 @@ def _impression_management_risk(features: dict, word_count: int) -> tuple[str, l
     return risk, notes
 
 
-def _build_critical_findings(features: dict, scores: dict[str, int], word_count: int) -> tuple[list[dict], list[str], list[str]]:
+def _build_critical_findings(
+    features: dict,
+    scores: dict[str, int],
+    word_count: int,
+    star_result: dict | None = None,
+) -> tuple[list[dict], list[str], list[str]]:
     findings: list[dict] = []
     hire_risks: list[str] = []
     evidence_gaps: list[str] = []
@@ -213,6 +218,52 @@ def _build_critical_findings(features: dict, scores: dict[str, int], word_count:
     if scores.get("C", 0) >= 70 and features["detail_words_ratio"] < 0.012:
         evidence_gaps.append("The answer sounds structured, but the detail density is still not enough for a high-C read")
 
+    # ─── STAR 分析辅助信号 ───
+    if star_result:
+        dim_scores = {d: star_result.get("dimension_scores", {}).get(d, {}).get("score", 50)
+                      for d in "STAR"}
+        star_defects = {d["defect_id"] for d in star_result.get("defects", [])}
+        star_confidence = star_result.get("authenticity_summary", {}).get("confidence", "medium")
+        disc_aux_signals = star_result.get("star_disc_auxiliary_signals", [])
+
+        # 引用 STAR 真实性置信度
+        if star_confidence == "low":
+            findings.append({
+                "finding": "STAR 真实性置信度为 low，STAR 缺陷信号影响 DISC 读数可信度。",
+                "severity": "medium",
+                "basis": [f"STAR defects: {', '.join(sorted(star_defects)) or 'none'}"],
+                "impact": "建议在面试中优先追问高严重度缺陷对应的 STAR 细节。",
+                "source": "star_analysis",
+            })
+            hire_risks.append("STAR 真实性风险，可能影响整体评估准确性")
+            evidence_gaps.append("建议追问候选人的具体行动步骤和可量化结果")
+
+        # 引用 DISC 辅助信号
+        for signal in disc_aux_signals:
+            evidence_gaps.append(f"[STAR→DISC] {signal}")
+
+        # S/T/A/R 维度过低时的具体建议
+        if dim_scores.get("S", 100) < 40:
+            findings.append({
+                "finding": "STAR-S 情境维度极低，背景描述缺失，决策前提无法验证。",
+                "severity": "medium",
+                "basis": ["STAR-S score < 40"],
+                "impact": "在此背景下描述的行动和结果可信度下降。",
+                "source": "star_analysis",
+            })
+            evidence_gaps.append("情境背景缺失，建议追问当时的团队规模、时间和约束条件")
+
+        if dim_scores.get("R", 100) < 40:
+            findings.append({
+                "finding": "STAR-R 结果维度极低，回答缺乏可量化成果。",
+                "severity": "high",
+                "basis": ["STAR-R score < 40"],
+                "impact": "无法核验候选人实际创造的价值，需重点追问具体数字。",
+                "source": "star_analysis",
+            })
+            hire_risks.append("结果缺乏量化证据，个人贡献难以评估")
+            evidence_gaps.append("STAR-R 偏低，建议追问结果数字、验证方式和归因逻辑")
+
     unique_hire_risks = list(dict.fromkeys(hire_risks))
     unique_evidence_gaps = list(dict.fromkeys(evidence_gaps))
     return findings[:4], unique_hire_risks[:4], unique_evidence_gaps[:5]
@@ -252,7 +303,13 @@ def _build_decision_outputs(scores: dict[str, int], critical_findings: list[dict
     return decision_summary, risk_summary, recommended_action
 
 
-def analyze_disc(transcript: str, turns: list[dict], features: dict, knowledge: dict) -> dict:
+def analyze_disc(
+    transcript: str,
+    turns: list[dict],
+    features: dict,
+    knowledge: dict,
+    star_result: dict | None = None,
+) -> dict:
     word_count = len(transcript.replace("\n", ""))
     sample_quality = _sample_quality(knowledge, word_count, len(turns))
 
@@ -325,7 +382,9 @@ def analyze_disc(transcript: str, turns: list[dict], features: dict, knowledge: 
             }
         )
 
-    critical_findings, hire_risks, evidence_gaps = _build_critical_findings(features, scores, word_count)
+    critical_findings, hire_risks, evidence_gaps = _build_critical_findings(
+        features, scores, word_count, star_result
+    )
     decision_summary, risk_summary, recommended_action = _build_decision_outputs(
         scores, critical_findings, evidence_gaps, confidence, impression_risk
     )

@@ -121,3 +121,57 @@ def call_openai_compatible(model: str, messages: list[dict]) -> dict | None:
         response_json = json.loads(resp.read().decode("utf-8"))
     content = response_json["choices"][0]["message"]["content"]
     return json.loads(content)
+
+
+# ─── Personality analysis prompt builders ────────────────────────────────────
+
+
+def build_personality_payload(
+    transcript: str,
+    turns: list[dict],
+    features: dict,
+    job_inference: dict,
+    local_bigfive: dict | None,
+    local_enneagram: dict | None,
+) -> dict:
+    """Build the shared payload for Big Five / Enneagram LLM analysis."""
+    return {
+        "transcript": transcript,
+        "parsed_interview": {
+            "job_inference": job_inference,
+            "turns": turns,
+        },
+        "atomic_features": features,
+        "local_bigfive_result": local_bigfive,
+        "local_enneagram_result": local_enneagram,
+    }
+
+
+def build_bigfive_messages(
+    prompt: str,
+    transcript: str,
+    turns: list[dict],
+    features: dict,
+    job_inference: dict,
+    local_bigfive: dict | None,
+) -> list[dict]:
+    payload = build_personality_payload(transcript, turns, features, job_inference, local_bigfive, None)
+    return [
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
+    ]
+
+
+def build_enneagram_messages(
+    prompt: str,
+    transcript: str,
+    turns: list[dict],
+    features: dict,
+    job_inference: dict,
+    local_enneagram: dict | None,
+) -> list[dict]:
+    payload = build_personality_payload(transcript, turns, features, job_inference, None, local_enneagram)
+    return [
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
+    ]
