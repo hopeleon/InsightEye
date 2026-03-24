@@ -1,0 +1,121 @@
+{
+  "case_id": "product_mid_disguised_framework_talker",
+  "title": "Product / Mid / Disguised / Framework-heavy talker",
+  "job_type": "Product Manager",
+  "level": "mid",
+  "case_quality": "disguised",
+  "case_type": "disguised",
+  "job_hint": "Product Manager",
+  "turn_count_target": 12,
+  "candidate_profile": {
+    "years_of_experience": "4 years",
+    "domain_background": "Internet growth and user conversion",
+    "target_role_summary": "Mid-level PM who speaks fluently in frameworks and cross-team strategy language",
+    "current_context": "Applying for a product role that requires strong problem framing and real prioritization"
+  },
+  "outline": [
+    {
+      "turn": 1,
+      "question_theme": "representative project",
+      "question_goal": "see project context and target",
+      "quality_expectation": "must explain the business problem and target"
+    },
+    {
+      "turn": 2,
+      "question_theme": "analysis method",
+      "question_goal": "test problem analysis",
+      "quality_expectation": "must explain concrete breakdown method"
+    },
+    {
+      "turn": 3,
+      "question_theme": "core conclusion",
+      "question_goal": "test whether the PM reached a clear diagnosis",
+      "quality_expectation": "must not stop at saying it is a multi-factor problem"
+    },
+    {
+      "turn": 4,
+      "question_theme": "execution tracks",
+      "question_goal": "test concrete action lines",
+      "quality_expectation": "must explain what changed in each line"
+    },
+    {
+      "turn": 5,
+      "question_theme": "key decision",
+      "question_goal": "verify product judgment",
+      "quality_expectation": "must identify a personal prioritization choice"
+    },
+    {
+      "turn": 6,
+      "question_theme": "alternative comparison",
+      "question_goal": "test tradeoff logic",
+      "quality_expectation": "must explain alternatives and why one was chosen"
+    },
+    {
+      "turn": 7,
+      "question_theme": "data evidence",
+      "question_goal": "verify metric grounding",
+      "quality_expectation": "must explain metric and node evidence"
+    },
+    {
+      "turn": 8,
+      "question_theme": "detail challenge",
+      "question_goal": "test whether this is only framework talk",
+      "quality_expectation": "must land on page, action, or metric details"
+    },
+    {
+      "turn": 9,
+      "question_theme": "result proof",
+      "question_goal": "verify quantitative proof",
+      "quality_expectation": "must explain time window and numbers"
+    },
+    {
+      "turn": 10,
+      "question_theme": "coordination challenge",
+      "question_goal": "verify push capability",
+      "quality_expectation": "must explain concrete conflict and action"
+    },
+    {
+      "turn": 11,
+      "question_theme": "validation loop",
+      "question_goal": "verify experiment mindset",
+      "quality_expectation": "must explain validation metrics and exit rules"
+    },
+    {
+      "turn": 12,
+      "question_theme": "retrospective",
+      "question_goal": "verify whether reflection is specific",
+      "quality_expectation": "must go beyond generic improvement language"
+    }
+  ],
+  "expected_disc": {
+    "ranking": [
+      "C",
+      "I",
+      "D",
+      "S"
+    ],
+    "notes": "The sample should sound structured and fluent, but evidence and ownership remain thin under pressure.",
+    "surface_vs_validated": "Surface C/I should not become validated high-C or high-D without concrete detail."
+  },
+  "expected_risks": [
+    "framework-heavy but detail-light",
+    "data and user evidence are insufficient",
+    "key decision and personal ownership remain fuzzy"
+  ],
+  "expected_findings": [
+    "easy to overrate because of fluent product language",
+    "needs validation of whether the diagnosis was real and specific",
+    "follow-up should force page-level, metric-level, and choice-level detail"
+  ],
+  "expected_followup_directions": [
+    "ask for a concrete page or path node",
+    "ask for exact numbers and time period",
+    "ask why the rejected option was not chosen"
+  ],
+  "evaluation_focus": [
+    "can the system detect disguised strength in PM samples",
+    "can the system identify evidence gaps under framework language",
+    "can the system generate follow-ups around problem framing and prioritization"
+  ],
+  "notes": "Classic disguised case: good product vocabulary, weak proof."
+}

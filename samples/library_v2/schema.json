@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "InsightEye Sample Meta V2",
+  "type": "object",
+  "required": [
+    "case_id",
+    "title",
+    "job_type",
+    "level",
+    "case_quality",
+    "case_type",
+    "turn_count_target",
+    "candidate_profile",
+    "outline",
+    "expected_disc",
+    "expected_risks",
+    "expected_findings",
+    "expected_followup_directions",
+    "evaluation_focus"
+  ],
+  "properties": {
+    "case_id": {"type": "string"},
+    "title": {"type": "string"},
+    "job_type": {"type": "string"},
+    "level": {"type": "string", "enum": ["junior", "mid", "senior"]},
+    "case_quality": {"type": "string", "enum": ["strong", "medium", "weak", "disguised"]},
+    "case_type": {"type": "string", "enum": ["positive", "neutral", "negative", "disguised"]},
+    "job_hint": {"type": "string"},
+    "turn_count_target": {"type": "integer", "minimum": 10},
+    "candidate_profile": {
+      "type": "object",
+      "required": ["years_of_experience", "domain_background", "target_role_summary"],
+      "properties": {
+        "years_of_experience": {"type": "string"},
+        "domain_background": {"type": "string"},
+        "target_role_summary": {"type": "string"},
+        "current_context": {"type": "string"}
+      }
+    },
+    "outline": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["turn", "question_theme", "question_goal"],
+        "properties": {
+          "turn": {"type": "integer"},
+          "question_theme": {"type": "string"},
+          "question_goal": {"type": "string"},
+          "quality_expectation": {"type": "string"}
+        }
+      }
+    },
+    "expected_disc": {
+      "type": "object",
+      "required": ["ranking", "notes"],
+      "properties": {
+        "ranking": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {"type": "string", "enum": ["D", "I", "S", "C"]}
+        },
+        "notes": {"type": "string"},
+        "surface_vs_validated": {"type": "string"}
+      }
+    },
+    "expected_risks": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "expected_findings": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "expected_followup_directions": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "evaluation_focus": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "notes": {"type": "string"}
+  }
+}

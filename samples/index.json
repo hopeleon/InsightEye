@@ -1,65 +1,93 @@
-﻿[
+[
+  {
+    "id": "backend_mid_disguised_consistency_case",
+    "title": "\u957f\u6837\u4f8b\uff1a\u7814\u53d1\u5c97\u4f2a\u5f3a\u6837\u672c\uff08\u7a33\u5b9a\u6027\u4e0e\u4e00\u81f4\u6027\uff09",
+    "job_hint": "\u7814\u53d1",
+    "filename": "library_v2/transcripts/backend_mid_disguised_consistency_case.txt",
+    "description": "\u4e2d\u6587\u957f\u5bf9\u8bdd\u6837\u4f8b\uff0c\u7ed3\u6784\u611f\u8f83\u5f3a\uff0c\u4f46\u6280\u672f\u6df1\u5ea6\u3001\u91cf\u5316\u7ed3\u679c\u548c ownership \u4ecd\u9700\u6838\u9a8c\u3002"
+  },
+  {
+    "id": "sales_tob_senior_strong_complex_deal",
+    "title": "\u957f\u6837\u4f8b\uff1aToB\u9500\u552e\u5f3a\u6837\u672c\uff08\u590d\u6742\u5ba2\u6237\u6210\u4ea4\uff09",
+    "job_hint": "\u9500\u552e",
+    "filename": "library_v2/transcripts/sales_tob_senior_strong_complex_deal.txt",
+    "description": "\u4e2d\u6587\u957f\u5bf9\u8bdd\u6837\u4f8b\uff0c\u8986\u76d6\u8bca\u65ad\u5207\u5165\u3001\u51b3\u7b56\u94fe\u7ecf\u8425\u3001\u6210\u4ea4\u4fe1\u53f7\u4e0e\u5931\u8d25\u590d\u76d8\u3002"
+  },
+  {
+    "id": "product_mid_disguised_framework_talker",
+    "title": "\u957f\u6837\u4f8b\uff1a\u4ea7\u54c1\u7ecf\u7406\u4f2a\u5f3a\u6837\u672c\uff08\u65b9\u6cd5\u8bba\u8bdd\u672f\u578b\uff09",
+    "job_hint": "\u4ea7\u54c1\u7ecf\u7406",
+    "filename": "library_v2/transcripts/product_mid_disguised_framework_talker.txt",
+    "description": "\u4e2d\u6587\u957f\u5bf9\u8bdd\u6837\u4f8b\uff0c\u8868\u8fbe\u6d41\u7545\u4f46\u7ec6\u8282\u4e0e\u6570\u636e\u8bc1\u636e\u4e0d\u8db3\uff0c\u9002\u5408\u6d4b\u8bd5\u4f2a\u5f3a\u8bc6\u522b\u3002"
+  },
+  {
+    "id": "operations_mid_weak_basic_execution",
+    "title": "\u957f\u6837\u4f8b\uff1a\u8fd0\u8425\u5f31\u6837\u672c\uff08\u6267\u884c\u7a33\u5b9a\u4f46\u7b56\u7565\u5f31\uff09",
+    "job_hint": "\u8fd0\u8425",
+    "filename": "library_v2/transcripts/operations_mid_weak_basic_execution.txt",
+    "description": "\u4e2d\u6587\u957f\u5bf9\u8bdd\u6837\u4f8b\uff0c\u504f\u6267\u884c\u8ddf\u8fdb\uff0c\u7f3a\u5c11\u5b9e\u9a8c\u8bbe\u8ba1\u4e0e\u4e3b\u52a8\u5224\u65ad\u3002"
+  },
   {
     "id": "pm_growth_case",
-    "title": "产品经理：增长项目推进",
-    "job_hint": "产品经理",
+    "title": "\u4ea7\u54c1\u7ecf\u7406\uff1a\u589e\u957f\u9879\u76ee\u63a8\u8fdb",
+    "job_hint": "\u4ea7\u54c1\u7ecf\u7406",
     "filename": "pm_growth_case.txt",
-    "description": "包含项目推进、阻力处理、判断失误应对三个典型问题。"
+    "description": "\u5305\u542b\u9879\u76ee\u63a8\u8fdb\u3001\u963b\u529b\u5904\u7406\u3001\u5224\u65ad\u5931\u8bef\u5e94\u5bf9\u4e09\u4e2a\u5178\u578b\u95ee\u9898\u3002"
   },
   {
     "id": "sales_tob_key_account",
-    "title": "销售岗位：ToB 难客户拿单",
-    "job_hint": "销售",
+    "title": "\u9500\u552e\u5c97\u4f4d\uff1aToB \u96be\u5ba2\u6237\u62ff\u5355",
+    "job_hint": "\u9500\u552e",
     "filename": "sales_tob_key_account.txt",
-    "description": "包含难客户突破、信任建立、成交判断、失败复盘与关系地图。"
+    "description": "\u5305\u542b\u96be\u5ba2\u6237\u7a81\u7834\u3001\u4fe1\u4efb\u5efa\u7acb\u3001\u6210\u4ea4\u5224\u65ad\u3001\u5931\u8d25\u590d\u76d8\u4e0e\u5173\u7cfb\u5730\u56fe\u3002"
   },
   {
     "id": "backend_order_refactor",
-    "title": "研发岗位：后端订单系统重构",
-    "job_hint": "研发",
+    "title": "\u7814\u53d1\u5c97\u4f4d\uff1a\u540e\u7aef\u8ba2\u5355\u7cfb\u7edf\u91cd\u6784",
+    "job_hint": "\u7814\u53d1",
     "filename": "backend_order_refactor.txt",
-    "description": "包含系统重构、灰度迁移、数据一致性、稳定性保障与取舍判断。"
+    "description": "\u5305\u542b\u7cfb\u7edf\u91cd\u6784\u3001\u7070\u5ea6\u8fc1\u79fb\u3001\u6570\u636e\u4e00\u81f4\u6027\u3001\u7a33\u5b9a\u6027\u4fdd\u969c\u4e0e\u53d6\u820d\u5224\u65ad\u3002"
   },
   {
     "id": "operations_growth_content",
-    "title": "运营岗位：内容平台增长项目",
-    "job_hint": "运营",
+    "title": "\u8fd0\u8425\u5c97\u4f4d\uff1a\u5185\u5bb9\u5e73\u53f0\u589e\u957f\u9879\u76ee",
+    "job_hint": "\u8fd0\u8425",
     "filename": "operations_growth_content.txt",
-    "description": "包含渠道优化、路径优化、跨团队协作、数据回看与自我复盘。"
+    "description": "\u5305\u542b\u6e20\u9053\u4f18\u5316\u3001\u8def\u5f84\u4f18\u5316\u3001\u8de8\u56e2\u961f\u534f\u4f5c\u3001\u6570\u636e\u56de\u770b\u4e0e\u81ea\u6211\u590d\u76d8\u3002"
   },
   {
     "id": "sales_hollow_long_negative",
-    "title": "反面案例：销售岗空洞长文本",
-    "job_hint": "销售",
+    "title": "\u53cd\u9762\u6848\u4f8b\uff1a\u9500\u552e\u5c97\u7a7a\u6d1e\u957f\u6587\u672c",
+    "job_hint": "\u9500\u552e",
     "filename": "sales_hollow_long_negative.txt",
-    "description": "长文本但缺少关键动作、决策点和量化结果。"
+    "description": "\u957f\u6587\u672c\u4f46\u7f3a\u5c11\u5173\u952e\u52a8\u4f5c\u3001\u51b3\u7b56\u70b9\u548c\u91cf\u5316\u7ed3\u679c\u3002"
   },
   {
     "id": "engineering_shallow_negative",
-    "title": "反面案例：研发岗技术浅层表述",
-    "job_hint": "研发",
+    "title": "\u53cd\u9762\u6848\u4f8b\uff1a\u7814\u53d1\u5c97\u6280\u672f\u6d45\u5c42\u8868\u8ff0",
+    "job_hint": "\u7814\u53d1",
     "filename": "engineering_shallow_negative.txt",
-    "description": "有技术词但缺少深度、因果链和架构决策。"
+    "description": "\u6709\u6280\u672f\u8bcd\u4f46\u7f3a\u5c11\u6df1\u5ea6\u3001\u56e0\u679c\u94fe\u548c\u67b6\u6784\u51b3\u7b56\u3002"
   },
   {
     "id": "operations_baseline_neutral",
-    "title": "中立案例：运营岗普通完整样本",
-    "job_hint": "运营",
+    "title": "\u4e2d\u7acb\u6848\u4f8b\uff1a\u8fd0\u8425\u5c97\u666e\u901a\u5b8c\u6574\u6837\u672c",
+    "job_hint": "\u8fd0\u8425",
     "filename": "operations_baseline_neutral.txt",
-    "description": "结构完整但亮点弱，适合作为 baseline 样本。"
+    "description": "\u7ed3\u6784\u5b8c\u6574\u4f46\u4eae\u70b9\u5f31\uff0c\u9002\u5408\u4f5c\u4e3a baseline \u6837\u672c\u3002"
   },
   {
     "id": "sales_cautious_weaker",
-    "title": "中立偏弱：销售岗谨慎无推动力",
-    "job_hint": "销售",
+    "title": "\u4e2d\u7acb\u504f\u5f31\uff1a\u9500\u552e\u5c97\u8c28\u614e\u65e0\u63a8\u52a8\u529b",
+    "job_hint": "\u9500\u552e",
     "filename": "sales_cautious_weaker.txt",
-    "description": "明显低 D，中低 I，偏 S 但证据不强。"
+    "description": "\u660e\u663e\u4f4e D\uff0c\u4e2d\u4f4e I\uff0c\u504f S \u4f46\u8bc1\u636e\u4e0d\u5f3a\u3002"
   },
   {
     "id": "project_polished_low_info",
-    "title": "伪装案例：高级话术低信息密度",
-    "job_hint": "产品经理",
+    "title": "\u4f2a\u88c5\u6848\u4f8b\uff1a\u9ad8\u7ea7\u8bdd\u672f\u4f4e\u4fe1\u606f\u5bc6\u5ea6",
+    "job_hint": "\u4ea7\u54c1\u7ecf\u7406",
     "filename": "project_polished_low_info.txt",
-    "description": "话术成熟但信息密度低，适合测试包装识别能力。"
+    "description": "\u8bdd\u672f\u6210\u719f\u4f46\u4fe1\u606f\u5bc6\u5ea6\u4f4e\uff0c\u9002\u5408\u6d4b\u8bd5\u5305\u88c5\u8bc6\u522b\u80fd\u529b\u3002"
   }
 ]

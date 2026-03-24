@@ -1,0 +1,122 @@
+{
+  "case_id": "backend_mid_disguised_consistency_case",
+  "title": "Backend / Mid / Disguised / Consistency and stability",
+  "job_type": "Backend Engineering",
+  "level": "mid",
+  "case_quality": "disguised",
+  "case_type": "disguised",
+  "job_hint": "Engineering",
+  "turn_count_target": 12,
+  "candidate_profile": {
+    "years_of_experience": "4 years",
+    "domain_background": "E-commerce transaction and order fulfillment",
+    "target_role_summary": "Mid-level backend engineer with order-chain optimization experience",
+    "current_context": "Applying for a role involving complex stability and consistency work"
+  },
+  "outline": [
+    {
+      "turn": 1,
+      "question_theme": "background and ownership",
+      "question_goal": "confirm project scope and role",
+      "quality_expectation": "must explain system context and ownership"
+    },
+    {
+      "turn": 2,
+      "question_theme": "project symptom",
+      "question_goal": "confirm inconsistency pattern",
+      "quality_expectation": "must explain what went wrong in business terms"
+    },
+    {
+      "turn": 3,
+      "question_theme": "problem diagnosis",
+      "question_goal": "verify diagnostic logic",
+      "quality_expectation": "must explain first metrics checked and why"
+    },
+    {
+      "turn": 4,
+      "question_theme": "signal interpretation",
+      "question_goal": "test whether suspicion is evidence-based",
+      "quality_expectation": "must connect signals to reasoning"
+    },
+    {
+      "turn": 5,
+      "question_theme": "solution direction",
+      "question_goal": "verify mechanism understanding",
+      "quality_expectation": "must explain chosen architecture at a high level"
+    },
+    {
+      "turn": 6,
+      "question_theme": "alternative evaluation",
+      "question_goal": "verify tradeoff thinking",
+      "quality_expectation": "must explain rejected options"
+    },
+    {
+      "turn": 7,
+      "question_theme": "rollout control",
+      "question_goal": "verify monitoring and rollback awareness",
+      "quality_expectation": "must explain risk control actions"
+    },
+    {
+      "turn": 8,
+      "question_theme": "metric detail",
+      "question_goal": "verify metric ownership",
+      "quality_expectation": "must explain thresholds and gray-release logic"
+    },
+    {
+      "turn": 9,
+      "question_theme": "hardest challenge",
+      "question_goal": "test depth vs generic wording",
+      "quality_expectation": "must explain constraints rather than vague difficulty"
+    },
+    {
+      "turn": 10,
+      "question_theme": "incident handling",
+      "question_goal": "verify stop-loss behavior",
+      "quality_expectation": "must explain concrete handling"
+    },
+    {
+      "turn": 11,
+      "question_theme": "result proof",
+      "question_goal": "verify quantified evidence",
+      "quality_expectation": "must provide before/after evidence"
+    },
+    {
+      "turn": 12,
+      "question_theme": "retrospective improvement",
+      "question_goal": "test whether reflection is specific",
+      "quality_expectation": "must explain what would be changed next time"
+    }
+  ],
+  "expected_disc": {
+    "ranking": [
+      "C",
+      "S",
+      "D",
+      "I"
+    ],
+    "notes": "Surface style should look structured and cautious, but evidence depth is weaker than the fluency suggests.",
+    "surface_vs_validated": "Surface C can be overestimated; validated C should stay moderate rather than high."
+  },
+  "expected_risks": [
+    "mechanism explanation is weaker than the language fluency suggests",
+    "ownership and decision authority are not fully clear",
+    "result proof is not hard enough",
+    "easy to overestimate as high C"
+  ],
+  "expected_findings": [
+    "answer sounds fluent but remains partly generic under pressure",
+    "pseudo-high-C risk should be flagged",
+    "follow-up should test real understanding of consistency and rollback"
+  ],
+  "expected_followup_directions": [
+    "ask which metrics were checked first and why",
+    "ask why this consistency strategy was chosen over alternatives",
+    "ask for rollback path and stop-loss strategy under gray-release failure"
+  ],
+  "evaluation_focus": [
+    "can the system detect disguised strength",
+    "can the system generate role-specific follow-ups",
+    "can the system avoid rewarding fluent but shallow answers"
+  ],
+  "notes": "This is a disguised sample: it should sound reasonable, but key technical proof must remain incomplete."
+}

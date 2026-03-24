@@ -1,0 +1,121 @@
+{
+  "case_id": "operations_mid_weak_basic_execution",
+  "title": "Growth Ops / Mid / Weak / Stable execution only",
+  "job_type": "Growth Operations",
+  "level": "mid",
+  "case_quality": "weak",
+  "case_type": "negative",
+  "job_hint": "Operations",
+  "turn_count_target": 12,
+  "candidate_profile": {
+    "years_of_experience": "3 years",
+    "domain_background": "Content platform acquisition and channel operations",
+    "target_role_summary": "Mid-level operator who is stable in execution but weak in strategy and experimentation",
+    "current_context": "Applying for a growth role expected to combine diagnosis, experiment design, and execution"
+  },
+  "outline": [
+    {
+      "turn": 1,
+      "question_theme": "project context",
+      "question_goal": "see whether the problem is clearly defined",
+      "quality_expectation": "must explain growth decline background"
+    },
+    {
+      "turn": 2,
+      "question_theme": "starting actions",
+      "question_goal": "see how the project began",
+      "quality_expectation": "must explain data organization and initial review"
+    },
+    {
+      "turn": 3,
+      "question_theme": "problem diagnosis",
+      "question_goal": "test whether diagnosis is clear",
+      "quality_expectation": "must go beyond saying some channels were average"
+    },
+    {
+      "turn": 4,
+      "question_theme": "concrete actions",
+      "question_goal": "test action specificity",
+      "quality_expectation": "must explain what was actually changed"
+    },
+    {
+      "turn": 5,
+      "question_theme": "personal decision",
+      "question_goal": "test ownership",
+      "quality_expectation": "must identify a decision personally made"
+    },
+    {
+      "turn": 6,
+      "question_theme": "core value",
+      "question_goal": "test whether the role was only execution support",
+      "quality_expectation": "must show irreplaceable contribution"
+    },
+    {
+      "turn": 7,
+      "question_theme": "results",
+      "question_goal": "test quantified outcomes",
+      "quality_expectation": "must explain metric movement"
+    },
+    {
+      "turn": 8,
+      "question_theme": "biggest challenge",
+      "question_goal": "test whether difficulty description is concrete",
+      "quality_expectation": "must not stop at generic coordination issues"
+    },
+    {
+      "turn": 9,
+      "question_theme": "collaboration handling",
+      "question_goal": "test push strength",
+      "quality_expectation": "must explain actions beyond reminders"
+    },
+    {
+      "turn": 10,
+      "question_theme": "failure or miss",
+      "question_goal": "test review ability",
+      "quality_expectation": "must explain misjudgment and correction"
+    },
+    {
+      "turn": 11,
+      "question_theme": "experiment sense",
+      "question_goal": "test growth thinking",
+      "quality_expectation": "must explain testing logic"
+    },
+    {
+      "turn": 12,
+      "question_theme": "do-over",
+      "question_goal": "test whether improvement is specific",
+      "quality_expectation": "must explain earlier testing and faster elimination"
+    }
+  ],
+  "expected_disc": {
+    "ranking": [
+      "S",
+      "C",
+      "I",
+      "D"
+    ],
+    "notes": "The sample should look like a stable executor with limited push and weak ownership.",
+    "surface_vs_validated": "It should not be upgraded into high D or high C just because it sounds orderly."
+  },
+  "expected_risks": [
+    "limited strategic initiative",
+    "unclear quantified result",
+    "weak ownership and decision authority"
+  ],
+  "expected_findings": [
+    "can execute baseline tasks but lacks strong growth experimentation thinking",
+    "diagnosis stays broad and shallow",
+    "coordination method relies mostly on reminders and follow-up"
+  ],
+  "expected_followup_directions": [
+    "ask for a specific experiment design and sample size",
+    "ask for a concrete action personally decided and owned",
+    "ask how stop-loss would be handled if the numbers did not improve"
+  ],
+  "evaluation_focus": [
+    "can the system detect stable execution but weak strategy",
+    "can the system highlight thin ownership",
+    "can the system produce validation-oriented operations follow-ups"
+  ],
+  "notes": "This should serve as a weak baseline sample for growth operations."
+}

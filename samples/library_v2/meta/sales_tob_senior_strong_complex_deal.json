@@ -1,0 +1,117 @@
+{
+  "case_id": "sales_tob_senior_strong_complex_deal",
+  "title": "ToB Sales / Senior / Strong / Complex deal",
+  "job_type": "ToB Sales",
+  "level": "senior",
+  "case_quality": "strong",
+  "case_type": "positive",
+  "job_hint": "Sales",
+  "turn_count_target": 12,
+  "candidate_profile": {
+    "years_of_experience": "8 years",
+    "domain_background": "Manufacturing digitalization and enterprise software sales",
+    "target_role_summary": "Senior ToB seller experienced in complex-account penetration and multi-stakeholder deals",
+    "current_context": "Applying for a role expected to independently break large accounts and drive complex deal cycles"
+  },
+  "outline": [
+    {
+      "turn": 1,
+      "question_theme": "representative case",
+      "question_goal": "confirm difficulty and context",
+      "quality_expectation": "must explain incumbent and why entry was hard"
+    },
+    {
+      "turn": 2,
+      "question_theme": "entry strategy",
+      "question_goal": "verify strategic judgment",
+      "quality_expectation": "must explain why diagnosis came before pitching"
+    },
+    {
+      "turn": 3,
+      "question_theme": "judgment signals",
+      "question_goal": "verify client sensing ability",
+      "quality_expectation": "must explain early signals and inference"
+    },
+    {
+      "turn": 4,
+      "question_theme": "diagnostic method",
+      "question_goal": "verify consultative selling process",
+      "quality_expectation": "must explain mapping and interview approach"
+    },
+    {
+      "turn": 5,
+      "question_theme": "early-stage resistance",
+      "question_goal": "verify trust building",
+      "quality_expectation": "must explain concrete resistance and response"
+    },
+    {
+      "turn": 6,
+      "question_theme": "decision chain",
+      "question_goal": "verify multi-stakeholder selling",
+      "quality_expectation": "must explain relationship map and role-specific value framing"
+    },
+    {
+      "turn": 7,
+      "question_theme": "buying signal",
+      "question_goal": "verify deal-readiness judgment",
+      "quality_expectation": "must identify conversion point"
+    },
+    {
+      "turn": 8,
+      "question_theme": "deal acceleration",
+      "question_goal": "verify sales-led actions",
+      "quality_expectation": "must explain pilot narrowing and commercial motion"
+    },
+    {
+      "turn": 9,
+      "question_theme": "business result",
+      "question_goal": "verify measurable outcome",
+      "quality_expectation": "must explain pilot-to-contract conversion"
+    },
+    {
+      "turn": 10,
+      "question_theme": "role boundary",
+      "question_goal": "verify personal contribution",
+      "quality_expectation": "must separate sales contribution from delivery contribution"
+    },
+    {
+      "turn": 11,
+      "question_theme": "failed case review",
+      "question_goal": "verify reflection and correction",
+      "quality_expectation": "must explain failure mechanism and changes"
+    },
+    {
+      "turn": 12,
+      "question_theme": "next-time improvement",
+      "question_goal": "verify optimization mindset",
+      "quality_expectation": "must explain earlier ROI and procurement involvement"
+    }
+  ],
+  "expected_disc": {
+    "ranking": [
+      "D",
+      "I",
+      "C",
+      "S"
+    ],
+    "notes": "The sample should show clear push, influence, and commercial judgment while remaining structured.",
+    "surface_vs_validated": "Both surface and validated style should remain high D/I rather than being dismissed as only good storytelling."
+  },
+  "expected_risks": [],
+  "expected_findings": [
+    "able to define the real problem instead of pitching too early",
+    "able to identify and manage a multi-role decision chain",
+    "able to read buying signals and convert them into deal motion"
+  ],
+  "expected_followup_directions": [
+    "ask how ROI logic was quantified in more detail",
+    "ask how objections differed across roles",
+    "ask how client expectations were managed during pilot execution"
+  ],
+  "evaluation_focus": [
+    "can the system recognize a genuinely strong ToB sales sample",
+    "can the system extract multi-stakeholder motion and buying signals",
+    "can the system produce high-value next-step follow-ups"
+  ],
+  "notes": "This should serve as a benchmark strong sample for ToB sales."
+}

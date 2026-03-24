@@ -1,0 +1,316 @@
+[
+  {
+    "case_id": "sales_tob_senior_strong_complex_deal",
+    "title": "ToB Sales / Senior / Strong / Complex deal",
+    "job_type": "ToB Sales",
+    "level": "senior",
+    "case_quality": "strong",
+    "case_type": "positive",
+    "turn_count_target": 12,
+    "status": "drafted",
+    "disc_target": [
+      "D",
+      "I",
+      "C",
+      "S"
+    ],
+    "risk_focus": []
+  },
+  {
+    "case_id": "sales_tob_mid_medium_multi_stakeholder",
+    "title": "ToB Sales / Mid / Medium / Multi-stakeholder",
+    "job_type": "ToB Sales",
+    "level": "mid",
+    "case_quality": "medium",
+    "case_type": "neutral",
+    "turn_count_target": 11,
+    "status": "planned",
+    "disc_target": [
+      "I",
+      "D",
+      "S",
+      "C"
+    ],
+    "risk_focus": [
+      "result proof is moderate",
+      "push rhythm is average"
+    ]
+  },
+  {
+    "case_id": "sales_tob_mid_weak_process_only",
+    "title": "ToB Sales / Mid / Weak / Process-only answer",
+    "job_type": "ToB Sales",
+    "level": "mid",
+    "case_quality": "weak",
+    "case_type": "negative",
+    "turn_count_target": 10,
+    "status": "planned",
+    "disc_target": [
+      "S",
+      "I",
+      "C",
+      "D"
+    ],
+    "risk_focus": [
+      "decision chain unclear",
+      "missing key actions",
+      "weak push"
+    ]
+  },
+  {
+    "case_id": "sales_tob_mid_disguised_polished_story",
+    "title": "ToB Sales / Mid / Disguised / Polished storytelling",
+    "job_type": "ToB Sales",
+    "level": "mid",
+    "case_quality": "disguised",
+    "case_type": "disguised",
+    "turn_count_target": 12,
+    "status": "planned",
+    "disc_target": [
+      "I",
+      "D",
+      "S",
+      "C"
+    ],
+    "risk_focus": [
+      "low information density",
+      "turning point unclear",
+      "packaging risk"
+    ]
+  },
+  {
+    "case_id": "backend_senior_strong_order_architecture",
+    "title": "Backend / Senior / Strong / Order architecture",
+    "job_type": "Backend Engineering",
+    "level": "senior",
+    "case_quality": "strong",
+    "case_type": "positive",
+    "turn_count_target": 12,
+    "status": "planned",
+    "disc_target": [
+      "C",
+      "D",
+      "S",
+      "I"
+    ],
+    "risk_focus": []
+  },
+  {
+    "case_id": "backend_mid_medium_performance_tradeoff",
+    "title": "Backend / Mid / Medium / Performance tradeoff",
+    "job_type": "Backend Engineering",
+    "level": "mid",
+    "case_quality": "medium",
+    "case_type": "neutral",
+    "turn_count_target": 11,
+    "status": "planned",
+    "disc_target": [
+      "C",
+      "S",
+      "D",
+      "I"
+    ],
+    "risk_focus": [
+      "depth is moderate",
+      "boundary awareness is moderate"
+    ]
+  },
+  {
+    "case_id": "backend_mid_weak_tech_surface_only",
+    "title": "Backend / Mid / Weak / Surface-level tech answer",
+    "job_type": "Backend Engineering",
+    "level": "mid",
+    "case_quality": "weak",
+    "case_type": "negative",
+    "turn_count_target": 10,
+    "status": "planned",
+    "disc_target": [
+      "C",
+      "S",
+      "I",
+      "D"
+    ],
+    "risk_focus": [
+      "buzzwords without depth",
+      "no architecture decision",
+      "weak result proof"
+    ]
+  },
+  {
+    "case_id": "backend_mid_disguised_consistency_case",
+    "title": "Backend / Mid / Disguised / Consistency and stability",
+    "job_type": "Backend Engineering",
+    "level": "mid",
+    "case_quality": "disguised",
+    "case_type": "disguised",
+    "turn_count_target": 12,
+    "status": "drafted",
+    "disc_target": [
+      "C",
+      "S",
+      "D",
+      "I"
+    ],
+    "risk_focus": [
+      "pseudo high C",
+      "ownership unclear",
+      "mechanism explanation weak"
+    ]
+  },
+  {
+    "case_id": "product_senior_strong_growth_strategy",
+    "title": "Product / Senior / Strong / Growth strategy",
+    "job_type": "Product Manager",
+    "level": "senior",
+    "case_quality": "strong",
+    "case_type": "positive",
+    "turn_count_target": 12,
+    "status": "planned",
+    "disc_target": [
+      "D",
+      "C",
+      "I",
+      "S"
+    ],
+    "risk_focus": []
+  },
+  {
+    "case_id": "product_mid_medium_cross_team_balance",
+    "title": "Product / Mid / Medium / Cross-team balance",
+    "job_type": "Product Manager",
+    "level": "mid",
+    "case_quality": "medium",
+    "case_type": "neutral",
+    "turn_count_target": 11,
+    "status": "planned",
+    "disc_target": [
+      "C",
+      "D",
+      "S",
+      "I"
+    ],
+    "risk_focus": [
+      "user insight moderate",
+      "push strength moderate"
+    ]
+  },
+  {
+    "case_id": "product_mid_weak_execution_only",
+    "title": "Product / Mid / Weak / Execution without judgment",
+    "job_type": "Product Manager",
+    "level": "mid",
+    "case_quality": "weak",
+    "case_type": "negative",
+    "turn_count_target": 10,
+    "status": "planned",
+    "disc_target": [
+      "S",
+      "C",
+      "I",
+      "D"
+    ],
+    "risk_focus": [
+      "weak problem framing",
+      "priority judgment weak",
+      "ownership insufficient"
+    ]
+  },
+  {
+    "case_id": "product_mid_disguised_framework_talker",
+    "title": "Product / Mid / Disguised / Framework-heavy talker",
+    "job_type": "Product Manager",
+    "level": "mid",
+    "case_quality": "disguised",
+    "case_type": "disguised",
+    "turn_count_target": 12,
+    "status": "drafted",
+    "disc_target": [
+      "C",
+      "I",
+      "D",
+      "S"
+    ],
+    "risk_focus": [
+      "framework-heavy but detail-light",
+      "weak data and user evidence"
+    ]
+  },
+  {
+    "case_id": "operations_senior_strong_growth_experiment",
+    "title": "Growth Ops / Senior / Strong / Experiment and collaboration",
+    "job_type": "Growth Operations",
+    "level": "senior",
+    "case_quality": "strong",
+    "case_type": "positive",
+    "turn_count_target": 12,
+    "status": "planned",
+    "disc_target": [
+      "C",
+      "D",
+      "S",
+      "I"
+    ],
+    "risk_focus": []
+  },
+  {
+    "case_id": "operations_mid_medium_channel_iteration",
+    "title": "Growth Ops / Mid / Medium / Channel iteration",
+    "job_type": "Growth Operations",
+    "level": "mid",
+    "case_quality": "medium",
+    "case_type": "neutral",
+    "turn_count_target": 11,
+    "status": "planned",
+    "disc_target": [
+      "S",
+      "C",
+      "D",
+      "I"
+    ],
+    "risk_focus": [
+      "experiment rhythm average",
+      "limited highlights"
+    ]
+  },
+  {
+    "case_id": "operations_mid_weak_basic_execution",
+    "title": "Growth Ops / Mid / Weak / Stable execution only",
+    "job_type": "Growth Operations",
+    "level": "mid",
+    "case_quality": "weak",
+    "case_type": "negative",
+    "turn_count_target": 10,
+    "status": "drafted",
+    "disc_target": [
+      "S",
+      "C",
+      "I",
+      "D"
+    ],
+    "risk_focus": [
+      "weak experiment sense",
+      "shallow diagnosis",
+      "limited proactivity"
+    ]
+  },
+  {
+    "case_id": "operations_mid_disguised_data_jargon_case",
+    "title": "Growth Ops / Mid / Disguised / Data jargon case",
+    "job_type": "Growth Operations",
+    "level": "mid",
+    "case_quality": "disguised",
+    "case_type": "disguised",
+    "turn_count_target": 12,
+    "status": "planned",
+    "disc_target": [
+      "C",
+      "I",
+      "S",
+      "D"
+    ],
+    "risk_focus": [
+      "jargon-heavy but weak experiment design",
+      "unclear attribution"
+    ]
+  }
+]

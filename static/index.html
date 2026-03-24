@@ -1,146 +1,322 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>&#x6167;&#x773c;&#x8bc6;&#x4eba;&#x6f14;&#x793a;&#x7248;</title>
+    <title>慧眼识人演示版</title>
     <link rel="stylesheet" href="/static/styles.css" />
   </head>
   <body>
-    <main class="shell">
-      <section class="hero-band">
-        <div class="hero-copy">
-          <p class="eyebrow">&#x6167;&#x773c;&#x8bc6;&#x4eba; INTERVIEW INTELLIGENCE</p>
-          <h1>&#x6167;&#x773c;&#x8bc6;&#x4eba;</h1>
-          <p class="subtitle">&#x9762;&#x5411;&#x9762;&#x8bd5;&#x5b98;&#x7684;&#x51b3;&#x7b56;&#x8f85;&#x52a9;&#x53f0;&#x3002;&#x9875;&#x9762;&#x9ed8;&#x8ba4;&#x5e26;&#x6837;&#x4f8b;&#x8f93;&#x5165;&#x548c;&#x5360;&#x4f4d;&#x7ed3;&#x679c;&#xff0c;&#x4fbf;&#x4e8e;&#x76f4;&#x63a5;&#x8c03;&#x8bd5;&#x5de5;&#x4f5c;&#x6d41;&#x4e0e;&#x5c55;&#x793a;&#x5c42;&#x3002;</p>
-          <div class="hero-tags">
-            <span class="hero-tag">DISC &#x5de5;&#x4f5c;&#x6d41;</span>
-            <span class="hero-tag">&#x98ce;&#x9669;&#x8bc4;&#x4f30;</span>
-            <span class="hero-tag">&#x8ffd;&#x95ee;&#x5efa;&#x8bae;</span>
-          </div>
-        </div>
-        <div class="hero-panel">
-          <div class="hero-panel-head">
-            <span>&#x8c03;&#x8bd5;&#x72b6;&#x6001;</span>
-            <strong id="status">&#x5f53;&#x524d;&#x663e;&#x793a;&#x9ed8;&#x8ba4;&#x5360;&#x4f4d;&#x7ed3;&#x679c;</strong>
-          </div>
-          <div class="hero-stat-grid">
-            <div class="hero-stat"><span>&#x5206;&#x6790;&#x6765;&#x6e90;</span><strong id="analysisSourceTop">&#x7b49;&#x5f85;&#x5206;&#x6790;</strong></div>
-            <div class="hero-stat"><span>&#x95ee;&#x7b54;&#x8f6e;&#x6b21;</span><strong id="turnCountTop">0</strong></div>
-            <div class="hero-stat"><span>&#x5de5;&#x4f5c;&#x6d41;&#x9636;&#x6bb5;</span><strong id="workflowStageTop">0</strong></div>
-            <div class="hero-stat"><span>&#x98ce;&#x9669;&#x7b49;&#x7ea7;</span><strong id="riskLevelTop">&#x672a;&#x5224;&#x5b9a;</strong></div>
+    <main class="app-shell">
+      <section id="inputView" class="view view-input active">
+        <header class="input-header">
+          <p class="eyebrow">INSIGHTEYE / INTERVIEW INTELLIGENCE</p>
+          <h1>慧眼识人</h1>
+          <p class="subtitle">
+            基于 DISC 与证据工作流的面试辅助决策台。
+            在一屏内完成岗位选择、文本输入与结果发起。
+          </p>
+          <div id="status" class="input-status-chip">等待分析</div>
+        </header>
+
+        <section class="input-stage">
+          <article class="input-card">
+            <div class="panel-head panel-head-space">
+              <div>
+                <p class="section-kicker">INPUT PAGE</p>
+                <h2>开始一次分析</h2>
+              </div>
+              <span class="subtle-pill">localhost:8000</span>
+            </div>
+
+            <div class="input-grid">
+              <div class="field-block field-inline">
+                <div class="field-item">
+                  <label for="jobHint">岗位提示</label>
+                  <input id="jobHint" type="text" placeholder="例如：销售 / 研发 / 产品" />
+                </div>
+                <div class="field-item sample-field">
+                  <label for="sampleSelect">示例填充（可选）</label>
+                  <div class="sample-toolbar">
+                    <select id="sampleSelect"><option value="">请选择样例</option></select>
+                    <button id="sampleBtn" type="button" class="secondary-btn">填充示例</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field-block">
+                <label for="transcript">整段面试文本</label>
+                <textarea id="transcript"></textarea>
+              </div>
+            </div>
+
+            <div class="input-actions">
+              <button id="analyzeBtn" type="button" class="primary-btn">开始分析</button>
+            </div>
+          </article>
+
+          <aside class="input-side">
+            <article class="micro-card">
+              <p class="section-kicker">WHY THIS FORMAT</p>
+              <h3>输入建议</h3>
+              <ul class="mini-list">
+                <li>优先使用带角色标记的原始面试对话</li>
+                <li>保留追问和反问，不要只截单轮回答</li>
+                <li>岗位提示可以留空，系统会尝试给出猜测</li>
+              </ul>
+            </article>
+            <article class="micro-card accent-card">
+              <p class="section-kicker">DEFAULT DEBUG</p>
+              <h3>快速调试</h3>
+              <p class="micro-copy">
+                页面会默认预填一段样例，你可以直接点击“开始分析”进入结果页。
+              </p>
+            </article>
+          </aside>
+        </section>
+      </section>
+
+      <section id="loadingView" class="view view-loading hidden">
+        <div class="loading-card">
+          <p class="eyebrow">ANALYSIS IN PROGRESS</p>
+          <h2>正在生成候选人结论</h2>
+          <p id="loadingMessage" class="subtitle small">请稍候，系统正在拆解问答、提取证据并生成评估。</p>
+          <div class="loading-orbit"></div>
+          <div id="loadingSteps" class="loading-steps"></div>
+          <div id="errorBox" class="error-box hidden">
+            <strong id="errorText"></strong>
+            <div class="error-actions">
+              <button id="retryBtn" type="button" class="primary-btn">重试</button>
+              <button id="backBtn" type="button" class="secondary-btn">返回输入</button>
+            </div>
           </div>
         </div>
       </section>
+      <section id="resultView" class="view view-result hidden">
+        <header class="result-topbar">
+          <div>
+            <p class="eyebrow">RESULT DASHBOARD</p>
+            <h2>候选人评估与面试决策</h2>
+          </div>
+          <div class="result-actions">
+            <button id="editAgainBtn" type="button" class="secondary-btn">返回修改输入</button>
+          </div>
+        </header>
 
-      <section class="workspace">
-        <aside class="control-rail">
-          <article class="panel control-panel sticky-panel">
-            <div class="panel-header compact-header">
+        <section class="dashboard-overview-lite">
+          <article class="overview-hero-card">
+            <div class="panel-head panel-head-space">
               <div>
-                <p class="section-kicker">&#x8f93;&#x5165;&#x533a;</p>
-                <h2>&#x9762;&#x8bd5;&#x8f93;&#x5165;</h2>
-              </div>
-              <span class="source-pill">&#x672c;&#x5730; :8000</span>
-            </div>
-
-            <label for="sampleSelect">&#x6837;&#x4f8b;&#x5e93;</label>
-            <div class="sample-toolbar">
-              <select id="sampleSelect"><option value="">&#x8bf7;&#x9009;&#x62e9;&#x6837;&#x4f8b;</option></select>
-              <button id="sampleBtn" type="button">&#x586b;&#x5145;</button>
-            </div>
-
-            <label for="jobHint">&#x5c97;&#x4f4d;&#x63d0;&#x793a;</label>
-            <input id="jobHint" type="text" placeholder="&#x4f8b;&#x5982;&#xff1a;&#x7814;&#x53d1; / &#x9500;&#x552e; / &#x4ea7;&#x54c1;" />
-
-            <label for="transcript">&#x6574;&#x6bb5;&#x9762;&#x8bd5;&#x6587;&#x672c;</label>
-            <textarea id="transcript"></textarea>
-
-            <div class="actions actions-stack">
-              <button id="analyzeBtn" type="button">&#x5f00;&#x59cb;&#x5206;&#x6790;</button>
-            </div>
-          </article>
-
-          <article class="panel helper-panel">
-            <div class="panel-header compact-header">
-              <div>
-                <p class="section-kicker">&#x8c03;&#x8bd5;&#x8f85;&#x52a9;</p>
-                <h2>&#x8bf4;&#x660e;</h2>
-              </div>
-            </div>
-            <div class="helper-list">
-              <div class="helper-item">&#x5efa;&#x8bae;&#x4f7f;&#x7528;&#x5e26;&#x89d2;&#x8272;&#x6807;&#x8bb0;&#x7684;&#x6574;&#x6bb5;&#x6587;&#x672c;&#xff0c;&#x4f8b;&#x5982;&#x201c;&#x9762;&#x8bd5;&#x5b98;&#xff1a;&#x201d;&#x3001;&#x201c;&#x5019;&#x9009;&#x4eba;&#xff1a;&#x201d;&#x3002;</div>
-              <div class="helper-item">&#x9875;&#x9762;&#x9996;&#x6b21;&#x52a0;&#x8f7d;&#x4f1a;&#x663e;&#x793a;&#x9ed8;&#x8ba4;&#x7ed3;&#x679c;&#xff0c;&#x4fbf;&#x4e8e;&#x4e0d;&#x53d1;&#x8bf7;&#x6c42;&#x65f6;&#x5148;&#x8c03; UI&#x3002;</div>
-              <div class="helper-item">&#x53f3;&#x4fa7;&#x5de5;&#x4f5c;&#x6d41;&#x9762;&#x677f;&#x4f1a;&#x663e;&#x793a;&#x8bc1;&#x636e;&#x3001;&#x4f2a;&#x88c5;&#x626b;&#x63cf;&#x548c;&#x51b3;&#x7b56;&#x8f7d;&#x8377;&#x3002;</div>
-            </div>
-          </article>
-        </aside>
-
-        <section id="results" class="results-column">
-          <article class="panel summary-panel">
-            <div class="panel-header summary-head">
-              <div>
-                <p class="section-kicker">&#x7ed3;&#x8bba;&#x5c42;</p>
-                <h2>&#x5019;&#x9009;&#x4eba;&#x753b;&#x50cf;&#x603b;&#x7ed3;</h2>
+                <p class="section-kicker">OVERVIEW</p>
+                <h3>一句话结论</h3>
               </div>
               <div id="analysisSource" class="source-badge"></div>
             </div>
-            <div class="summary-grid">
-              <div class="hero-summary-card">
-                <div class="card-label">&#x4e00;&#x53e5;&#x8bdd;&#x98ce;&#x683c;&#x603b;&#x7ed3;</div>
-                <div id="candidateStyle" class="hero-summary-title"></div>
-                <p id="candidateStyleNote" class="card-note"></p>
+            <div id="candidateStyle" class="overview-title"></div>
+            <div id="riskTags" class="tag-list summary-tags"></div>
+            <div class="overview-metrics-row">
+              <article class="metric-chip"><span>风险等级</span><strong id="riskLevelTop">未判定</strong></article>
+              <article class="metric-chip"><span>问答轮次</span><strong id="turnCountTop">0</strong></article>
+              <article class="metric-chip"><span>岗位猜测</span><strong id="jobGuessTop">未知</strong></article>
+              <article class="metric-chip"><span>样本质量</span><strong id="sampleQualityTop">暂无数据</strong></article>
+            </div>
+          </article>
+
+          <article class="overview-score-card refined-score-card">
+            <div class="panel-head compact-head">
+              <div>
+                <p class="section-kicker">JUDGMENT</p>
+                <h3>快速判断</h3>
               </div>
-              <div class="summary-side-grid">
-                <div class="summary-side-card risk-card">
-                  <div class="card-label">&#x98ce;&#x9669;&#x63d0;&#x793a;</div>
-                  <div id="riskHeadline" class="card-title"></div>
-                  <p id="riskDetail" class="card-note"></p>
+            </div>
+            <div id="heroScore" class="hero-score-wrap"></div>
+            <div class="score-mini-grid">
+              <div class="mini-stat dark"><span>分析来源</span><strong id="analysisSourceTop">等待分析</strong></div>
+              <div class="mini-stat dark"><span>工作流阶段</span><strong id="workflowStageTop">0</strong></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="dashboard-main-grid">
+          <div class="dashboard-main-left">
+            <section class="insight-stack">
+              <article class="insight-structured-card risk-card">
+                <div class="insight-card-head">
+                  <span class="insight-icon-wrap danger">!</span>
+                  <div>
+                    <p class="section-kicker">INSIGHT 01</p>
+                    <h3>最大风险</h3>
+                  </div>
                 </div>
-                <div class="summary-side-card action-card">
-                  <div class="card-label">&#x63a8;&#x8350;&#x52a8;&#x4f5c;</div>
-                  <div id="nextAction" class="card-title"></div>
-                  <p id="nextActionDetail" class="card-note"></p>
+                <div id="riskHeadline" class="insight-title"></div>
+                <div id="riskBulletList" class="bullet-list"></div>
+              </article>
+
+              <article class="insight-structured-card action-card">
+                <div class="insight-card-head">
+                  <span class="insight-icon-wrap primary">→</span>
+                  <div>
+                    <p class="section-kicker">INSIGHT 02</p>
+                    <h3>建议动作</h3>
+                  </div>
+                </div>
+                <div id="nextAction" class="insight-title"></div>
+                <div id="actionBulletList" class="bullet-list"></div>
+              </article>
+
+              <article class="insight-structured-card truth-card">
+                <div class="insight-card-head">
+                  <span class="insight-icon-wrap neutral">◎</span>
+                  <div>
+                    <p class="section-kicker">INSIGHT 03</p>
+                    <h3>判断依据</h3>
+                  </div>
+                </div>
+                <div id="candidateStyleNote" class="insight-title subdued"></div>
+                <div id="evidenceBulletList" class="bullet-list"></div>
+              </article>
+            </section>
+          </div>
+
+          <aside class="dashboard-main-right">
+            <article class="panel disc-focus-card">
+              <div class="panel-head compact-head">
+                <div>
+                  <p class="section-kicker">DISC</p>
+                  <h3>结构理解入口</h3>
                 </div>
               </div>
-              <div class="followup-card">
-                <div class="card-label">&#x5efa;&#x8bae;&#x8ffd;&#x95ee;</div>
-                <div id="topFollowups" class="question-stack"></div>
+              <div class="disc-focus-layout">
+                <div id="discPie" class="disc-pie-card"></div>
+                <div class="disc-focus-side">
+                  <div id="discTagline" class="disc-tagline"></div>
+                  <p id="discExplain" class="disc-explain"></p>
+                  <div id="discBars" class="disc-bars"></div>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel capability-progress-panel">
+              <div class="panel-head compact-head">
+                <div>
+                  <p class="section-kicker">CAPABILITY</p>
+                  <h3>能力判断</h3>
+                </div>
+              </div>
+              <div id="capabilityCards" class="capability-progress-list"></div>
+            </article>
+          </aside>
+        </section>
+        <section class="dashboard-compare-row">
+          <article class="compare-surface">
+            <div class="panel-head compact-head">
+              <div>
+                <p class="section-kicker">COMPARE</p>
+                <h3>优势与风险</h3>
+              </div>
+            </div>
+            <div class="compare-columns bare-columns">
+              <div>
+                <span class="compare-heading positive">优势</span>
+                <div id="strengthList" class="micro-list bare-list"></div>
+              </div>
+              <div>
+                <span class="compare-heading negative">风险</span>
+                <div id="riskList" class="micro-list bare-list"></div>
               </div>
             </div>
           </article>
 
-          <div class="metric-row">
-            <article class="panel metric-card wide-card"><div class="panel-header compact-header"><div><p class="section-kicker">&#x5173;&#x952e;&#x6307;&#x6807;</p><h2>DISC &#x5206;&#x5e03;</h2></div></div><div class="disc-visual"><div id="discPie" class="disc-pie-card"></div><div id="discBars" class="disc-bars"></div></div></article>
-            <article class="panel metric-card"><div class="panel-header compact-header"><div><p class="section-kicker">&#x5173;&#x952e;&#x6307;&#x6807;</p><h2>&#x771f;&#x5b9e;&#x6027;&#x4e0e;&#x98ce;&#x9669;&#x63d0;&#x793a;</h2></div></div><div id="riskMeter" class="risk-meter"></div><div id="riskTags" class="tag-list"></div></article>
-            <article class="panel metric-card"><div class="panel-header compact-header"><div><p class="section-kicker">&#x5173;&#x952e;&#x6307;&#x6807;</p><h2>&#x8868;&#x8fbe;&#x4e0e;&#x7ed3;&#x6784;&#x80fd;&#x529b;</h2></div></div><div id="capabilityTags" class="tag-list"></div><div id="capabilitySummary" class="summary-box compact"></div></article>
-          </div>
+          <article class="followup-surface">
+            <div class="panel-head compact-head">
+              <div>
+                <p class="section-kicker">FOLLOW-UP</p>
+                <h3>建议追问</h3>
+              </div>
+            </div>
+            <div id="topFollowups" class="numbered-followups"></div>
+          </article>
+        </section>
 
-          <div class="workflow-row">
-            <article class="panel workflow-card"><div class="panel-header compact-header"><div><p class="section-kicker">&#x5de5;&#x4f5c;&#x6d41;</p><h2>&#x9636;&#x6bb5;&#x8f68;&#x8ff9;</h2></div></div><div id="workflowStages" class="workflow-list"></div></article>
-            <article class="panel workflow-card"><div class="panel-header compact-header"><div><p class="section-kicker">&#x5de5;&#x4f5c;&#x6d41;</p><h2>DISC &#x8bc1;&#x636e;&#x6458;&#x8981;</h2></div></div><div id="workflowEvidence" class="workflow-kv"></div></article>
-            <article class="panel workflow-card"><div class="panel-header compact-header"><div><p class="section-kicker">&#x5de5;&#x4f5c;&#x6d41;</p><h2>&#x4f2a;&#x88c5;&#x4e0e;&#x7f3a;&#x9677;&#x626b;&#x63cf;</h2></div></div><div id="workflowMasking" class="workflow-kv"></div></article>
-            <article class="panel workflow-card"><div class="panel-header compact-header"><div><p class="section-kicker">&#x5de5;&#x4f5c;&#x6d41;</p><h2>&#x51b3;&#x7b56;&#x8f7d;&#x8377;</h2></div></div><div id="workflowDecision" class="workflow-kv"></div></article>
-          </div>
+        <section class="dashboard-bottom-lite">
+          <article class="risk-strip-card">
+            <div class="risk-strip-copy">
+              <span class="section-kicker">RISK</span>
+              <strong id="riskStripHeadline">暂无风险总结</strong>
+              <p id="riskStripDetail">暂无风险细节。</p>
+            </div>
+            <div id="riskMeter" class="risk-strip-meter"></div>
+          </article>
 
-          <article class="panel interview-panel"><div class="panel-header compact-header"><div><p class="section-kicker">&#x7ed3;&#x6784;&#x89c6;&#x56fe;</p><h2>&#x9762;&#x8bd5;&#x7ed3;&#x6784;&#x901f;&#x89c8;</h2></div></div><div id="overview" class="chips"></div><div id="turns" class="turn-list"></div></article>
-
-          <details class="panel detail-panel" open>
-            <summary><span>&#x8be6;&#x7ec6;&#x5206;&#x6790;&#x5c42;</span><span>&#x5c55;&#x5f00;&#x67e5;&#x770b;&#x7ef4;&#x5ea6;&#x8bc1;&#x636e;&#x3001;&#x7f3a;&#x53e3;&#x3001;&#x539f;&#x5b50;&#x7279;&#x5f81;&#x4e0e;&#x539f;&#x59cb;&#x8fd4;&#x56de;</span></summary>
+          <details class="panel workflow-shell">
+            <summary>
+              <span>工作流过程</span>
+              <span>默认收起，仅在需要时查看 parse / feature / decision 等阶段</span>
+            </summary>
+            <div class="workflow-board workflow-board-refined">
+              <article class="workflow-card workflow-card-wide">
+                <div class="panel-head compact-head">
+                  <div>
+                    <p class="section-kicker">WORKFLOW</p>
+                    <h3>阶段轨迹</h3>
+                  </div>
+                </div>
+                <div id="workflowStages" class="workflow-list workflow-stepper"></div>
+              </article>
+              <article class="workflow-card">
+                <div class="panel-head compact-head">
+                  <div>
+                    <p class="section-kicker">WORKFLOW</p>
+                    <h3>DISC 证据</h3>
+                  </div>
+                </div>
+                <div id="workflowEvidence" class="workflow-kv"></div>
+              </article>
+              <article class="workflow-card">
+                <div class="panel-head compact-head">
+                  <div>
+                    <p class="section-kicker">WORKFLOW</p>
+                    <h3>缺陷扫描</h3>
+                  </div>
+                </div>
+                <div id="workflowMasking" class="workflow-kv"></div>
+              </article>
+              <article class="workflow-card">
+                <div class="panel-head compact-head">
+                  <div>
+                    <p class="section-kicker">WORKFLOW</p>
+                    <h3>决策载荷</h3>
+                  </div>
+                </div>
+                <div id="workflowDecision" class="workflow-kv"></div>
+              </article>
+            </div>
+          </details>
+          <details class="panel detail-panel">
+            <summary>
+              <span>结构化详情</span>
+              <span>包括面试映射、维度证据、追问建议和原始返回</span>
+            </summary>
             <div class="detail-content">
+              <div class="result-kpi-strip">
+                <article class="mini-stat result-stat"><span>候选人字数</span><strong id="candidateCharTop">0</strong></article>
+                <article class="mini-stat result-stat"><span>样本质量</span><strong id="sampleQualityTopDetail">暂无数据</strong></article>
+                <article class="mini-stat result-stat"><span>解析来源</span><strong id="parseSourceTop">未知</strong></article>
+              </div>
+              <article class="subpanel map-panel"><h3>面试结构速览</h3><div id="overview" class="chips"></div><div id="turns" class="turn-list"></div></article>
               <div class="detail-grid two-col">
-                <article class="subpanel"><h3>&#x7ef4;&#x5ea6;&#x8be6;&#x7ec6;&#x5206;&#x6790;</h3><div id="dimensions" class="dimension-grid"></div></article>
-                <article class="subpanel"><h3>&#x5173;&#x952e;&#x7f3a;&#x9677;</h3><div id="criticalFindings" class="list-block"></div></article>
+                <article class="subpanel"><h3>维度详细分析</h3><div id="dimensions" class="dimension-grid"></div></article>
+                <article class="subpanel"><h3>关键缺陷</h3><div id="criticalFindings" class="list-block"></div></article>
               </div>
               <div class="detail-grid two-col">
-                <article class="subpanel"><h3>&#x8bc1;&#x636e;&#x7f3a;&#x53e3;</h3><div id="evidenceGaps" class="list-block"></div></article>
-                <article class="subpanel"><h3>&#x884c;&#x4e3a;&#x5047;&#x8bbe;</h3><div id="hypotheses" class="list-block"></div></article>
+                <article class="subpanel"><h3>证据缺口</h3><div id="evidenceGaps" class="list-block"></div></article>
+                <article class="subpanel"><h3>行为假设</h3><div id="hypotheses" class="list-block"></div></article>
               </div>
               <div class="detail-grid two-col">
-                <article class="subpanel"><h3>&#x539f;&#x5b50;&#x7279;&#x5f81;</h3><div id="features" class="feature-list"></div></article>
-                <article class="subpanel"><h3>&#x66f4;&#x591a;&#x8ffd;&#x95ee;&#x5efa;&#x8bae;</h3><div id="followups" class="list-block"></div></article>
+                <article class="subpanel"><h3>原子特征</h3><div id="features" class="feature-list"></div></article>
+                <article class="subpanel"><h3>更多追问建议</h3><div id="followups" class="list-block"></div></article>
               </div>
-              <article class="subpanel"><h3>&#x6a21;&#x578b;&#x72b6;&#x6001;&#x4e0e;&#x539f;&#x59cb;&#x8fd4;&#x56de;</h3><div id="llmStatus" class="summary-box"></div><pre id="llmOutput" class="json-box"></pre></article>
+              <article class="subpanel"><h3>模型状态与原始返回</h3><div id="llmStatus" class="summary-box"></div><pre id="llmOutput" class="json-box"></pre></article>
             </div>
           </details>
         </section>
