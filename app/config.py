@@ -9,6 +9,9 @@ STATIC_DIR = BASE_DIR / "static"
 
 DISC_KNOWLEDGE_PATH = KNOWLEDGE_DIR / "DISC.yaml"
 DISC_PROMPT_PATH = PROMPTS_DIR / "disc_system_prompt.txt"
+# ========== MBTI 相关配置 ==========
+MBTI_KNOWLEDGE_PATH = KNOWLEDGE_DIR / "MBTI.yaml"
+MBTI_PROMPT_PATH = PROMPTS_DIR / "mbti_system_prompt.txt"
 
 DEFAULT_OPENAI_BASE_URL = "https://api.zhizengzeng.com/v1"
 DEFAULT_OPENAI_PARSER_MODEL = "gpt-5-mini"

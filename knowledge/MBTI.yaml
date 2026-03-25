@@ -1,0 +1,426 @@
+version: "1.0"
+model: "MBTI"
+scenario: "job_interview"
+purpose: "infer MBTI cognitive preferences from interview language and atomic NLP features"
+disclaimer:
+  - "MBTI reflects cognitive preferences, not skills or competencies."
+  - "Interview context may not reveal all dimensions equally."
+  - "Scores indicate tendency strength, not binary types."
+
+global_rules:
+  minimum_sample_words: 120
+  preferred_sample_words: 300
+  confidence_rules:
+    low:
+      - "single dimension evidence only"
+      - "contradictory signals across turns"
+      - "strong role-playing detected"
+    medium:
+      - "partial evidence across 2-3 dimensions"
+      - "some consistency in style"
+    high:
+      - "clear repeated patterns across all 4 dimensions"
+      - "spontaneous examples align with theory"
+  anti_overclaim:
+    - "avoid deterministic typing"
+    - "state preference strength explicitly"
+    - "acknowledge ambiguity when present"
+
+input_features:
+  lexical:
+    - action_verbs_ratio
+    - emotional_words_ratio
+    - social_words_ratio
+    - abstract_words_ratio
+    - detail_words_ratio
+    - certainty_words_ratio
+    - hedge_words_ratio
+  pronouns:
+    - first_person_singular_ratio
+    - first_person_plural_ratio
+  syntax:
+    - avg_sentence_length
+    - question_ratio
+    - logical_connector_ratio
+    - qualifier_ratio
+  discourse:
+    - star_structure_score
+    - topic_stability_score
+    - self_vs_team_orientation
+    - problem_vs_people_focus
+    - abstraction_level
+    - story_richness_score
+
+dimensions:
+  E_I:
+    label: "Extraversion vs Introversion"
+    description: "Energy source and social engagement style"
+    
+    E:
+      label: "Extraversion (外向)"
+      core_traits:
+        - "energy from external interaction"
+        - "thinks while talking"
+        - "broad social engagement"
+      interview_markers:
+        lexical:
+          keywords:
+            - "我们"
+            - "大家"
+            - "团队"
+            - "一起"
+            - "分享"
+            - "讨论"
+            - "沟通"
+            - "协作"
+          patterns:
+            - "frequent team stories"
+            - "emphasis on group dynamics"
+        syntax:
+          - "conversational rhythm"
+          - "higher question usage"
+          - "spontaneous elaboration"
+        discourse:
+          - "mentions many people by role"
+          - "describes group interactions vividly"
+          - "proactive communication style"
+        pronouns:
+          - "我们 > 我"
+          - "high first_person_plural_ratio"
+      feature_rules:
+        strong_positive:
+          - "social_words_ratio >= 0.015"
+          - "first_person_plural_ratio >= 0.012"
+          - "self_vs_team_orientation == 'team'"
+        soft_positive:
+          - "story_richness_score >= 0.65"
+          - "question_ratio >= 0.08"
+        negative:
+          - "first_person_singular_ratio > 0.025"
+          - "social_words_ratio < 0.005"
+    
+    I:
+      label: "Introversion (内向)"
+      core_traits:
+        - "energy from internal reflection"
+        - "thinks before talking"
+        - "selective social engagement"
+      interview_markers:
+        lexical:
+          keywords:
+            - "自己"
+            - "思考"
+            - "分析"
+            - "独立"
+            - "专注"
+            - "研究"
+          patterns:
+            - "individual responsibility emphasis"
+            - "depth over breadth in examples"
+        syntax:
+          - "more structured sentences"
+          - "lower spontaneous elaboration"
+        discourse:
+          - "fewer people mentioned"
+          - "focus on internal process"
+          - "measured communication pace"
+        pronouns:
+          - "我 > 我们"
+          - "high first_person_singular_ratio"
+      feature_rules:
+        strong_positive:
+          - "first_person_singular_ratio >= 0.018"
+          - "social_words_ratio < 0.008"
+          - "self_vs_team_orientation == 'self'"
+        soft_positive:
+          - "avg_sentence_length >= 25"
+          - "topic_stability_score >= 0.70"
+        negative:
+          - "first_person_plural_ratio > 0.015"
+          - "emotional_words_ratio > 0.012"
+    
+    scoring_logic:
+      formula: "E_score = E_evidence * 100 / (E_evidence + I_evidence)"
+      threshold: 55  # > 55 偏E, < 45 偏I, 中间为中性
+
+  N_S:
+    label: "Intuition vs Sensing"
+    description: "Information gathering preference"
+    
+    N:
+      label: "Intuition (直觉)"
+      core_traits:
+        - "focus on patterns and possibilities"
+        - "abstract thinking"
+        - "future-oriented"
+      interview_markers:
+        lexical:
+          keywords:
+            - "可能"
+            - "未来"
+            - "趋势"
+            - "创新"
+            - "模式"
+            - "潜力"
+            - "想象"
+            - "方向"
+            - "战略"
+          patterns:
+            - "hypothetical scenarios"
+            - "big picture framing"
+        syntax:
+          - "conditional statements"
+          - "conceptual language"
+        discourse:
+          - "abstracts from specific to general"
+          - "future possibilities mentioned"
+          - "explores multiple what-ifs"
+      feature_rules:
+        strong_positive:
+          - "abstraction_level == 'abstract'"
+          - "abstract_words_ratio >= 0.008"
+          - "hedge_words_ratio >= 0.008"
+        soft_positive:
+          - "qualifier_ratio >= 0.010"
+          - "detail_words_ratio < 0.012"
+        negative:
+          - "detail_words_ratio > 0.020"
+          - "star_structure_score > 0.85"
+    
+    S:
+      label: "Sensing (感觉)"
+      core_traits:
+        - "focus on concrete facts"
+        - "practical and detail-oriented"
+        - "present-focused"
+      interview_markers:
+        lexical:
+          keywords:
+            - "具体"
+            - "数据"
+            - "实际"
+            - "细节"
+            - "步骤"
+            - "现在"
+            - "经验"
+            - "事实"
+          patterns:
+            - "specific numbers and dates"
+            - "step-by-step descriptions"
+        syntax:
+          - "declarative statements"
+          - "sequential language"
+        discourse:
+          - "rich in operational detail"
+          - "examples grounded in past experience"
+          - "minimal speculation"
+      feature_rules:
+        strong_positive:
+          - "detail_words_ratio >= 0.015"
+          - "abstraction_level == 'grounded'"
+          - "star_structure_score >= 0.75"
+        soft_positive:
+          - "story_richness_score >= 0.70"
+          - "certainty_words_ratio >= 0.005"
+        negative:
+          - "abstract_words_ratio > 0.012"
+          - "hedge_words_ratio > 0.015"
+
+  T_F:
+    label: "Thinking vs Feeling"
+    description: "Decision-making preference"
+    
+    T:
+      label: "Thinking (思考)"
+      core_traits:
+        - "logic-based decisions"
+        - "objective analysis"
+        - "principle-driven"
+      interview_markers:
+        lexical:
+          keywords:
+            - "逻辑"
+            - "分析"
+            - "效率"
+            - "标准"
+            - "原则"
+            - "理性"
+            - "客观"
+            - "数据"
+          patterns:
+            - "cause-effect reasoning"
+            - "systematic breakdown"
+        syntax:
+          - "high logical connectors"
+          - "conditional reasoning"
+        discourse:
+          - "emphasizes objective criteria"
+          - "minimal emotional language"
+          - "focus on what is correct"
+        pronouns:
+          - "neutral pronoun usage"
+      feature_rules:
+        strong_positive:
+          - "logical_connector_ratio >= 0.015"
+          - "problem_vs_people_focus == 'problem'"
+          - "emotional_words_ratio < 0.006"
+        soft_positive:
+          - "certainty_words_ratio >= 0.006"
+          - "detail_words_ratio >= 0.012"
+        negative:
+          - "emotional_words_ratio > 0.012"
+          - "problem_vs_people_focus == 'people'"
+    
+    F:
+      label: "Feeling (情感)"
+      core_traits:
+        - "value-based decisions"
+        - "considers people impact"
+        - "harmony-seeking"
+      interview_markers:
+        lexical:
+          keywords:
+            - "感觉"
+            - "关心"
+            - "价值"
+            - "和谐"
+            - "认同"
+            - "信任"
+            - "关系"
+            - "支持"
+          patterns:
+            - "people-first framing"
+            - "emotional state descriptions"
+        syntax:
+          - "empathetic language"
+          - "value statements"
+        discourse:
+          - "mentions how people felt"
+          - "emphasizes interpersonal harmony"
+          - "focus on what is right for people"
+      feature_rules:
+        strong_positive:
+          - "emotional_words_ratio >= 0.010"
+          - "problem_vs_people_focus == 'people'"
+          - "social_words_ratio >= 0.012"
+        soft_positive:
+          - "first_person_plural_ratio >= 0.010"
+          - "hedge_words_ratio >= 0.008"
+        negative:
+          - "logical_connector_ratio > 0.020"
+          - "emotional_words_ratio < 0.004"
+
+  J_P:
+    label: "Judging vs Perceiving"
+    description: "Lifestyle and structure preference"
+    
+    J:
+      label: "Judging (判断)"
+      core_traits:
+        - "prefers structure and closure"
+        - "plan-oriented"
+        - "decisive"
+      interview_markers:
+        lexical:
+          keywords:
+            - "计划"
+            - "完成"
+            - "deadline"
+            - "按时"
+            - "目标"
+            - "安排"
+            - "决定"
+            - "确定"
+          patterns:
+            - "closure-seeking language"
+            - "completion emphasis"
+        syntax:
+          - "declarative conclusions"
+          - "structured sequences"
+        discourse:
+          - "emphasis on finishing tasks"
+          - "mentions plans and schedules"
+          - "prefers predictability"
+      feature_rules:
+        strong_positive:
+          - "star_structure_score >= 0.75"
+          - "action_verbs_ratio >= 0.018"
+          - "certainty_words_ratio >= 0.005"
+        soft_positive:
+          - "topic_stability_score >= 0.70"
+          - "qualifier_ratio < 0.008"
+        negative:
+          - "hedge_words_ratio > 0.012"
+          - "qualifier_ratio > 0.015"
+    
+    P:
+      label: "Perceiving (知觉)"
+      core_traits:
+        - "prefers flexibility and openness"
+        - "adaptive"
+        - "exploratory"
+      interview_markers:
+        lexical:
+          keywords:
+            - "灵活"
+            - "适应"
+            - "尝试"
+            - "探索"
+            - "变化"
+            - "机会"
+            - "调整"
+          patterns:
+            - "open-ended language"
+            - "adaptability emphasis"
+        syntax:
+          - "qualifying statements"
+          - "conditional phrasing"
+        discourse:
+          - "mentions adjusting plans"
+          - "comfortable with ambiguity"
+          - "explores alternatives"
+      feature_rules:
+        strong_positive:
+          - "hedge_words_ratio >= 0.010"
+          - "qualifier_ratio >= 0.012"
+          - "action_verbs_ratio < 0.015"
+        soft_positive:
+          - "question_ratio >= 0.08"
+          - "topic_stability_score < 0.65"
+        negative:
+          - "certainty_words_ratio > 0.008"
+          - "star_structure_score > 0.80"
+
+cross_validation:
+  disc_mbti_mapping:
+    D_high:
+      likely: ["E", "T", "J"]
+      unlikely: ["I", "F", "P"]
+    I_high:
+      likely: ["E", "F"]
+      unlikely: ["I", "T"]
+    S_high:
+      likely: ["I", "F", "P"]
+      unlikely: ["E", "T", "J"]
+    C_high:
+      likely: ["I", "T", "J"]
+      unlikely: ["E", "F", "P"]
+  
+  conflict_detection:
+    - pattern: "high_D + P"
+      description: "果断型与灵活型冲突"
+      recommendation: "追问：在压力下如何平衡速度与灵活？"
+    - pattern: "high_I + I(introvert)"
+      description: "影响型与内向冲突"
+      recommendation: "追问：独处时如何保持能量？"
+    - pattern: "high_C + P"
+      description: "谨慎型与开放型冲突"
+      recommendation: "追问：面对不确定性时的决策方式？"
+
+output_mapping:
+  type_format: "4-letter code (e.g., INTJ, ESFP)"
+  preference_strength:
+    clear: "> 60% in one direction"
+    moderate: "55-60%"
+    slight: "50-55%"
+    neutral: "45-55%"

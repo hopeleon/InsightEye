@@ -252,6 +252,151 @@ function renderDetailedLayer(report, analysis, source) {
   setHtml("llmStatus", llmStatus);
   setText("llmOutput", JSON.stringify(report.llm_analysis || report.disc_analysis, null, 2));
 }
+function renderMBTILayer(report) {
+  const mbti = report.mbti_analysis || {};
+  
+  if (!mbti.type) {
+    console.log("⚠️ 未检测到 MBTI 分析结果");
+    return;
+  }
+  
+  console.log("📊 渲染 MBTI 分析...", mbti);
+  
+  // ========== 渲染整体置信度 ==========
+  const confidenceBadge = document.getElementById("mbtiConfidence");
+  if (confidenceBadge) {
+    const conf = mbti.meta?.confidence || "low";
+    confidenceBadge.textContent = conf === "high" ? "高置信" : conf === "medium" ? "中置信" : "低置信";
+    confidenceBadge.className = `source-badge confidence-${conf}`;
+  }
+  
+  // ========== 渲染 MBTI 类型 ==========
+  const typeBadge = document.getElementById("mbtiTypeBadge");
+  if (typeBadge) {
+    typeBadge.textContent = mbti.type;
+    typeBadge.className = `mbti-type-badge mbti-${mbti.type.toLowerCase().replace(/x/g, "neutral")}`;
+  }
+  
+  const typeDesc = document.getElementById("mbtiTypeDesc");
+  if (typeDesc) {
+    typeDesc.textContent = mbti.type_description || "认知风格类型";
+  }
+  
+  // ========== 渲染冲突列表 ==========
+  const conflictsEl = document.getElementById("mbtiConflicts");
+  if (conflictsEl) {
+    const conflicts = mbti.conflicts || [];
+    
+    if (conflicts.length === 0) {
+      conflictsEl.innerHTML = '<div class="mbti-no-conflict">✓ DISC 与 MBTI 无明显冲突</div>';
+    } else {
+      conflictsEl.innerHTML = conflicts.map((item) => {
+        const severityClass = item.severity === "high" ? "high" : item.severity === "medium" ? "medium" : "low";
+        return `
+          <div class="mbti-conflict-item ${severityClass}">
+            <div class="mbti-conflict-head">
+              <span class="mbti-conflict-badge ${severityClass}">${item.severity === "high" ? "高" : item.severity === "medium" ? "中" : "低"}</span>
+              <strong>${safeText(item.description, TEXT.na)}</strong>
+            </div>
+            <p class="mbti-conflict-rec">${safeText(item.recommendation, "")}</p>
+          </div>
+        `;
+      }).join("");
+    }
+  }
+  
+  // ========== 渲染四维度 ==========
+  const dimensions = mbti.dimensions || {};
+  
+  renderMBTIDimension("E_I", dimensions.E_I || {});
+  renderMBTIDimension("N_S", dimensions.N_S || {});
+  renderMBTIDimension("T_F", dimensions.T_F || {});
+  renderMBTIDimension("J_P", dimensions.J_P || {});
+  
+  // ========== 渲染追问建议 ==========
+  const followupsEl = document.getElementById("mbtiFollowups");
+  if (followupsEl) {
+    const questions = mbti.follow_up_questions || [];
+    
+    if (questions.length === 0) {
+      followupsEl.innerHTML = '<div class="question-item">暂无MBTI追问建议</div>';
+    } else {
+      followupsEl.innerHTML = questions.map((q) => `
+        <div class="question-item">
+          <strong>${safeText(q.question, TEXT.na)}</strong>
+          <div>${safeText(q.purpose, "")}</div>
+        </div>
+      `).join("");
+    }
+  }
+  
+  console.log("✅ MBTI 渲染完成");
+}
+
+
+function renderMBTIDimension(dimKey, dimData) {
+  const preference = dimData.preference || "-";
+  const strength = dimData.strength || 50;
+  const summary = dimData.summary || "等待分析";
+  const evidence = dimData.evidence || {};
+  const scores = dimData.scores || {};
+  
+  // 更新偏好标签
+  const badgeEl = document.getElementById(`mbti${dimKey.replace("_", "")}`);
+  if (badgeEl) {
+    badgeEl.textContent = preference;
+    badgeEl.className = `mbti-pref-badge pref-${preference.toLowerCase()}`;
+  }
+  
+  // 更新进度条
+  const barWrapEl = document.getElementById(`mbti${dimKey.replace("_", "")}Bar`);
+  if (barWrapEl) {
+    const [leftKey, rightKey] = dimKey.split("_");
+    const leftScore = scores[leftKey] || 50;
+    const rightScore = scores[rightKey] || 50;
+    
+    barWrapEl.innerHTML = `
+      <div class="mbti-pref-labels">
+        <span>${leftKey} ${leftScore}%</span>
+        <span>${rightKey} ${rightScore}%</span>
+      </div>
+      <div class="mbti-pref-bar">
+        <div class="mbti-pref-fill left pref-${leftKey.toLowerCase()}" style="width: ${leftScore}%"></div>
+        <div class="mbti-pref-fill right pref-${rightKey.toLowerCase()}" style="width: ${rightScore}%"></div>
+        <div class="mbti-pref-center"></div>
+      </div>
+    `;
+  }
+  
+  // 更新总结
+  const summaryEl = document.getElementById(`mbti${dimKey.replace("_", "")}Summary`);
+  if (summaryEl) {
+    summaryEl.textContent = summary;
+  }
+  
+  // 更新证据
+  const evidenceEl = document.getElementById(`mbti${dimKey.replace("_", "")}Evidence`);
+  if (evidenceEl) {
+    const [leftKey, rightKey] = dimKey.split("_");
+    const leftEvidence = evidence[leftKey] || [];
+    const rightEvidence = evidence[rightKey] || [];
+    
+    evidenceEl.innerHTML = `
+      <div class="mbti-evidence-section">
+        <strong>${leftKey} 型证据:</strong>
+        <ul>
+          ${leftEvidence.length > 0 ? leftEvidence.map((e) => `<li>${e}</li>`).join("") : "<li>暂无</li>"}
+        </ul>
+      </div>
+      <div class="mbti-evidence-section">
+        <strong>${rightKey} 型证据:</strong>
+        <ul>
+          ${rightEvidence.length > 0 ? rightEvidence.map((e) => `<li>${e}</li>`).join("") : "<li>暂无</li>"}
+        </ul>
+      </div>
+    `;
+  }
+}
 function renderReport(report) {
   const primary = getPrimaryAnalysis(report);
   renderDecisionLayer(report, primary.analysis, primary.source);
@@ -259,6 +404,8 @@ function renderReport(report) {
   renderWorkflow(report);
   renderInterviewOverview(report);
   renderDetailedLayer(report, primary.analysis, primary.source);
+    // ========== 渲染 MBTI 分析 ==========
+  renderMBTILayer(report);
   statusEl.textContent = report.llm_status?.enabled ? `解析模型：${report.llm_status.parser_model} / 主分析模型：${report.llm_status.analysis_model}` : primary.source;
   lastReport = report;
 }

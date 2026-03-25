@@ -22,6 +22,12 @@ class WorkflowContext:
     masking_assessment: dict[str, Any] = field(default_factory=dict)
     decision_payload: dict[str, Any] = field(default_factory=dict)
     disc_analysis: dict[str, Any] = field(default_factory=dict)
+    
+    # ========== 新增 MBTI 字段 ==========
+    mbti_analysis: dict[str, Any] = field(default_factory=dict)
+    mbti_knowledge: dict[str, Any] = field(default_factory=dict)
+    # ====================================
+    
     analysis_output: dict[str, Any] | None = None
     analysis_error: str | None = None
     stage_trace: list[dict[str, Any]] = field(default_factory=list)

@@ -20,3 +20,18 @@ def load_disc_knowledge() -> dict:
 @lru_cache(maxsize=1)
 def load_disc_prompt() -> str:
     return _read_text(DISC_PROMPT_PATH)
+
+@lru_cache(maxsize=1)
+def load_mbti_knowledge() -> dict:
+    """加载 MBTI 知识库"""
+    from .config import MBTI_KNOWLEDGE_PATH
+    
+    return yaml.safe_load(_read_text(MBTI_KNOWLEDGE_PATH))
+
+
+@lru_cache(maxsize=1)
+def load_mbti_prompt() -> str:
+    """加载 MBTI 提示词"""
+    from .config import MBTI_PROMPT_PATH
+    
+    return _read_text(MBTI_PROMPT_PATH)
