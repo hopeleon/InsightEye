@@ -238,6 +238,7 @@ def extract_features(turns: list[dict]) -> dict:
         "qualifier_ratio": _ratio(_count_keywords(candidate_text, ("如果", "取决于", "前提", "通常", "在这种情况下")), total_chars),
         "logical_connector_ratio": _ratio(keyword_counts["logical"], total_chars),
         "contrast_connector_ratio": _ratio(keyword_counts["contrast"], total_chars),
+        "abstract_words_ratio": _ratio(keyword_counts["abstract"], total_chars),
         "modal_verb_ratio": _ratio(_count_keywords(candidate_text, ("会", "可以", "应该", "需要")), total_chars),
         "star_structure_score": star_structure_score,
         "topic_stability_score": _topic_stability(turns),
@@ -274,79 +275,6 @@ def extract_features(turns: list[dict]) -> dict:
         "_pronoun_counts": pronoun_counts,
         "_keyword_counts": keyword_counts,
     }
-
-
-def extract_industry_signals(
-    candidate_text: str,
-    total_chars: int,
-    industry_knowledge: dict,
-) -> dict:
-    """
-    基于行业知识库，对候选人文本打行业维度分数（0~1）。
-    只在行业知识库存在时生效，否则返回全零字典。
-    """
-    if not industry_knowledge or total_chars == 0:
-        return {
-            "industry_growth_score": 0.0,
-            "industry_ownership_score": 0.0,
-            "industry_cross_team_score": 0.0,
-            "industry_technical_depth_score": 0.0,
-            "industry_data_decision_score": 0.0,
-            "industry_iteration_agility_score": 0.0,
-            "industry_weak_vague_result": 0.0,
-            "industry_weak_team_vague": 0.0,
-            "industry_weak_process_without_why": 0.0,
-            "industry_weak_buzzword": 0.0,
-        }
-
-    def _kw_density(keywords: list[str]) -> float:
-        hits = sum(candidate_text.count(kw) for kw in keywords)
-        return round(min(1.0, hits * 1.5 / max(total_chars / 500, 1)), 4)
-
-    strong = industry_knowledge.get("strong_signals") or {}
-    weak = industry_knowledge.get("weak_signals") or {}
-
-    return {
-        "industry_growth_score": _kw_density(strong.get("growth_mindset", {}).get("keywords", [])),
-        "industry_ownership_score": _kw_density(strong.get("ownership", {}).get("keywords", [])),
-        "industry_cross_team_score": _kw_density(strong.get("cross_team_influence", {}).get("keywords", [])),
-        "industry_technical_depth_score": _kw_density(strong.get("technical_depth", {}).get("keywords", [])),
-        "industry_data_decision_score": _kw_density(strong.get("data_decision", {}).get("keywords", [])),
-        "industry_iteration_agility_score": _kw_density(strong.get("iteration_agility", {}).get("keywords", [])),
-        "industry_weak_vague_result": _kw_density(weak.get("vague_result", {}).get("keywords", [])),
-        "industry_weak_team_vague": _kw_density(weak.get("team_vague", {}).get("keywords", [])),
-        "industry_weak_process_without_why": _kw_density(weak.get("process_without_why", {}).get("keywords", [])),
-        "industry_weak_buzzword": _kw_density(weak.get("buzzword_without_detail", {}).get("keywords", [])),
-    }
-
-
-def extract_features_with_industry(
-    turns: list[dict],
-    industry_knowledge: dict | None,
-) -> dict:
-    """
-    提取通用原子特征 + 行业维度特征。
-    industry_knowledge 为 None 时，行业维度分数均为 0。
-    """
-    base = extract_features(turns)
-    candidate_text = "\n".join(turn["answer"] for turn in turns if turn["answer"]).strip()
-    total_chars = base.get("text_length", 1)
-    if industry_knowledge:
-        ind = extract_industry_signals(candidate_text, total_chars, industry_knowledge)
-    else:
-        ind = {
-            "industry_growth_score": 0.0,
-            "industry_ownership_score": 0.0,
-            "industry_cross_team_score": 0.0,
-            "industry_technical_depth_score": 0.0,
-            "industry_data_decision_score": 0.0,
-            "industry_iteration_agility_score": 0.0,
-            "industry_weak_vague_result": 0.0,
-            "industry_weak_team_vague": 0.0,
-            "industry_weak_process_without_why": 0.0,
-            "industry_weak_buzzword": 0.0,
-        }
-    return {**base, **ind}
 
 
 def feature_highlights(features: dict) -> list[dict]:

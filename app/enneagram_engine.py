@@ -2,6 +2,19 @@ from __future__ import annotations
 
 from collections import defaultdict
 
+
+def _to_float(val) -> float:
+    """安全将值转为 float，字符串非数字返回 0.0"""
+    if isinstance(val, (int, float)):
+        return float(val)
+    if isinstance(val, str):
+        try:
+            return float(val)
+        except ValueError:
+            return 0.0
+    return 0.0
+
+
 ALL_TYPES = (
     "type_1", "type_2", "type_3", "type_4", "type_5",
     "type_6", "type_7", "type_8", "type_9",
@@ -306,7 +319,7 @@ def analyze_enneagram(transcript: str, turns: list[dict], features: dict, knowle
         kw_count = _keyword_hits(transcript, _TYPE_KEYWORDS[type_key])
         rules_hit = sum(
             1 for fn, op, th, d, direction in _TYPE_FEATURE_RULES.get(type_key, [])
-            if _eval_condition(float(features.get(fn, 0.0)), op, th)
+            if _eval_condition(_to_float(features.get(fn, 0.0)), op, th)
         )
         key_evidence: list[str] = []
         if kw_count >= 5:

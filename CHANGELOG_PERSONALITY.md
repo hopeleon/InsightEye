@@ -1,6 +1,6 @@
 # 人格分析模块变更记录
 
-> 本文档记录 2026-03-24 本次会话中新增/修改的所有文件及其变更内容。
+> 本文档记录 2026-03-24 人格分析模块新增/修改的所有内容，以及本次会话（2026-03-25）的性能与 UI 优化。
 > 下次遇到问题时，可根据此文档还原或修复。
 
 ---
@@ -407,3 +407,85 @@ renderDetailedLayer  →  维度详情 / 关键缺陷 / 证据缺口 / 行为假
 ### 问题7：STAR.yaml YAML 解析错误
 - 运行 `python -c "import yaml; yaml.safe_load(open('knowledge/STAR.yaml', encoding='utf-8'))"`
 - 检查所有 `- "` 开头的行是否正确闭合，内部是否有未转义的 `"` 字符
+
+---
+
+## 七、本次会话变更（2026-03-25）
+
+### 性能优化：并行 LLM 执行
+
+#### `workflow/engine.py`
+**变更内容**：v0.3 → v0.4，重构 `run_personality_workflow()`，将可并行的阶段改为 `ThreadPoolExecutor` 并发执行。
+
+**并行结构**：
+```
+阶段一（顺序）：parse → feature
+阶段二（顺序）：star → disc_evidence → masking → disc → decision
+阶段三（并行 3 线程）：bigfive_stage | enneagram_stage | mbti_stage
+阶段四（顺序）：personality_mapping  ← 依赖三个结果
+阶段五（并行 2 线程）：llm_stage | llm_personality_stage
+```
+
+**新增函数**：
+```python
+def _run_disc_chain(context, disc_knowledge, disc_prompt)           # DISC 链（顺序）
+def _parallel_personality_stage(context, bigfive_kn, enneagram_kn) # 三个人格阶段并行
+def _run_llm_personality_stage(context, bigfive_prompt, enneagram_prompt)  # LLM 人格分析
+```
+
+**预期效果**：约节省 10-20 秒（取决于网络延迟）。
+
+#### `app/server.py`
+**变更内容**：在 `_serve_file()` 中增加缓存控制头，防止浏览器强缓存 `index.html` / JS / CSS 导致 UI 不更新。
+```python
+handler.send_header("Cache-Control", "no-store, max-age=0, must-revalidate")
+handler.send_header("Pragma", "no-cache")
+```
+
+### UI 优化
+
+#### `static/index.html`
+**变更内容**：
+1. 删除「调试辅助」面板（`helper-panel` article 整块移除）
+2. 将计时器、图谱加速勾选框、图谱状态指示器合并为一个 `.analyze-toolbar-options` 横条，紧跟在「开始分析」按钮下方
+3. 静态资源 URL 追加 `?v=20260324` 版本参数，强制拉新文件
+4. `<meta http-equiv="Cache-Control" content="no-store">` 防止 HTML 层缓存
+
+#### `static/styles.css`
+**变更内容**：新增三个 CSS 类：
+```css
+.analyze-toolbar          { flex-direction: column; gap: 12px; }
+.analyze-toolbar-options  { /* 灰绿色底横条，含计时器/勾选框/状态 */ }
+.timer-widget-inline      { flex-shrink: 0; }
+```
+
+### Bug 修复
+
+#### `workflow/knowledge_graph.py`
+**变更内容**：在 `try/except` 导入块中增加 `print()` 输出，便于终端排查知识图谱模块是否加载成功。
+
+#### `static/knowledge_graph_timer.js`
+**变更内容**：图谱状态「未启用」文案改为「**服务端未加载**」，title 提示更新为：
+> "知识图谱加速由服务端控制。勾选框只决定是否请求启用；若服务端未加载该模块，会显示此状态。"
+
+#### `workflow/engine.py`
+**变更内容**：MBTI 阶段异常时增加 `print(f"[MBTI] 阶段异常: {e}")` 输出，便于终端排查 MBTI 为空的原因。
+
+### 排查补充
+
+### 问题8：页面 UI 没有显示新功能（「开始分析」下方没有计时器和图谱选项）
+- **原因**：浏览器强缓存了旧版 `index.html`
+- **解决**：重启 `python run_demo.py`，刷新页面（Ctrl+Shift+R 强制刷新），或访问 `http://127.0.0.1:8000/?t=1`
+
+### 问题9：图谱指示器显示「服务端未加载」
+- **原因**：`workflow/knowledge_graph.py` 导入失败（YAML 缺失或语法错误）
+- **排查**：查看服务器启动时的终端输出，若有 `[知识图谱] 模块未加载: ...` 则定位具体错误
+
+### 问题10：MBTI 显示「暂无数据」
+- **排查**：分析完成后查看终端，若有 `[MBTI] 阶段异常: ...` 输出则定位具体错误
+- **常见原因**：`knowledge/MBTI.yaml` 中 `dimensions[E_I][E]` 等路径下缺少 `feature_rules` 字段
+
+### 问题11：分析速度慢（超过 30 秒）
+- **原因**：13 个 LLM + 规则调用顺序执行（已通过并行化修复）
+- **确认**：`workflow/engine.py` 版本号已升至 v0.4，若仍有此问题检查终端是否出现 Python 错误
+- **若用 DISC-only 模式**（`/api/analyze`）：只有 7 个阶段，速度约为完整版的 1/2

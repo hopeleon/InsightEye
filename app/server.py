@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 import mimetypes
 from http import HTTPStatus
@@ -31,6 +32,9 @@ def _serve_file(handler: BaseHTTPRequestHandler, path: Path) -> None:
     handler.send_response(200)
     handler.send_header("Content-Type", f"{mime_type or 'application/octet-stream'}; charset=utf-8")
     handler.send_header("Content-Length", str(len(data)))
+    # 避免浏览器长期缓存 index.html / JS / CSS，否则 UI 更新后用户仍看到旧版页面
+    handler.send_header("Cache-Control", "no-store, max-age=0, must-revalidate")
+    handler.send_header("Pragma", "no-cache")
     handler.end_headers()
     handler.wfile.write(data)
 
@@ -76,10 +80,23 @@ class DemoHandler(BaseHTTPRequestHandler):
             return
 
         job_hint = (payload.get("job_hint_optional") or "").strip()
-        if route == "/api/analyze/full":
-            report = analyze_interview_full(transcript, job_hint)
+        raw_kg = payload.get("use_knowledge_graph", True)
+        if isinstance(raw_kg, str):
+            use_knowledge_graph = raw_kg.strip().lower() not in ("0", "false", "no", "off")
         else:
-            report = analyze_interview(transcript, job_hint)
+            use_knowledge_graph = bool(raw_kg)
+        if route == "/api/analyze/full":
+            report = analyze_interview_full(
+                transcript,
+                job_hint,
+                apply_knowledge_graph=use_knowledge_graph,
+            )
+        else:
+            report = analyze_interview(
+                transcript,
+                job_hint,
+                apply_knowledge_graph=use_knowledge_graph,
+            )
         _json_response(self, report)
 
     def log_message(self, format: str, *args) -> None:

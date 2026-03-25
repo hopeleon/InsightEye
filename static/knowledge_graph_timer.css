@@ -1,0 +1,112 @@
+/* ============================================================
+   计时器模块 — knowledge_graph_timer.css
+   用途：在"开始分析"按钮旁显示分析耗时（秒），便于性能观察
+   依赖：无需任何第三方库，直接操作 DOM
+   ============================================================ */
+
+#timer-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-2, #2c5f66);
+  background: rgba(44, 95, 102, 0.08);
+  border: 1px solid rgba(44, 95, 102, 0.18);
+  border-radius: 999px;
+  padding: 6px 14px;
+  min-width: 90px;
+  justify-content: center;
+  vertical-align: middle;
+  cursor: default;
+  user-select: none;
+  transition: opacity 200ms ease;
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+#timer-widget.running {
+  animation: timer-pulse 1.4s ease-in-out infinite;
+}
+
+#timer-widget.done {
+  animation: none;
+  color: var(--ok, #3a936f);
+  border-color: rgba(58, 147, 111, 0.3);
+  background: rgba(58, 147, 111, 0.08);
+}
+
+#timer-widget.slow {
+  color: var(--warn, #d89b2b);
+  border-color: rgba(216, 155, 43, 0.3);
+  background: rgba(216, 155, 43, 0.08);
+}
+
+#timer-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* 计时数字 */
+#timer-ms {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  font-size: 13px;
+}
+
+/* 图谱加速状态指示器 */
+#graph-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent, #935c2f);
+  background: rgba(147, 92, 47, 0.08);
+  border: 1px solid rgba(147, 92, 47, 0.15);
+  border-radius: 999px;
+  padding: 5px 10px;
+  cursor: default;
+  user-select: none;
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  vertical-align: middle;
+}
+
+#graph-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok, #3a936f);
+  flex-shrink: 0;
+}
+
+#graph-status.boosted #graph-dot {
+  background: var(--ok, #3a936f);
+  animation: dot-blink 2s ease-in-out infinite;
+}
+
+#graph-status.normal #graph-dot {
+  background: var(--muted, #6d665d);
+  animation: none;
+}
+
+#graph-status.pending {
+  color: var(--muted, #6d665d);
+  background: rgba(109, 102, 93, 0.06);
+  border-color: rgba(109, 102, 93, 0.12);
+}
+
+#graph-status.pending #graph-dot {
+  background: var(--muted, #6d665d);
+  animation: none;
+}
+
+@keyframes timer-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+@keyframes dot-blink {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.4); }
+}

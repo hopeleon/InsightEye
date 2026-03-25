@@ -42,6 +42,137 @@ const DISC_META = {
   C: { label: "C / \u84dd\u8272", className: "c", style: "\u7ed3\u6784\u6e05\u6670\u3001\u6ce8\u91cd\u7ec6\u8282" },
 };
 
+const MBTI_DIM_LABELS = {
+  E_I: "\u80fd\u91cf\u6765\u6e90",
+  N_S: "\u4fe1\u606f\u83b7\u53d6",
+  T_F: "\u51b3\u7b56\u65b9\u5f0f",
+  J_P: "\u751f\u6d3b\u65b9\u5f0f",
+};
+
+/** WHR \u540c\u6b3e\uff1a\u7ef4\u5ea6\u4fa7\u6807\u7b7e\u4e0e\u8272\u5f69\uff08renderMBTIDimensions / \u5361\u7247\u6761\u4f9d\u8d56\u6b64\u5e38\u91cf\uff09 */
+const MBTI_META = {
+  E: { label: "\u5916\u5411 E", color: "#e57373" },
+  I: { label: "\u5185\u5411 I", color: "#64b5f6" },
+  N: { label: "\u76f4\u89c9 N", color: "#ba68c8" },
+  S: { label: "\u5b9e\u611f S", color: "#ffb74d" },
+  T: { label: "\u601d\u8003 T", color: "#4fc3f7" },
+  F: { label: "\u60c5\u611f F", color: "#f06292" },
+  J: { label: "\u5224\u65ad J", color: "#7986cb" },
+  P: { label: "\u77e5\u89c9 P", color: "#81c784" },
+  X: { label: "\u672a\u5b9a X", color: "#9e9e9e" },
+};
+
+// ========== MBTI \u515a\u5e95\u6d4b\u677f\uff1a\u6240\u6709\u5185\u5bb9\u653e\u5165 personality-row \u7684 mbtiCards \u5bb9\u5668\uff0c\u6c47\u96c6\u7c7b\u578b\u3001\u56db\u7ef4\u5ea6\u3001\u8ffd\u95ee\u548c\u51b2\u7a81 ==========
+
+function mbtiConfLevel(conf) {
+  const c = String(conf || "").toLowerCase();
+  if (c.includes("clear") || c.includes("high")) return "high";
+  if (c.includes("moderate") || c.includes("medium")) return "medium";
+  if (c.includes("slight") || c.includes("neutral") || c.includes("low")) return "low";
+  return "low";
+}
+
+/**
+ * MBTI \u515a\u5e95\u6d4b\u677f\uff1a\u6240\u6709\u5185\u5bb9\u653e\u5165 personality-row \u7684 #mbtiCards
+ * \u5305\u542b\uff1a\u7c7b\u578b\u5361\u3001\u56db\u7ef4\u5ea6\u3001\u8ffd\u95ee\u5efa\u8bae\u3001\u51b2\u7a81\u63d0\u793a
+ */
+function renderMbtiLayer(report) {
+  const mbti = report.mbti_analysis || report.workflow?.mbti_analysis || report.workflow?.mbti_result;
+  if (!mbti || !mbti.dimensions) {
+    setHtml("mbtiCards", `<div class="mbti-na">${TEXT.na}</div>`);
+    return;
+  }
+
+  const meta    = mbti.meta || {};
+  const type    = safeText(mbti.type, TEXT.unknown);
+  const typeDesc = safeText(mbti.type_description, TEXT.noDetail);
+  const conf    = safeText(meta.confidence, "medium");
+  const confCls = mbtiConfLevel(conf);
+  const sampleQ = safeText(meta.sample_quality, "");
+  const words   = meta.word_count ?? TEXT.na;
+  const turns   = meta.turn_count ?? TEXT.na;
+
+  // \u7c7b\u578b\u5361\uff08\u590d\u76f6\u80cc\u666f\uff0c\u5b57\u7b26\u7279\u8272\uff09
+  const typeBadgeColor = confCls === "high" ? "#2f8667" : confCls === "medium" ? "#764ba2" : "#9e9e9e";
+  const typeBadge = `
+    <div class="mbti-hero">
+      <div class="mbti-type-badge" style="background:${typeBadgeColor}">${type}</div>
+      <div class="mbti-hero-meta">
+        <p class="mbti-type-desc">${typeDesc}</p>
+        <div class="mbti-meta-row">
+          <span class="mbti-meta-chip">\u6837\u672c\uff1a${sampleQ || TEXT.na}</span>
+          <span class="mbti-meta-chip">\u7f6e\u4fe1\u5ea6\uff1a<span class="risk-badge ${confCls}">${conf}</span></span>
+          <span class="mbti-meta-chip">\u5b57\u6570\uff1a${words}</span>
+          <span class="mbti-meta-chip">\u56de\u5408\uff1a${turns}</span>
+        </div>
+      </div>
+    </div>`;
+
+  // \u56db\u7ef4\u5ea6\uff082\u00d72 \u5361\u7247\u680f\uff09
+  const dimOrder = ["E_I", "N_S", "T_F", "J_P"];
+  const dimCards = `<div class="mbti-dim-grid">${dimOrder.map((dim) => {
+    const obj      = mbti.dimensions[dim] || {};
+    const pref     = safeText(obj.preference, "X");
+    const strength = Number(obj.strength);
+    const conf2    = safeText(obj.confidence, "medium");
+    const pct      = Number.isFinite(strength) ? Math.max(6, Math.round(strength)) : 0;
+    const color    = MBTI_META[pref]?.color || "#9e9e9e";
+    return `
+      <div class="mbti-dim-card" style="border-top:3px solid ${color}">
+        <div class="mbti-dim-head">
+          <span class="mbti-dim-label">${MBTI_DIM_LABELS[dim] || dim}</span>
+          <span class="mbti-pref-tag" style="background:${color}">${pref}</span>
+        </div>
+        <div class="mbti-bar-track">
+          <div class="mbti-bar-fill" style="width:${pct}%;background:${color}"></div>
+        </div>
+        <div class="mbti-dim-footer">
+          <span class="mbti-strength">${pct}%</span>
+          <span class="risk-badge ${mbtiConfLevel(conf2)}">${conf2}</span>
+        </div>
+      </div>`;
+  }).join("")}</div>`;
+
+  // \u8ffd\u95ee\u5efa\u8bae
+  const followups = (mbti.follow_up_questions || []).slice(0, 3);
+  const followupHtml = followups.length
+    ? `
+      <div class="mbti-section">
+        <div class="mbti-section-title">\u8ffd\u95ee\u5efa\u8bae</div>
+        ${followups.map((q) => `
+          <div class="mbti-question">
+            <div class="mbti-q-meta"><span class="mbti-dim-tag">${safeText(q.dimension, "")}</span></div>
+            <p class="mbti-q-text"><strong>${safeText(q.question)}</strong></p>
+            <p class="mbti-q-purpose">${safeText(q.purpose)}</p>
+          </div>`).join("")}
+      </div>`
+    : "";
+
+  // \u51b2\u7a81\u63d0\u793a
+  const conflicts = (mbti.conflicts || []).slice(0, 2);
+  const conflictHtml = conflicts.length
+    ? `
+      <div class="mbti-section">
+        <div class="mbti-section-title">\u4ea4\u53c9\u9a8c\u8bc1</div>
+        ${conflicts.map((c) => {
+          const sev = safeText(c.severity, "low");
+          const col = sev === "high" ? "var(--danger)" : sev === "medium" ? "var(--warn)" : "var(--ok)";
+          return `
+            <div class="mbti-conflict-item" style="border-left:3px solid ${col}">
+              <div class="mbti-conflict-head">
+                <strong>${safeText(c.type)}</strong>
+                <span class="risk-badge ${sev}">${sev}</span>
+              </div>
+              <p class="mbti-conflict-desc">${safeText(c.description)}</p>
+              ${c.recommendation ? `<p class="mbti-conflict-rec">\u5efa\u8bae\uff1a${safeText(c.recommendation)}</p>` : ""}
+            </div>`;
+        }).join("")}
+      </div>`
+    : "";
+
+  setHtml("mbtiCards", typeBadge + dimCards + followupHtml + conflictHtml);
+}
+
 const DEFAULT_TRANSCRIPT = `\u9762\u8bd5\u5b98\uff1a\u8bb2\u4e00\u4e2a\u4f60\u505a\u8fc7\u7684\u6280\u672f\u9879\u76ee\u3002
 \u5019\u9009\u4eba\uff1a\u6211\u4e4b\u524d\u53c2\u4e0e\u8fc7\u4e00\u4e2a\u8ba2\u5355\u7cfb\u7edf\u4f18\u5316\u9879\u76ee\uff0c\u9ad8\u5cf0\u671f\u54cd\u5e94\u65f6\u95f4\u4e0d\u592a\u7a33\u5b9a\u3002\u6211\u4e3b\u8981\u53c2\u4e0e\u4e86\u63a5\u53e3\u548c\u6570\u636e\u6d41\u7a0b\u4f18\u5316\uff0c\u4e5f\u770b\u4e86\u65e5\u5fd7\u548c\u76d1\u63a7\uff0c\u8c03\u6574\u4e86\u4e00\u4e9b\u903b\u8f91\uff0c\u8fd8\u52a0\u4e86\u4e00\u90e8\u5206\u7f13\u5b58\uff0c\u6574\u4f53\u6027\u80fd\u6709\u4e00\u5b9a\u6539\u5584\u3002
 \u9762\u8bd5\u5b98\uff1a\u4f60\u5177\u4f53\u662f\u600e\u4e48\u5b9a\u4f4d\u95ee\u9898\u7684\uff1f
@@ -137,6 +268,23 @@ const DEFAULT_REPORT = {
     ],
     cross_model_notes: ["\u4e09\u578b\u516c\u5f00\u80fd\u529b\u4e0eDICS\u7c7b\u578b\u8868\u73b0\u57fa\u672c\u4e00\u81f4\uff0c\u5efa\u8bae\u5173\u6ce8\u5173\u6ce8\u6280\u672f\u6df1\u5ea6\u548c\u7ed3\u679c\u5f52\u56fe\u80fd\u529b\u3002"],
   },
+  mbti_analysis: {
+    meta: { sample_quality: "medium", confidence: "medium", word_count: 118, turn_count: 2 },
+    type: "ISTJ",
+    type_description: "\u9ed8\u8ba4\u9884\u89c8\uff1a\u6837\u672c\u504f\u6280\u672f\u7ec6\u8282\u4e0e\u903b\u8f91\u5b9a\u4f4d\uff0c\u7c7b\u578b\u4ec5\u4f9b\u5c55\u793a\u3002\u70b9\u51fb\u300c\u5f00\u59cb\u5206\u6790\u300d\u540e\u66ff\u6362\u4e3a\u5b9e\u65f6\u89c4\u5219\u7ed3\u679c\u3002",
+    dimensions: {
+      E_I: { preference: "I", strength: 58, confidence: "medium", scores: { E: 32, I: 48 }, evidence: { E: ["\u793a\u4f8b\uff1a\u793e\u4ea4\u8bcd\u6c47\u5360\u6bd4\u504f\u4f4e"], I: ["\u504f\u4e2a\u4eba\u884c\u52a8\u4e0e\u6280\u672f\u7ec6\u8282\u63cf\u8ff0"] } },
+      N_S: { preference: "S", strength: 54, confidence: "medium", scores: { N: 36, S: 44 }, evidence: { N: [], S: ["\u5173\u6ce8\u65e5\u5fd7\u3001\u76d1\u63a7\u4e0e\u63a5\u53e3\u54cd\u5e94\u7b49\u5177\u4f53\u7ec6\u8282"] } },
+      T_F: { preference: "T", strength: 62, confidence: "medium", scores: { T: 51, F: 31 }, evidence: { T: ["\u504f\u95ee\u9898\u4e0e\u673a\u5236\u5b9a\u4f4d"], F: [] } },
+      J_P: { preference: "J", strength: 50, confidence: "low", scores: { J: 42, P: 36 }, evidence: { J: ["\u56de\u7b54\u6709\u660e\u663e\u6b65\u9aa4\u611f"], P: [] } },
+    },
+    conflicts: [],
+    follow_up_questions: [
+      { dimension: "J_P", question: "\u9047\u5230\u65b0\u9700\u6c42\u65f6\uff0c\u4f60\u66f4\u5e38\u5148\u9501\u5b9a\u65b9\u6848\u8fd8\u662f\u5148\u4fdd\u7559\u7075\u6d3b\u6027\uff1f", purpose: "\u9a8c\u8bc1 J/P \u5728\u5de5\u4f5c\u8282\u594f\u4e0a\u7684\u8868\u8fbe\u3002" },
+    ],
+    evidence_summary: {},
+  },
+  graph_boost: { enabled: false, skipped_stages: [], speedup_ratio: 0 },
   llm_analysis: null,
   llm_status: { enabled: false, parser_model: "gpt-5-mini", analysis_model: "gpt-5.4", parser_error: null, analysis_error: null, parser_output_available: false },
   workflow: {
@@ -290,7 +438,7 @@ function pickEnneagramForSecondary(report) {
 
 /** \u5408\u5e76 API / \u7f13\u5b58\u5f02\u5e38\u7684 dimension_scores\uff1b\u7f3a\u5931\u65f6\u7528 atomic_features \u7684 star_*_score \u5c55\u793a\u3002 */
 function normalizeStarForSecondary(report) {
-  const star = report.star_analysis;
+  const star = report.star_analysis || report.workflow?.star_analysis || report.workflow?.star_result;
   const rawDs =
     star && typeof star === "object" && star.dimension_scores && typeof star.dimension_scores === "object"
       ? star.dimension_scores
@@ -310,6 +458,14 @@ function normalizeStarForSecondary(report) {
         };
       }
     }
+    const direct = Number(rawDs[dim] ?? rawDs[dim.toLowerCase()]);
+    if (!normalizedDs[dim] && Number.isFinite(direct)) {
+      normalizedDs[dim] = {
+        score: direct,
+        band: direct >= 75 ? "high" : direct >= 50 ? "medium" : "low",
+        interpretation: "",
+      };
+    }
   }
   const f = report.atomic_features || {};
   for (const dim of letters) {
@@ -322,6 +478,17 @@ function normalizeStarForSecondary(report) {
       score: pct,
       band,
       interpretation: "\u6839\u636e\u539f\u5b50\u7279\u5f81\u5c55\u793a",
+    };
+  }
+  const legacyScores = star && typeof star === "object" && star.scores && typeof star.scores === "object" ? star.scores : {};
+  for (const dim of letters) {
+    if (normalizedDs[dim]) continue;
+    const raw = Number(legacyScores[dim]);
+    if (!Number.isFinite(raw)) continue;
+    normalizedDs[dim] = {
+      score: raw,
+      band: raw >= 75 ? "high" : raw >= 50 ? "medium" : "low",
+      interpretation: "\u6839\u636e\u517c\u5bb9\u5b57\u6bb5\u5c55\u793a",
     };
   }
   if (Object.keys(normalizedDs).length === 0) return null;
@@ -431,7 +598,14 @@ function renderPersonalitySecondary(report) {
     const body = (dims || TEXT.na) + defects + confidenceTag;
     setHtml("starCards", body.trim() ? body : `<div class="list-item">${TEXT.na}</div>`);
   } else {
-    setHtml("starCards", `<div class="list-item">${TEXT.na}</div>`);
+    const fallback = report.atomic_features || {};
+    const fromAtomic = ["S", "T", "A", "R"].map((dim) => {
+      const raw = Number(fallback[`star_${dim.toLowerCase()}_score`]);
+      if (!Number.isFinite(raw)) return "";
+      const pct = raw <= 1 ? Math.round(raw * 100) : Math.round(raw);
+      return `<div class="personality-star-item low"><strong>${dim}</strong> ${pct}</div>`;
+    }).join("");
+    setHtml("starCards", fromAtomic || `<div class="list-item">${TEXT.na}</div>`);
   }
 }
 
@@ -467,12 +641,12 @@ function renderDecisionLayer(report, analysis, source) { setText("analysisSource
 function renderMetricsLayer(report, analysis) { setHtml("discPie", renderDiscPie(analysis)); setHtml("discBars", renderDiscBars(analysis)); const riskClass = riskLevelClass(analysis.meta?.impression_management_risk); setHtml("riskMeter", `<div class="risk-head"><strong>${buildRiskHeadline(analysis)}</strong><span class="risk-badge ${riskClass}">${safeText(analysis.meta?.impression_management_risk, "\u4f4e")}</span></div><p class="card-note">${buildRiskDetail(analysis)}</p>`); setHtml("riskTags", createList([...(analysis.hire_risks || []), ...(analysis.evidence_gaps || []), ...((analysis.meta?.notes || []).slice(0, 2))].slice(0, 4), (note) => `<div class="tag">${note}</div>`, "\u6682\u65e0\u98ce\u9669\u6807\u7b7e")); const capabilityTags = buildCapabilityTags(report); setHtml("capabilityTags", capabilityTags.map((tag) => `<div class="tag">${tag}</div>`).join("")); setHtml("capabilitySummary", `${capabilityTags.join(" / ")}\u3002${TEXT.validateEvidence}`); }
 function renderInterviewOverview(report) { setText("turnCountTop", String(report.input_overview?.turn_count || 0)); setHtml("overview", [`<div class="chip">\u5c97\u4f4d\u731c\u6d4b\uff1a${report.interview_map?.job_inference?.value || TEXT.unknown}</div>`,`<div class="chip">\u95ee\u7b54\u8f6e\u6b21\uff1a${report.input_overview?.turn_count || 0}</div>`,`<div class="chip">\u5019\u9009\u4eba\u5b57\u6570\uff1a${report.input_overview?.candidate_char_count || 0}</div>`,`<div class="chip">\u6837\u672c\u8d28\u91cf\uff1a${safeText(report.llm_analysis?.meta?.sample_quality || report.disc_analysis?.meta?.sample_quality)}</div>`,`<div class="chip">\u89e3\u6790\u6765\u6e90\uff1a${safeText(report.interview_map?.parse_source)}</div>`].join("")); setHtml("turns", createList(report.interview_map?.turns, (turn) => `<div class="turn-item"><div class="type">\u7b2c ${turn.turn_id} \u8f6e \u00b7 ${safeText(turn.question_type)}</div><p><strong>\u95ee\u9898\uff1a</strong>${safeText(turn.question, TEXT.na)}</p><p><strong>\u56de\u7b54\u6458\u8981\uff1a</strong>${safeText(turn.answer_summary)}</p></div>`, "\u6682\u65e0\u95ee\u7b54\u6620\u5c04")); }
 function renderDetailedLayer(report, analysis, source) { renderDimensionCards("dimensions", analysis.dimension_analysis || {}); setHtml("criticalFindings", createList(analysis.critical_findings, (item) => `<div class="list-item"><div class="type">${safeText(item.severity)}</div><p><strong>${safeText(item.finding)}</strong></p><p>${(item.basis || []).join("\uff1b") || "\u6682\u65e0\u4f9d\u636e"}</p><p>${safeText(item.impact, "\u6682\u65e0\u5f71\u54cd\u8bf4\u660e")}</p></div>`, "\u6682\u65e0\u5173\u952e\u7f3a\u9677")); setHtml("evidenceGaps", createList(analysis.evidence_gaps, (item) => `<div class="list-item"><p>${safeText(item)}</p></div>`, "\u6682\u65e0\u8bc1\u636e\u7f3a\u53e3")); setHtml("features", createList(report.atomic_features ? [{ label: "STAR \u5b8c\u6574\u5ea6", value: `${Math.round((report.atomic_features.star_structure_score || 0) * 100)}%` },{ label: "\u903b\u8f91\u8fde\u63a5\u8bcd\u6bd4\u4f8b", value: report.atomic_features.logical_connector_ratio },{ label: "\u52a8\u4f5c\u52a8\u8bcd\u6bd4\u4f8b", value: report.atomic_features.action_verbs_ratio },{ label: "\u6545\u4e8b\u4e30\u5bcc\u5ea6", value: `${Math.round((report.atomic_features.story_richness_score || 0) * 100)}%` },{ label: "\u4e2a\u4eba / \u56e2\u961f\u53d6\u5411", value: report.atomic_features.self_vs_team_orientation },{ label: "\u95ee\u9898 / \u4eba\u9645\u53d6\u5411", value: report.atomic_features.problem_vs_people_focus }] : [], (item) => `<div class="feature-item"><strong>${item.label}</strong><div>${item.value}</div></div>`, "\u6682\u65e0\u539f\u5b50\u7279\u5f81")); setHtml("hypotheses", createList(analysis.behavioral_hypotheses, (item) => `<div class="list-item"><div class="type">${safeText(item.strength)}</div><p>${safeText(item.hypothesis)}</p><p>${(item.basis || []).join("\uff1b")}</p></div>`, "\u6682\u65e0\u884c\u4e3a\u5047\u8bbe")); setHtml("followups", createList(analysis.follow_up_questions, (item) => `<div class="list-item"><div class="type">${safeText(item.target_dimension)}</div><p>${safeText(item.question)}</p><p>${safeText(item.purpose)}</p></div>`, "\u6682\u65e0\u8ffd\u95ee\u5efa\u8bae")); const llmStatus = report.llm_status?.enabled ? [`\u5f53\u524d\u4e3b\u89c6\u56fe\uff1a${source}`,`\u89e3\u6790\u6a21\u578b\uff1a${report.llm_status.parser_model}`,`\u4e3b\u5206\u6790\u6a21\u578b\uff1a${report.llm_status.analysis_model}`,report.llm_status.parser_error ? `\u89e3\u6790\u9519\u8bef\uff1a${report.llm_status.parser_error}` : "\u89e3\u6790\u6a21\u578b\u53ef\u7528\u3002",report.llm_status.analysis_error ? `\u5206\u6790\u9519\u8bef\uff1a${report.llm_status.analysis_error}` : "\u5206\u6790\u6a21\u578b\u53ef\u7528\u3002"].join("<br />") : TEXT.defaultStatus; setHtml("llmStatus", llmStatus); setText("llmOutput", JSON.stringify(report.llm_analysis || report.disc_analysis, null, 2)); }
-function renderReport(report) { const primary = getPrimaryAnalysis(report); resultsEl.classList.remove("hidden"); statusEl.textContent = report.llm_status?.enabled ? `\u89e3\u6790\u6a21\u578b\uff1a${report.llm_status.parser_model} / \u4e3b\u5206\u6790\u6a21\u578b\uff1a${report.llm_status.analysis_model}` : TEXT.defaultStatus; renderDecisionLayer(report, primary.analysis, primary.source); renderMetricsLayer(report, primary.analysis); renderPersonalitySecondary(report); renderWorkflow(report); renderInterviewOverview(report); renderDetailedLayer(report, primary.analysis, primary.source); }
+function renderReport(report) { const primary = getPrimaryAnalysis(report); resultsEl.classList.remove("hidden"); statusEl.textContent = report.llm_status?.enabled ? `\u89e3\u6790\u6a21\u578b\uff1a${report.llm_status.parser_model} / \u4e3b\u5206\u6790\u6a21\u578b\uff1a${report.llm_status.analysis_model}` : TEXT.defaultStatus; renderDecisionLayer(report, primary.analysis, primary.source); renderMetricsLayer(report, primary.analysis); renderPersonalitySecondary(report); renderMbtiLayer(report); renderWorkflow(report); renderInterviewOverview(report); renderDetailedLayer(report, primary.analysis, primary.source); }
 async function loadSampleLibrary() { try { const response = await fetch("/samples/index.json"); if (!response.ok) throw new Error(TEXT.sampleLoadFailed); sampleLibrary = await response.json(); sampleSelectEl.innerHTML = [`<option value="">${TEXT.selectSample}</option>`].concat(sampleLibrary.map((item) => `<option value="${item.id}">${item.title}</option>`)).join(""); if (!defaultSampleLoaded && sampleLibrary.length) { sampleSelectEl.value = sampleLibrary[0].id; await fillSelectedSample(); defaultSampleLoaded = true; } } catch { sampleSelectEl.innerHTML = `<option value="">${TEXT.sampleLoadFailed}</option>`; } }
 async function fillSelectedSample() { const selectedId = sampleSelectEl.value; if (!selectedId) { transcriptEl.value = DEFAULT_TRANSCRIPT; jobHintEl.value = "\u540e\u7aef\u7814\u53d1"; return; } const item = sampleLibrary.find((entry) => entry.id === selectedId); if (!item) return; sampleBtn.disabled = true; sampleBtn.textContent = TEXT.loading; try { const response = await fetch(`/samples/${item.filename}`); if (!response.ok) throw new Error(TEXT.sampleTextLoadFailed); transcriptEl.value = await response.text(); jobHintEl.value = item.job_hint || ""; } catch { transcriptEl.value = DEFAULT_TRANSCRIPT; jobHintEl.value = item.job_hint || "\u540e\u7aef\u7814\u53d1"; } finally { sampleBtn.disabled = false; sampleBtn.textContent = TEXT.fill; } }
 sampleBtn.addEventListener("click", fillSelectedSample);
 // /api/analyze/full：含大五/九型/STAR 本地规则；/api/analyze 仅 DISC，次要映射字段为 null
-analyzeBtn.addEventListener("click", async () => { const interview_transcript = transcriptEl.value.trim(); if (!interview_transcript) { window.alert(TEXT.pasteTranscriptFirst); return; } analyzeBtn.disabled = true; analyzeBtn.textContent = TEXT.analyzing; try { const response = await fetch("/api/analyze/full", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ interview_transcript, job_hint_optional: jobHintEl.value.trim() }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || TEXT.requestFailed); renderReport(data); } catch (error) { window.alert(error.message); } finally { analyzeBtn.disabled = false; analyzeBtn.textContent = TEXT.run; } });
+analyzeBtn.addEventListener("click", async () => { const interview_transcript = transcriptEl.value.trim(); if (!interview_transcript) { window.alert(TEXT.pasteTranscriptFirst); return; } const kgEl = document.getElementById("useKnowledgeGraph"); const use_knowledge_graph = !kgEl || kgEl.checked; analyzeBtn.disabled = true; analyzeBtn.textContent = TEXT.analyzing; try { const response = await fetch("/api/analyze/full", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ interview_transcript, job_hint_optional: jobHintEl.value.trim(), use_knowledge_graph }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || TEXT.requestFailed); renderReport(data); } catch (error) { window.alert(error.message); } finally { analyzeBtn.disabled = false; analyzeBtn.textContent = TEXT.run; } });
 renderReport(DEFAULT_REPORT);
 transcriptEl.value = DEFAULT_TRANSCRIPT;
 jobHintEl.value = "\u540e\u7aef\u7814\u53d1";
