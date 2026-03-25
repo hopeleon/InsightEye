@@ -19,6 +19,8 @@ let defaultSampleLoaded = false;
 let lastPayload = null;
 let lastReport = null;
 let loadingTimer = null;
+let currentTaskId = null;  // 新增：当前 LLM 任务 ID
+let pollTimer = null;      // 新增：轮询定时器
 const TEXT = {
   na: "暂无数据",
   sourceLlm: "LLM 主分析",
@@ -334,6 +336,228 @@ function renderMBTILayer(report) {
 }
 
 
+// ========== LLM 异步分析核心函数 ==========
+
+async function performAnalysis(payload) {
+  showView("loading");
+  startLoadingSequence();
+  hideError();
+  
+  // 停止之前的轮询
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+  
+  try {
+    console.log("📤 发送分析请求...", payload);
+    
+    const res = await fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.error || TEXT.requestFailed);
+    }
+    
+    const data = await res.json();
+    console.log("📥 收到响应:", data);
+    
+    // ========== 1. 立即展示本地规则结果 ==========
+    stopLoadingSequence();
+    lastReport = data.local_result;
+    renderReport(data.local_result, "local");
+    showView("result");
+    
+    // ========== 2. 如果触发了 LLM，开始轮询 ==========
+    if (data.llm_status.triggered) {
+      currentTaskId = data.llm_status.task_id;
+      showLLMLoadingBanner(data.llm_status.reason);
+      startPollingLLM(currentTaskId);
+    }
+    
+  } catch (err) {
+    console.error("❌ 分析失败:", err);
+    showError(err.message || TEXT.requestFailed);
+  }
+}
+
+
+function showLLMLoadingBanner(reason) {
+  // 移除旧的横幅
+  document.getElementById("llmBanner")?.remove();
+  
+  const banner = document.createElement("div");
+  banner.id = "llmBanner";
+  banner.className = "llm-loading-banner";
+  banner.innerHTML = `
+    <div class="llm-banner-content">
+      <div class="llm-spinner"></div>
+      <div class="llm-banner-text">
+        <strong>正在调用 LLM 深度分析...</strong>
+        <p class="llm-reason">${reason}</p>
+        <p class="llm-progress" id="llmProgress">准备中...</p>
+      </div>
+    </div>
+    <button id="cancelLLM" class="llm-cancel-btn" title="取消深度分析">✕</button>
+  `;
+  
+  resultView.prepend(banner);
+  
+  // 绑定取消按钮
+  document.getElementById("cancelLLM")?.addEventListener("click", () => {
+    if (confirm("确定取消 LLM 深度分析吗？将仅保留本地规则结果。")) {
+      stopPollingLLM();
+      banner.remove();
+    }
+  });
+}
+
+
+function startPollingLLM(taskId) {
+  console.log(`🔄 开始轮询任务: ${taskId}`);
+  
+  let attempts = 0;
+  const maxAttempts = 60; // 最多轮询 2 分钟
+  
+  pollTimer = setInterval(async () => {
+    attempts++;
+    
+    try {
+      const res = await fetch(`/api/llm_status/${taskId}`);
+      
+      if (!res.ok) {
+        throw new Error("无法获取任务状态");
+      }
+      
+      const data = await res.json();
+      console.log(`📊 任务状态 [${attempts}/${maxAttempts}]:`, data.status);
+      
+      // 更新进度文本
+      const progressEl = document.getElementById("llmProgress");
+      if (progressEl) {
+        progressEl.textContent = data.progress || "分析中...";
+      }
+      
+      if (data.status === "completed") {
+        stopPollingLLM();
+        onLLMCompleted(data.result);
+      } else if (data.status === "failed") {
+        stopPollingLLM();
+        onLLMFailed(data.error);
+      } else if (attempts >= maxAttempts) {
+        stopPollingLLM();
+        onLLMTimeout();
+      }
+      
+    } catch (err) {
+      console.error("❌ 轮询失败:", err);
+      stopPollingLLM();
+      onLLMFailed(err.message);
+    }
+  }, 2000); // 每 2 秒轮询一次
+}
+
+
+function stopPollingLLM() {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+    console.log("⏸️ 停止轮询");
+  }
+}
+
+
+function onLLMCompleted(llmResult) {
+  console.log("✨ LLM 分析完成:", llmResult);
+  
+  // 移除加载横幅，显示成功提示
+  const banner = document.getElementById("llmBanner");
+  if (banner) {
+    banner.className = "llm-banner-success";
+    banner.innerHTML = `
+      <div class="llm-banner-content">
+        <div class="llm-check">✓</div>
+        <div class="llm-banner-text">
+          <strong>LLM 深度分析已完成</strong>
+          <p>结果已更新，变化部分已高亮显示</p>
+        </div>
+      </div>
+    `;
+    
+    // 3 秒后淡出移除
+    setTimeout(() => {
+      banner.style.opacity = "0";
+      setTimeout(() => banner.remove(), 300);
+    }, 3000);
+  }
+  
+  // 平滑更新结果
+  lastReport = llmResult;
+  updateResultWithAnimation(llmResult);
+}
+
+
+function onLLMFailed(error) {
+  console.error("❌ LLM 分析失败:", error);
+  
+  const banner = document.getElementById("llmBanner");
+  if (banner) {
+    banner.className = "llm-banner-error";
+    banner.innerHTML = `
+      <div class="llm-banner-content">
+        <div class="llm-error-icon">!</div>
+        <div class="llm-banner-text">
+          <strong>LLM 分析失败</strong>
+          <p>${error || "未知错误"}</p>
+          <p class="llm-fallback">已保留本地规则分析结果</p>
+        </div>
+      </div>
+      <button onclick="this.parentElement.remove()" class="llm-cancel-btn">✕</button>
+    `;
+  }
+}
+
+
+function onLLMTimeout() {
+  console.warn("⏱️ LLM 分析超时");
+  
+  const banner = document.getElementById("llmBanner");
+  if (banner) {
+    banner.className = "llm-banner-error";
+    banner.innerHTML = `
+      <div class="llm-banner-content">
+        <div class="llm-error-icon">⏱</div>
+        <div class="llm-banner-text">
+          <strong>LLM 分析超时</strong>
+          <p>深度分析耗时过长，已自动取消</p>
+          <p class="llm-fallback">当前显示本地规则分析结果</p>
+        </div>
+      </div>
+      <button onclick="this.parentElement.remove()" class="llm-cancel-btn">✕</button>
+    `;
+  }
+}
+
+
+function updateResultWithAnimation(newResult) {
+  // 添加更新动画类
+  resultView.classList.add("result-updating");
+  
+  setTimeout(() => {
+    // 重新渲染结果
+    renderReport(newResult, "llm");
+    
+    // 移除动画类
+    setTimeout(() => {
+      resultView.classList.remove("result-updating");
+    }, 300);
+  }, 200);
+}
+
 function renderMBTIDimension(dimKey, dimData) {
   const preference = dimData.preference || "-";
   const strength = dimData.strength || 50;
@@ -397,17 +621,30 @@ function renderMBTIDimension(dimKey, dimData) {
     `;
   }
 }
-function renderReport(report) {
-  const primary = getPrimaryAnalysis(report);
-  renderDecisionLayer(report, primary.analysis, primary.source);
-  renderMetricsLayer(report, primary.analysis);
-  renderWorkflow(report);
+function renderReport(report, source = "local") {
+  console.log(`渲染报告 [来源: ${source}]`, report);
+  
+  const { source: analysisSource, analysis } = getPrimaryAnalysis(report);
+  
+  // ========== 新增：显示分析来源标识 ==========
+  const sourceBadge = document.getElementById("analysisSource");
+  if (sourceBadge) {
+    if (source === "local") {
+      sourceBadge.textContent = "⚡ 快速分析（本地规则）";
+      sourceBadge.className = "source-badge source-local";
+    } else {
+      sourceBadge.textContent = "✨ 深度分析（LLM）";
+      sourceBadge.className = "source-badge source-llm";
+    }
+  }
+  
+  // ========== 原有渲染逻辑保持不变 ==========
   renderInterviewOverview(report);
-  renderDetailedLayer(report, primary.analysis, primary.source);
-    // ========== 渲染 MBTI 分析 ==========
+  renderDecisionLayer(report, analysis, analysisSource);
+  renderMetricsLayer(report, analysis);
+  renderWorkflow(report);
+  renderDetailedLayer(report, analysis, analysisSource);
   renderMBTILayer(report);
-  statusEl.textContent = report.llm_status?.enabled ? `解析模型：${report.llm_status.parser_model} / 主分析模型：${report.llm_status.analysis_model}` : primary.source;
-  lastReport = report;
 }
 async function loadSampleLibrary() {
   try {
@@ -468,7 +705,23 @@ async function runAnalysis() {
   }
 }
 sampleBtn.addEventListener("click", fillSelectedSample);
-analyzeBtn.addEventListener("click", runAnalysis);
+analyzeBtn.addEventListener("click", async () => {
+  const transcript = transcriptEl.value.trim();
+  const jobHint = jobHintEl.value.trim();
+  
+  if (!transcript) {
+    alert(TEXT.pasteTranscriptFirst);
+    return;
+  }
+  
+  lastPayload = { 
+    interview_transcript: transcript, 
+    job_hint_optional: jobHint,
+    force_llm: false,  // 不强制调用 LLM
+  };
+  
+  await performAnalysis(lastPayload);  // 改用新函数
+});
 retryBtn.addEventListener("click", () => { if (lastPayload) runAnalysis(); });
 backBtn.addEventListener("click", () => { hideError(); stopLoadingSequence(); showView("input"); });
 editAgainBtn.addEventListener("click", () => { showView("input"); if (lastReport) statusEl.textContent = TEXT.sourceLocal; });

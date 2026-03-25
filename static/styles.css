@@ -1060,3 +1060,187 @@ body {
   color: var(--muted);
   background: rgba(19,24,43,0.08);
 }
+
+/* ========== LLM 异步加载样式 ========== */
+.llm-loading-banner,
+.llm-banner-success,
+.llm-banner-error {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(138,124,255,0.08), rgba(91,108,255,0.06));
+  border: 1px solid rgba(138,124,255,0.20);
+  transition: all 0.3s ease;
+}
+
+.llm-loading-banner {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.llm-banner-success {
+  background: linear-gradient(135deg, rgba(76,217,100,0.08), rgba(52,211,153,0.06));
+  border-color: rgba(76,217,100,0.30);
+}
+
+.llm-banner-error {
+  background: linear-gradient(135deg, rgba(255,122,122,0.08), rgba(239,68,68,0.06));
+  border-color: rgba(255,122,122,0.30);
+}
+
+.llm-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.llm-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(138,124,255,0.20);
+  border-top-color: var(--secondary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.llm-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--success);
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.llm-error-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--risk);
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.llm-banner-text {
+  flex: 1;
+}
+
+.llm-banner-text strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.llm-banner-text p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.llm-reason {
+  color: var(--secondary);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.llm-progress {
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.llm-fallback {
+  color: var(--amber);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.llm-cancel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(19,24,43,0.08);
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.llm-cancel-btn:hover {
+  background: rgba(255,122,122,0.15);
+  color: var(--risk);
+}
+
+/* 来源标识 */
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.source-local {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: white;
+}
+
+.source-llm {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+}
+
+/* 结果更新动画 */
+.result-updating {
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.value-changed {
+  animation: highlight 1s ease;
+}
+
+@keyframes highlight {
+  0%, 100% { 
+    background: transparent; 
+    transform: scale(1);
+  }
+  50% { 
+    background: rgba(139, 92, 246, 0.15); 
+    transform: scale(1.02);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(138,124,255,0.4); 
+  }
+  50% { 
+    box-shadow: 0 0 0 8px rgba(138,124,255,0); 
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
