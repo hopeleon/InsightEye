@@ -52,6 +52,7 @@ def _apply_feature_rules(dim: str, features: dict) -> tuple[float, list[str], li
     positive: list[str] = []
     negative: list[str] = []
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     score = 20.0
 
     if dim == "O":
@@ -144,6 +145,8 @@ def _apply_feature_rules(dim: str, features: dict) -> tuple[float, list[str], li
         if features.get("hedge_words_ratio", 0) < 0.004:
             score -= 8
 =======
+=======
+>>>>>>> Stashed changes
     score = 40.0   # 基础分提高，让短文本也能有基础分
 
     if dim == "O":
@@ -235,6 +238,9 @@ def _apply_feature_rules(dim: str, features: dict) -> tuple[float, list[str], li
             positive.append("确定性词汇较多，情绪表达相对平稳。")
         if features.get("hedge_words_ratio", 0) < 0.003:
             score -= 6
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
             positive.append("保留性表达极少，表达直接确定，情绪稳定性信号较强。")
 
@@ -255,6 +261,7 @@ def _confidence_level(word_count: int, turn_count: int, scores: dict) -> tuple[s
     notes: list[str] = []
     level = "medium"
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     if word_count < 120 or turn_count <= 1:
         level = "low"
         notes.append("样本量偏少，结论仅作为初步倾向参考。")
@@ -266,6 +273,8 @@ def _confidence_level(word_count: int, turn_count: int, scores: dict) -> tuple[s
         level = "low"
         notes.append("多个维度出现极端分数，可能存在面试呈现偏差，置信度降权。")
 =======
+=======
+>>>>>>> Stashed changes
     if word_count < 60 or turn_count <= 1:
         level = "low"
         notes.append("样本量偏少，结论仅作为初步倾向参考。")
@@ -278,6 +287,9 @@ def _confidence_level(word_count: int, turn_count: int, scores: dict) -> tuple[s
         notes.append("多个维度出现极端分数，可能存在面试呈现偏差，置信度降权。")
     elif extreme_count == 2 and level == "low":
         notes.append("部分极端维度存在，需扩大样本验证。")
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     return level, notes
 

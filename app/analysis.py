@@ -4,12 +4,19 @@ from workflow.engine import run_disc_workflow, run_personality_workflow
 
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
 def analyze_interview(
     transcript: str,
     job_hint: str = "",
     *,
     apply_knowledge_graph: bool = True,
 ) -> dict:
+<<<<<<< Updated upstream
+=======
+    """快速 DISC 分析（原有接口，完全不变）"""
+>>>>>>> Stashed changes
     return run_disc_workflow(
         transcript=transcript,
         job_hint=job_hint,
@@ -23,12 +30,17 @@ def analyze_interview_full(
     *,
     apply_knowledge_graph: bool = True,
 ) -> dict:
+<<<<<<< Updated upstream
     """完整人格分析：DISC + Big Five + 九型人格 + 跨模型映射。"""
+=======
+    """完整人格分析：DISC + BigFive + 九型 + MBTI + 跨模型映射"""
+>>>>>>> Stashed changes
     return run_personality_workflow(
         transcript=transcript,
         job_hint=job_hint,
         apply_knowledge_graph=apply_knowledge_graph,
     )
+<<<<<<< Updated upstream
 =======
 def analyze_interview(transcript: str, job_hint: str = "") -> dict:
     return run_disc_workflow(transcript=transcript, job_hint=job_hint)
@@ -37,4 +49,6 @@ def analyze_interview(transcript: str, job_hint: str = "") -> dict:
 def analyze_interview_full(transcript: str, job_hint: str = "") -> dict:
     """完整人格分析：DISC + BigFive + 九型 + MBTI + 跨模型映射（ywj 分支新增）。"""
     return run_personality_workflow(transcript=transcript, job_hint=job_hint)
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes

@@ -24,14 +24,21 @@ BIGFIVE_PROMPT_PATH = PROMPTS_DIR / "bigfive_system_prompt.txt"
 ENNEAGRAM_KNOWLEDGE_PATH = KNOWLEDGE_DIR / "ENNEAGRAM.yaml"
 ENNEAGRAM_PROMPT_PATH = PROMPTS_DIR / "enneagram_system_prompt.txt"
 STAR_KNOWLEDGE_PATH = KNOWLEDGE_DIR / "STAR.yaml"
+<<<<<<< Updated upstream
 
 STAR_KNOWLEDGE_PATH = KNOWLEDGE_DIR / "STAR.yaml"
+=======
+>>>>>>> Stashed changes
 
 DEFAULT_OPENAI_BASE_URL = "https://api.zhizengzeng.com/v1"
 DEFAULT_OPENAI_PARSER_MODEL = "gpt-5-mini"
 DEFAULT_OPENAI_ANALYSIS_MODEL = "gpt-5.4"
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 DEFAULT_OPENAI_PERSONALITY_MODEL = "gpt-5.4"
+=======
+DEFAULT_OPENAI_PERSONALITY_MODEL = "gpt-5-mini"
+>>>>>>> Stashed changes
 =======
 DEFAULT_OPENAI_PERSONALITY_MODEL = "gpt-5-mini"
 >>>>>>> Stashed changes

@@ -25,6 +25,7 @@ def run_llm_stage(context: WorkflowContext, disc_prompt: str) -> WorkflowContext
             ),
         )
         context.mark_stage("llm_stage", "completed", "LLM analysis returned")
+        context.llm_called = True  # 标记 LLM 真正被调用
     except Exception as exc:
         context.analysis_error = str(exc)
         context.mark_stage("llm_stage", "failed", context.analysis_error)

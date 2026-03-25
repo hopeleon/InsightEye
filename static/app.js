@@ -1,3 +1,10 @@
+<<<<<<< Updated upstream
+=======
+// ============================================================
+// InsightEye - Merged App (current + ywj enhanced version)
+// ============================================================
+
+>>>>>>> Stashed changes
 const transcriptEl = document.getElementById("transcript");
 const jobHintEl = document.getElementById("jobHint");
 const sampleSelectEl = document.getElementById("sampleSelect");
@@ -5,7 +12,22 @@ const analyzeBtn = document.getElementById("analyzeBtn");
 const sampleBtn = document.getElementById("sampleBtn");
 const resultsEl = document.getElementById("results");
 const statusEl = document.getElementById("status");
+<<<<<<< Updated upstream
 
+=======
+const inputView = document.getElementById("inputView");
+const loadingView = document.getElementById("loadingView");
+const resultView = document.getElementById("resultView");
+const loadingStepsEl = document.getElementById("loadingSteps");
+const loadingMessageEl = document.getElementById("loadingMessage");
+const errorBoxEl = document.getElementById("errorBox");
+const errorTextEl = document.getElementById("errorText");
+const retryBtn = document.getElementById("retryBtn");
+const backBtn = document.getElementById("backBtn");
+const editAgainBtn = document.getElementById("editAgainBtn");
+
+// ─── 全局状态 ───────────────────────────────────────────────
+>>>>>>> Stashed changes
 let sampleLibrary = [];
 let defaultSampleLoaded = false;
 <<<<<<< Updated upstream
@@ -38,6 +60,7 @@ const TEXT = {
 let lastPayload = null;
 let lastReport = null;
 let loadingTimer = null;
+<<<<<<< Updated upstream
 
 function getCurrentMode() {
   if (modeRadios) {
@@ -89,6 +112,13 @@ function initModeSelector() {
 }
 
 
+=======
+let currentTaskId = null;   // 当前 LLM 异步任务 ID
+let pollTimer = null;       // 轮询定时器
+let modeRadios = [];        // 模式选择 DOM 引用
+
+// ─── 文本常量 ───────────────────────────────────────────────
+>>>>>>> Stashed changes
 const TEXT = {
   na: "暂无数据",
   sourceLlm: "LLM 主分析",
@@ -115,6 +145,9 @@ const TEXT = {
   validateEvidence: "这些标签只能作为快速提示，仍需结合证据核验。",
   loadingMessage: "请稍候，系统正在拆解问答、提取证据并生成评估。",
   loadingMessageFull: "请稍候，系统正在并行分析 DISC · BigFive · 九型 · MBTI · 跨模型映射。",
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 };
 
@@ -125,6 +158,7 @@ const DISC_META = {
   C: { label: "C / \u84dd\u8272", className: "c", style: "\u7ed3\u6784\u6e05\u6670\u3001\u6ce8\u91cd\u7ec6\u8282" },
 };
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 const MBTI_DIM_LABELS = {
   E_I: "\u80fd\u91cf\u6765\u6e90",
@@ -420,6 +454,29 @@ function buildNextAction(analysis) { return analysis.recommended_action || TEXT.
 function buildNextActionDetail(analysis) { const topQuestion = analysis.follow_up_questions?.[0]?.question; return topQuestion ? `${TEXT.askFirst}${topQuestion}` : "\u7ee7\u7eed\u8981\u6c42\u5019\u9009\u4eba\u8bf4\u660e\u52a8\u4f5c\u3001\u51b3\u7b56\u548c\u7ed3\u679c\u8bc1\u636e\u3002"; }
 function buildCapabilityTags(report) { const features = report.atomic_features || {}; const tags = []; if ((features.star_structure_score || 0) >= 0.75) tags.push("\u7ed3\u6784\u5b8c\u6574"); else if ((features.star_structure_score || 0) >= 0.5) tags.push("\u7ed3\u6784\u4e2d\u7b49"); else tags.push("\u7ed3\u6784\u504f\u5f31"); if ((features.logical_connector_ratio || 0) >= 0.015) tags.push("\u903b\u8f91\u8f83\u6e05\u6670"); else tags.push("\u903b\u8f91\u5f85\u9a8c\u8bc1"); if ((features.story_richness_score || 0) >= 0.65) tags.push("\u7ec6\u8282\u4e30\u5bcc"); else if ((features.story_richness_score || 0) >= 0.45) tags.push("\u7ec6\u8282\u4e00\u822c"); else tags.push("\u7ec6\u8282\u504f\u8584"); if ((features.action_verbs_ratio || 0) >= 0.02) tags.push("\u52a8\u4f5c\u8868\u8fbe\u8f83\u5f3a"); return tags; }
 =======
+=======
+const BIGFIVE_LABELS = {
+  openness:      { label: "开放", desc: "敏感、好奇心" },
+  conscientiousness: { label: "尽责", desc: "谨慎、自律" },
+  extraversion:  { label: "外向", desc: "活力、互动" },
+  agreeableness: { label: "宜人", desc: "信任、合作" },
+  neuroticism:   { label: "神经质", desc: "情绪、担忧" },
+};
+
+const ENNEAGRAM_LABELS = {
+  "1": { label: "1号", name: "改革者", desc: "原则性、完美导向" },
+  "2": { label: "2号", name: "助人者", desc: "热情、慷慨" },
+  "3": { label: "3号", name: "成就者", desc: "目标导向、追求成功" },
+  "4": { label: "4号", name: "自我型", desc: "情感深度、渴望独特" },
+  "5": { label: "5号", name: "探索者", desc: "洞察、知识导向" },
+  "6": { label: "6号", name: "忠诚者", desc: "审慎、寻求安全" },
+  "7": { label: "7号", name: "享乐者", desc: "乐观、活跃" },
+  "8": { label: "8号", name: "保护者", desc: "自信、掌控" },
+  "9": { label: "9号", name: "和平者", desc: "平和、接纳" },
+};
+
+// 加载文案（根据模式切换）
+>>>>>>> Stashed changes
 const LOADING_STEPS_QUICK = [
   "正在解析面试文本",
   "正在提取行为与证据信号",
@@ -440,6 +497,7 @@ const DEFAULT_TRANSCRIPT = `面试官：讲一个你做过的技术项目。
 面试官：你具体是怎么定位问题的？
 候选人：我主要先看日志和响应时间，再看哪些接口比较慢。有些问题比较明显，比如重复查询，优化后会有一些效果。`;
 
+<<<<<<< Updated upstream
 // ─── 通用工具 ───────────────────────────────────────────────────────────────
 function setHtml(id, html) {
   const el = document.getElementById(id);
@@ -463,22 +521,92 @@ function getPrimaryAnalysis(report) {
     ? { source: TEXT.sourceLlm, analysis: report.llm_analysis }
     : { source: TEXT.sourceLocal, analysis: report.disc_analysis };
 }
+=======
+// ─── 模式选择 ───────────────────────────────────────────────
+function getCurrentMode() {
+  if (modeRadios.length) {
+    for (const r of modeRadios) {
+      if (r.checked) return r.value;
+    }
+  }
+  return "quick";
+}
+
+function getAnalysisEndpoint() {
+  return getCurrentMode() === "full" ? "/api/analyze/full" : "/api/analyze";
+}
+
+function getLoadingSteps() {
+  return getCurrentMode() === "full" ? LOADING_STEPS_FULL : LOADING_STEPS_QUICK;
+}
+
+function updateAnalyzeBtnText() {
+  if (!analyzeBtn) return;
+  analyzeBtn.textContent = getCurrentMode() === "full" ? TEXT.runFull : TEXT.run;
+}
+
+function updateModeHint() {
+  const hint = document.getElementById("modeHint");
+  if (hint) hint.textContent = getCurrentMode() === "full" ? TEXT.loadingMessageFull : TEXT.loadingMessage;
+}
+
+function applyModeCardStyle() {
+  const quickCard = document.getElementById("modeQuickCard");
+  const fullCard = document.getElementById("modeFullCard");
+  if (!quickCard || !fullCard) return;
+  const isFull = getCurrentMode() === "full";
+  quickCard.classList.toggle("active", !isFull);
+  fullCard.classList.toggle("active", isFull);
+}
+
+function initModeSelector() {
+  modeRadios = Array.from(document.querySelectorAll('input[name="modeGroup"]'));
+  for (const r of modeRadios) {
+    r.addEventListener("change", () => {
+      updateAnalyzeBtnText();
+      updateModeHint();
+      applyModeCardStyle();
+    });
+  }
+  applyModeCardStyle();
+}
+
+// ─── 通用工具 ───────────────────────────────────────────────
+function setHtml(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+function setText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
+function safeText(value, fallback = TEXT.na) { return value === null || value === undefined || value === "" ? fallback : value; }
+function createList(items, renderer, empty = TEXT.na) { return !items || !items.length ? `<div class="list-item">${empty}</div>` : items.map(renderer).join(""); }
+function rankDimensions(scores) { return Object.entries(scores || {}).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ key: k, value: v })); }
+function getPrimaryAnalysis(report) { return report.llm_analysis && report.llm_analysis.scores ? { source: TEXT.sourceLlm, analysis: report.llm_analysis } : { source: TEXT.sourceLocal, analysis: report.disc_analysis }; }
+
+>>>>>>> Stashed changes
 function riskLevelClass(level) {
   const s = String(level || "low").toLowerCase();
   if (s.includes("高") || s.includes("high") || s.includes("failed")) return "high";
   if (s.includes("中") || s.includes("medium") || s.includes("skipped")) return "medium";
   return "low";
 }
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 function scoreByRisk(level) {
   const t = riskLevelClass(level);
   return t === "high" ? 42 : t === "medium" ? 67 : 84;
 }
+<<<<<<< Updated upstream
 function scoreToLevel(value) {
   return value >= 75 ? "high" : value >= 50 ? "medium" : "low";
 }
 function levelLabel(level) {
   return level === "high" ? "高" : level === "medium" ? "中" : "低";
 }
+=======
+
+function scoreToLevel(value) { return value >= 75 ? "high" : value >= 50 ? "medium" : "low"; }
+function levelLabel(level) { return level === "high" ? "高" : level === "medium" ? "中" : "低"; }
+
+>>>>>>> Stashed changes
 function trimSentence(value, fallback = TEXT.na, limit = 60) {
   const content = safeText(value, fallback).replace(/\s+/g, " ").trim();
   if (content.length <= limit) return content;
@@ -486,19 +614,32 @@ function trimSentence(value, fallback = TEXT.na, limit = 60) {
   return compact && compact.length >= 8 ? `${compact}。` : `${content.slice(0, limit)}...`;
 }
 
+<<<<<<< Updated upstream
 // ─── 视图切换 ───────────────────────────────────────────────────────────────
+=======
+// ─── 视图切换 ───────────────────────────────────────────────
+>>>>>>> Stashed changes
 function showView(name) {
   inputView.classList.toggle("hidden", name !== "input");
   loadingView.classList.toggle("hidden", name !== "loading");
   resultView.classList.toggle("hidden", name !== "result");
   hideError();
 }
+<<<<<<< Updated upstream
 function renderLoading(stepIndex = 0, steps) {
   loadingStepsEl.innerHTML = steps.map((step, i) => {
+=======
+
+function renderLoading(stepIndex = 0, steps) {
+  const allSteps = steps || LOADING_STEPS_QUICK;
+  loadingMessageEl.textContent = getCurrentMode() === "full" ? TEXT.loadingMessageFull : TEXT.loadingMessage;
+  loadingStepsEl.innerHTML = allSteps.map((step, i) => {
+>>>>>>> Stashed changes
     const state = i < stepIndex ? "done" : i === stepIndex ? "active" : "";
     return `<div class="loading-step ${state}"><span class="loading-step-dot"></span><span>${step}</span></div>`;
   }).join("");
 }
+<<<<<<< Updated upstream
 function startLoadingSequence(steps) {
   let idx = 0;
   renderLoading(idx, steps);
@@ -521,6 +662,25 @@ function hideError() {
 }
 
 // ─── DISC 核心渲染 ────────────────────────────────────────────────────────
+=======
+
+function startLoadingSequence() {
+  const steps = getLoadingSteps();
+  let stepIndex = 0;
+  renderLoading(stepIndex, steps);
+  clearInterval(loadingTimer);
+  loadingTimer = setInterval(() => {
+    stepIndex = (stepIndex + 1) % steps.length;
+    renderLoading(stepIndex, steps);
+  }, 1100);
+}
+
+function stopLoadingSequence() { clearInterval(loadingTimer); loadingTimer = null; }
+function showError(message) { stopLoadingSequence(); errorBoxEl.classList.remove("hidden"); errorTextEl.textContent = message || TEXT.requestFailed; }
+function hideError() { errorBoxEl.classList.add("hidden"); errorTextEl.textContent = ""; }
+
+// ─── DISC 核心渲染 ──────────────────────────────────────────
+>>>>>>> Stashed changes
 function buildStyleSummary(analysis) {
   if (analysis.decision_summary) return trimSentence(analysis.decision_summary, TEXT.weakSignals, 42);
   const ranking = rankDimensions(analysis.scores);
@@ -593,11 +753,16 @@ function buildCapabilityCards(report, analysis) {
     return `<div class="ability-row"><div class="ability-row-head"><strong>${item.title}</strong><span class="capability-badge ${badgeLevel}">${badgeText}</span></div><div class="ability-progress"><span style="width:${safeScore}%"></span></div><div class="ability-note">${item.desc}</div></div>`;
   }).join("");
 }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+
 >>>>>>> Stashed changes
 function renderDiscBars(analysis) {
   return rankDimensions(analysis.scores).map(({ key, value }) => `<div class="metric-bar"><div class="metric-bar-head"><span>${DISC_META[key]?.label || key}</span><strong>${value}</strong></div><div class="bar-track"><div class="bar-fill ${DISC_META[key]?.className || ""}" style="width:${Math.max(8, value)}%"></div></div></div>`).join("");
 }
 
+<<<<<<< Updated upstream
 const BIGFIVE_LABELS = {
   openness: { label: "\u5f00\u653e", desc: "\u654f\u611f\u3001\u597d\u5947\u5fc3" },
   conscientiousness: { label: "\u5c3d\u8d23", desc: "\u8c28\u614e\u3001\u81ea\u5f8b" },
@@ -868,6 +1033,8 @@ function renderPersonalitySecondary(report) {
   }
 }
 
+=======
+>>>>>>> Stashed changes
 function renderDiscPie(analysis) {
   const scores = analysis.scores || {};
   const total = Object.values(scores).reduce((s, v) => s + Number(v || 0), 0) || 1;
@@ -886,14 +1053,17 @@ function renderDiscPie(analysis) {
 =======
   return `<div class="disc-pie" style="background: conic-gradient(${stops.join(", ")});"><div class="disc-pie-center"><div><strong>${top?.value || 0}</strong><span>${DISC_META[top?.key]?.label || TEXT.na}</span></div></div></div><div class="disc-pie-caption">基于当前分值分布计算的 D / I / S / C 相对占比。</div>`;
 }
+
 function renderHeroScore(analysis) {
   const rc = riskLevelClass(analysis.meta?.impression_management_risk);
   const score = scoreByRisk(analysis.meta?.impression_management_risk);
   const color = rc === "high" ? "var(--risk)" : rc === "medium" ? "#a16bff" : "var(--success)";
   return `<div class="score-ring" style="background: conic-gradient(${color} ${score * 3.6}deg, rgba(255,255,255,0.12) 0deg);"><div class="score-ring-inner"><strong>${score}</strong><span>可信度 / 可用度</span></div></div>`;
 }
+
 function renderDimensionCards(targetId, analysis) {
   setHtml(targetId, Object.entries(analysis || {}).map(([dim, item]) => `<div class="dimension-card"><h3>${dim} - ${safeText(item.score, 0)}</h3><p>${safeText(item.summary)}</p><strong>支持证据</strong><ul>${(item.evidence_for || []).slice(0, 3).map((e) => `<li>${e}</li>`).join("") || "<li>暂无</li>"}</ul><strong>反证线索</strong><ul>${(item.evidence_against || []).slice(0, 2).map((e) => `<li>${e}</li>`).join("") || "<li>暂无</li>"}</ul></div>`).join("") || `<div class="list-item">${TEXT.na}</div>`);
+<<<<<<< Updated upstream
 >>>>>>> Stashed changes
 }
 function renderDimensionCards(targetId, analysis) { setHtml(targetId, Object.entries(analysis || {}).map(([dim, item]) => `<div class="dimension-card"><h3>${dim} - ${safeText(item.score, 0)}</h3><p>${safeText(item.summary)}</p><strong>\u652f\u6301\u8bc1\u636e</strong><ul>${(item.evidence_for || []).slice(0, 3).map((entry) => `<li>${entry}</li>`).join("") || "<li>\u6682\u65e0</li>"}</ul><strong>\u53cd\u8bc1\u7ebf\u7d22</strong><ul>${(item.evidence_against || []).slice(0, 2).map((entry) => `<li>${entry}</li>`).join("") || "<li>\u6682\u65e0</li>"}</ul></div>`).join("") || "<div class='list-item'>\u6682\u65e0\u7ef4\u5ea6\u5206\u6790</div>"); }
@@ -931,7 +1101,11 @@ jobHintEl.value = "\u540e\u7aef\u7814\u53d1";
   setHtml("workflowMasking", `<div class="workflow-tile"><strong>关键缺陷</strong><div>${trimSentence((masking.critical_findings || []).map((i) => i.finding).join("；") || TEXT.na, TEXT.na, 60)}</div></div><div class="workflow-tile"><strong>证据缺口</strong><div>${trimSentence((masking.evidence_gaps || []).join("；") || TEXT.na, TEXT.na, 60)}</div></div><div class="workflow-tile"><strong>录用风险</strong><div>${trimSentence((masking.hire_risks || []).join("；") || TEXT.na, TEXT.na, 60)}</div></div>`);
   const decision = workflow.decision_payload || {};
   setHtml("workflowDecision", `<div class="workflow-tile"><strong>决策总结</strong><p>${trimSentence(decision.decision_summary, TEXT.na, 60)}</p></div><div class="workflow-tile"><strong>风险结论</strong><p>${trimSentence(decision.risk_summary, TEXT.na, 60)}</p></div><div class="workflow-tile"><strong>推荐动作</strong><p>${trimSentence(decision.recommended_action, TEXT.na, 60)}</p></div>`);
+=======
+>>>>>>> Stashed changes
 }
+
+// ─── 决策层渲染 ────────────────────────────────────────────
 function renderDecisionLayer(report, analysis, source) {
   const bullets = buildInsightBullets(report, analysis);
   setText("analysisSource", source);
@@ -953,6 +1127,7 @@ function renderDecisionLayer(report, analysis, source) {
   setText("riskStripHeadline", buildRiskHeadline(analysis));
   setText("riskStripDetail", buildRiskDetail(analysis));
 }
+
 function renderMetricsLayer(report, analysis) {
   setHtml("discPie", renderDiscPie(analysis));
   setHtml("discBars", renderDiscBars(analysis));
@@ -962,6 +1137,7 @@ function renderMetricsLayer(report, analysis) {
   setHtml("riskMeter", `<div class="risk-strip-value"><span class="risk-badge ${rc}">${safeText(analysis.meta?.impression_management_risk, "低")}</span><div class="risk-scale-bar compact"><div class="risk-scale-fill ${rc}" style="width:${rc === "high" ? 88 : rc === "medium" ? 58 : 28}%"></div></div></div>`);
   setHtml("capabilityCards", buildCapabilityCards(report, analysis));
 }
+
 function renderInterviewOverview(report) {
   setText("turnCountTop", String(report.input_overview?.turn_count || 0));
   setText("jobGuessTop", report.interview_map?.job_inference?.value || TEXT.unknown);
@@ -979,6 +1155,7 @@ function renderInterviewOverview(report) {
   setHtml("overview", chips.map((c) => `<div class="chip">${c}</div>`).join(""));
   setHtml("turns", createList(report.interview_map?.turns, (turn) => `<div class="turn-item"><div class="type">第 ${turn.turn_id} 轮 · ${safeText(turn.question_type)}</div><p><strong>问题：</strong>${safeText(turn.question, TEXT.na)}</p><p><strong>回答摘要：</strong>${safeText(turn.answer_summary)}</p></div>`, TEXT.na));
 }
+
 function renderDetailedLayer(report, analysis, source) {
   renderDimensionCards("dimensions", analysis.dimension_analysis || {});
   setHtml("criticalFindings", createList(analysis.critical_findings, (item) => `<div class="list-item"><div class="type">${safeText(item.severity)}</div><p><strong>${safeText(item.finding)}</strong></p><p>${(item.basis || []).join("；") || TEXT.na}</p><p>${safeText(item.impact, TEXT.na)}</p></div>`, TEXT.na));
@@ -1005,6 +1182,7 @@ function renderDetailedLayer(report, analysis, source) {
   setText("llmOutput", JSON.stringify(report.llm_analysis || report.disc_analysis, null, 2));
 }
 
+<<<<<<< Updated upstream
 // ─── 冲突渲染（统一）──────────────────────────────────────────────────────
 function renderConflictItem(item) {
   const sc = item.severity === "high" ? "high" : item.severity === "medium" ? "medium" : "low";
@@ -1065,10 +1243,57 @@ function renderAllConflicts(report) {
 // ─── MBTI 渲染 ─────────────────────────────────────────────────────────
 function renderMBTILayer(report) {
   const mbti = report.mbti_analysis || {};
+=======
+// ─── 工作流渲染 ───────────────────────────────────────────
+function renderWorkflow(report) {
+  const workflow = report.workflow || {};
+  const stageTrace = workflow.stage_trace || [];
+  setText("workflowStageTop", String(stageTrace.length));
+  setHtml("workflowStages", createList(stageTrace, (item, i) => `<div class="workflow-stage"><div class="workflow-stage-top"><div class="workflow-stage-name"><span class="workflow-step-index">${i + 1}</span><strong>${safeText(item.stage)}</strong></div><span class="workflow-stage-status ${riskLevelClass(item.status)}">${safeText(item.status)}</span></div><div class="workflow-stage-meta"><span>${trimSentence(item.detail, TEXT.na, 48)}</span></div></div>`, TEXT.na));
+  const evidence = workflow.disc_evidence || {};
+  setHtml("workflowEvidence", `<div class="workflow-tile"><strong>维度排序</strong><div>${safeText((evidence.ranking || []).join(" / "), TEXT.na)}</div></div><div class="workflow-tile"><strong>分值摘要</strong><div>${Object.entries(evidence.scores || {}).map(([k, v]) => `<span class="inline-kpi">${k}: ${v}</span>`).join("") || TEXT.na}</div></div><div class="workflow-tile"><strong>证据亮点</strong><div>${trimSentence((evidence.feature_highlights || []).join("；") || TEXT.na, TEXT.na, 60)}</div></div>`);
+  const masking = workflow.masking_assessment || {};
+  setHtml("workflowMasking", `<div class="workflow-tile"><strong>关键缺陷</strong><div>${trimSentence((masking.critical_findings || []).map((i) => i.finding).join("；") || TEXT.na, TEXT.na, 60)}</div></div><div class="workflow-tile"><strong>证据缺口</strong><div>${trimSentence((masking.evidence_gaps || []).join("；") || TEXT.na, TEXT.na, 60)}</div></div><div class="workflow-tile"><strong>录用风险</strong><div>${trimSentence((masking.hire_risks || []).join("；") || TEXT.na, TEXT.na, 60)}</div></div>`);
+  const decision = workflow.decision_payload || {};
+  setHtml("workflowDecision", `<div class="workflow-tile"><strong>决策总结</strong><p>${trimSentence(decision.decision_summary, TEXT.na, 60)}</p></div><div class="workflow-tile"><strong>风险结论</strong><p>${trimSentence(decision.risk_summary, TEXT.na, 60)}</p></div><div class="workflow-tile"><strong>推荐动作</strong><p>${trimSentence(decision.recommended_action, TEXT.na, 60)}</p></div>`);
+}
+
+// ─── MBTI 渲染 ─────────────────────────────────────────────
+function renderMBTIDimension(dimKey, dimData) {
+  const pref = dimData.preference || "-";
+  const summary = dimData.summary || "等待分析";
+  const evidence = dimData.evidence || {};
+  const scores = dimData.scores || {};
+  const id = `mbti${dimKey.replace("_", "")}`;
+
+  const badgeEl = document.getElementById(id);
+  if (badgeEl) { badgeEl.textContent = pref; badgeEl.className = `mbti-pref-badge pref-${pref.toLowerCase()}`; }
+
+  const barWrapEl = document.getElementById(`${id}Bar`);
+  if (barWrapEl) {
+    const [lk, rk] = dimKey.split("_");
+    const ls = scores[lk] || 50, rs = scores[rk] || 50;
+    barWrapEl.innerHTML = `<div class="mbti-pref-labels"><span>${lk} ${ls}%</span><span>${rk} ${rs}%</span></div><div class="mbti-pref-bar"><div class="mbti-pref-fill left pref-${lk.toLowerCase()}" style="width:${ls}%"></div><div class="mbti-pref-fill right pref-${rk.toLowerCase()}" style="width:${rs}%"></div><div class="mbti-pref-center"></div></div>`;
+  }
+
+  const summaryEl = document.getElementById(`${id}Summary`);
+  if (summaryEl) summaryEl.textContent = summary;
+
+  const evEl = document.getElementById(`${id}Evidence`);
+  if (evEl) {
+    const [lk, rk] = dimKey.split("_");
+    evEl.innerHTML = `<div class="mbti-ev-section"><strong>${lk} 型证据:</strong><ul>${(evidence[lk] || []).length ? evidence[lk].map((e) => `<li>${e}</li>`).join("") : "<li>暂无</li>"}</ul></div><div class="mbti-ev-section"><strong>${rk} 型证据:</strong><ul>${(evidence[rk] || []).length ? evidence[rk].map((e) => `<li>${e}</li>`).join("") : "<li>暂无</li>"}</ul></div>`;
+  }
+}
+
+function renderMBTILayer(report) {
+  const mbti = report.mbti_analysis || {};
+>>>>>>> Stashed changes
   if (!mbti.type) return;
 
   const conf = mbti.meta?.confidence || "low";
   const confBadge = document.getElementById("mbtiConfidence");
+<<<<<<< Updated upstream
   if (confBadge) {
     confBadge.textContent = conf === "high" ? "高置信" : conf === "medium" ? "中置信" : "低置信";
     confBadge.className = `source-badge confidence-${conf}`;
@@ -1079,11 +1304,20 @@ function renderMBTILayer(report) {
     typeBadge.textContent = mbti.type;
     typeBadge.className = `mbti-type-badge mbti-${mbti.type.toLowerCase().replace(/x/g, "neutral")}`;
   }
+=======
+  if (confBadge) { confBadge.textContent = conf === "high" ? "高置信" : conf === "medium" ? "中置信" : "低置信"; confBadge.className = `source-badge confidence-${conf}`; }
+
+  const typeBadge = document.getElementById("mbtiTypeBadge");
+  if (typeBadge) { typeBadge.textContent = mbti.type; typeBadge.className = `mbti-type-badge mbti-${mbti.type.toLowerCase().replace(/x/g, "neutral")}`; }
+>>>>>>> Stashed changes
 
   const typeDesc = document.getElementById("mbtiTypeDesc");
   if (typeDesc) typeDesc.textContent = mbti.type_description || "认知风格类型";
 
+<<<<<<< Updated upstream
   // 冲突列表现在由 renderAllConflicts 统一处理
+=======
+>>>>>>> Stashed changes
   const conflictsEl = document.getElementById("mbtiConflicts");
   if (conflictsEl) {
     const conflicts = mbti.conflicts || [];
@@ -1107,6 +1341,7 @@ function renderMBTILayer(report) {
       ? '<div class="question-item">暂无追问建议</div>'
       : qs.map((q) => `<div class="question-item"><strong>${safeText(q.question, TEXT.na)}</strong><div>${safeText(q.purpose, "")}</div></div>`).join("");
   }
+<<<<<<< Updated upstream
 }
 
 function renderMBTIDimension(dimKey, dimData) {
@@ -1435,6 +1670,368 @@ async function loadSampleLibrary() {
   } catch {
     sampleSelectEl.innerHTML = `<option value="">${TEXT.sampleLoadFailed}</option>`;
   }
+=======
+}
+
+// ─── 跨模型冲突渲染 ────────────────────────────────────────
+function renderConflictItem(item) {
+  const sc = item.severity === "high" ? "high" : item.severity === "medium" ? "medium" : "low";
+  const iconMap = {
+    "DISC-MBTI 冲突": "◈",
+    "BigFive ↔ DISC 冲突": "◉",
+    "Enneagram ↔ DISC 冲突": "◐",
+    "Enneagram ↔ STAR 包装风险": "⚠",
+    "Enneagram ↔ DISC 风险信号": "◐",
+  };
+  const icon = iconMap[item.type] || "◈";
+  return `<div class="conflict-item ${sc}"><div class="conflict-head"><span class="conflict-icon">${icon}</span><span class="conflict-badge ${sc}">${sc === "high" ? "高" : sc === "medium" ? "中" : "低"}</span><span class="conflict-type-label">${safeText(item.type, "冲突")}</span></div><p class="conflict-desc">${safeText(item.description, TEXT.na)}</p>${item.recommendation ? `<div class="conflict-rec"><strong>追问建议：</strong>${safeText(item.recommendation)}</div>` : ""}</div>`;
+}
+
+function renderAllConflicts(report) {
+  const mbti = report.mbti_analysis || {};
+  const conflicts = mbti.conflicts || [];
+  const conflictSection = document.getElementById("conflictSection");
+  if (!conflictSection) return;
+
+  if (conflicts.length === 0) {
+    conflictSection.innerHTML = `<div class="conflict-empty"><div class="conflict-icon-wrap"><span>✓</span></div><strong>DISC、MBTI、BigFive、九型人格之间无明显冲突</strong><p>各模型结论一致性较高，人格画像置信度较好。</p></div>`;
+    return;
+  }
+
+  const high = conflicts.filter((c) => c.severity === "high");
+  const med  = conflicts.filter((c) => c.severity === "medium");
+  const low  = conflicts.filter((c) => c.severity !== "high" && c.severity !== "medium");
+
+  let html = `<div class="conflict-summary-row">`;
+  if (high.length) html += `<span class="conflict-summary-chip high">高风险 ${high.length}</span>`;
+  if (med.length)  html += `<span class="conflict-summary-chip medium">中风险 ${med.length}</span>`;
+  if (low.length)  html += `<span class="conflict-summary-chip low">低风险 ${low.length}</span>`;
+  html += `</div>`;
+  conflictSection.innerHTML = html + [...high.map(renderConflictItem), ...med.map(renderConflictItem), ...low.map(renderConflictItem)].join("");
+}
+
+// ─── BigFive 面板渲染 ─────────────────────────────────────
+const BF_LABELS = {
+  O: { label: "开放性 O", desc: "好奇、探索、创造力" },
+  C: { label: "尽责性 C", desc: "自律、计划、可靠性" },
+  E: { label: "外向性 E", desc: "活力、社交、主动" },
+  A: { label: "宜人性 A", desc: "信任、合作、同理心" },
+  N: { label: "神经质 N", desc: "情绪波动、忧虑（N高=不稳定）" },
+};
+
+function _normBf(raw) {
+  try {
+    const v = Number(raw);
+    if (!Number.isFinite(v)) return 0.0;
+    return v > 1.0 ? v : v * 100;
+  } catch { return 0.0; }
+}
+
+function renderBigFivePanel(report) {
+  const bf = report.bigfive_analysis;
+  const llmBf = report.llm_bigfive_analysis;
+  let scores = {};
+  if (llmBf && llmBf.scores) scores = llmBf.scores;
+  else if (bf && bf.scores) scores = bf.scores;
+
+  const container = document.getElementById("bigfiveCards");
+  if (!container) return;
+  const hasData = Object.keys(scores).length > 0;
+  if (!hasData) { container.innerHTML = `<div class="panel-empty-note">暂无 BigFive 分析数据（请使用「深度分析」模式）</div>`; return; }
+
+  container.innerHTML = Object.entries(BF_LABELS).map(([key, meta]) => {
+    const raw = scores[key] ?? scores[key.toLowerCase()];
+    const pct = Math.round(_normBf(raw));
+    const band = pct >= 65 ? "high" : pct >= 40 ? "medium" : "low";
+    const bandLabel = band === "high" ? "高" : band === "medium" ? "中" : "低";
+    const isN = key === "N";
+    const barStyle = isN
+      ? (pct > 60 ? "background:var(--amber)" : "background:linear-gradient(90deg,var(--success),var(--amber))")
+      : "background:linear-gradient(90deg,var(--primary),var(--secondary))";
+    return `<div class="bf-row"><div class="bf-label"><strong>${meta.label}</strong><small>${meta.desc}</small></div><div class="bf-bar-wrap"><div class="bf-bar-fill ${isN ? "inverted" : ""}" style="width:${pct}%;${barStyle}"></div></div><div class="bf-score"><strong>${pct}</strong><span class="risk-badge ${riskLevelClass(bandLabel)}">${bandLabel}</span></div></div>`;
+  }).join("");
+}
+
+// ─── 九型人格面板渲染 ──────────────────────────────────────
+const ENNG_META = {
+  "1": { label: "1号", name: "改革者", color: "var(--amber)" },
+  "2": { label: "2号", name: "助人者", color: "var(--success)" },
+  "3": { label: "3号", name: "成就者", color: "var(--risk)" },
+  "4": { label: "4号", name: "自我型", color: "var(--secondary)" },
+  "5": { label: "5号", name: "探索者", color: "var(--cyan)" },
+  "6": { label: "6号", name: "忠诚者", color: "var(--amber)" },
+  "7": { label: "7号", name: "享乐者", color: "var(--i-color)" },
+  "8": { label: "8号", name: "保护者", color: "var(--risk)" },
+  "9": { label: "9号", name: "和平者", color: "var(--s-color)" },
+};
+
+function _resolveEnng(result) {
+  if (!result) return null;
+  if (result.top_two_types && result.top_two_types.length) return result.top_two_types;
+  if (result.top_types && result.top_types.length) return result.top_types;
+  const t = result.primary_type;
+  if (t) return [{ type_number: String(t.type_number ?? t.type ?? ""), score: Number(t.raw_score ?? t.score ?? 50), label: String(t.label ?? "") }];
+  return null;
+}
+
+function renderEnneagramPanel(report) {
+  const local = report.enneagram_analysis;
+  const llm = report.llm_enneagram_analysis;
+  const combined = { ...(local || {}), ...(llm || {}) };
+  const types = _resolveEnng(combined);
+  const container = document.getElementById("enneagramCards");
+  if (!container) return;
+  if (!types || types.length === 0) { container.innerHTML = `<div class="panel-empty-note">暂无九型人格数据（请使用「深度分析」模式）</div>`; return; }
+
+  const primary = types[0];
+  const pMeta = ENNG_META[String(primary?.type_number || primary?.type || "")] || ENNG_META["1"];
+  const pScore = primary?.score || primary?.raw_score || 50;
+  const pPct = Math.round(Number(pScore));
+  const pBand = pPct >= 65 ? "high" : pPct >= 45 ? "medium" : "low";
+
+  const others = types.slice(1, 3).map((t) => {
+    const m = ENNG_META[String(t?.type_number || t?.type || "")] || { label: String(t?.type_number || t?.type || "?"), name: "", desc: "" };
+    const s = Math.round(Number(t?.score || t?.raw_score || 50));
+    return `<div class="enng-other-row"><span class="enng-type-chip" style="background:${m.color}22;color:${m.color}">${m.label} ${m.name}</span><span class="risk-badge ${riskLevelClass(s >= 60 ? "高" : s >= 45 ? "中" : "低")}">${s}分</span></div>`;
+  }).join("");
+
+  container.innerHTML = `<div class="enng-primary-row"><div class="enng-primary-badge" style="background:${pMeta.color}18;color:${pMeta.color}"><div class="enng-primary-type">${pMeta.label}</div><div class="enng-primary-name">${pMeta.name}</div></div><div class="enng-primary-info"><div class="enng-primary-desc">${pMeta.desc}</div><div class="bf-bar-wrap short"><div class="bf-bar-fill" style="width:${pPct}%;background:${pMeta.color}"></div></div><div class="enng-primary-score"><span class="risk-badge ${riskLevelClass(pBand)}">${pBand === "high" ? "高" : pBand === "medium" ? "中" : "低"}</span><span>${pPct} 分</span></div></div></div>${others ? `<div class="enng-others-wrap">${others}</div>` : ""}${llm?.cross_model_notes?.length ? `<div class="enng-cross-note">${safeText(llm.cross_model_notes[0], "")}</div>` : ""}`;
+}
+
+// ─── STAR 结构面板渲染 ─────────────────────────────────────
+function renderSTARPanel(report) {
+  const star = report.star_analysis;
+  const f = report.atomic_features || {};
+  const DIM_META = [
+    { key: "S", name: "情境 S", color: "var(--d-color)", feat: "star_s_score" },
+    { key: "T", name: "任务 T", color: "var(--i-color)", feat: "star_t_score" },
+    { key: "A", name: "行动 A", color: "var(--s-color)", feat: "star_a_score" },
+    { key: "R", name: "结果 R", color: "var(--c-color)", feat: "star_r_score" },
+  ];
+
+  const container = document.getElementById("starCards");
+  if (!container) return;
+
+  const rawDs = (star && typeof star === "object" && star.dimension_scores) ? star.dimension_scores : {};
+  const getDim = (key) => {
+    const cell = rawDs[key] || rawDs[key.toLowerCase()];
+    if (cell && typeof cell === "object") {
+      const sc = Number(cell.score);
+      if (Number.isFinite(sc)) return { pct: Math.round(sc <= 1 ? sc * 100 : sc), band: cell.band || (sc >= 0.75 ? "high" : sc >= 0.5 ? "medium" : "low"), note: safeText(cell.interpretation, "") };
+    }
+    return null;
+  };
+
+  const rows = DIM_META.map(({ key, name, color, feat }) => {
+    const d = getDim(key);
+    if (d) {
+      const bandLabel = d.band === "high" ? "高" : d.band === "medium" ? "中" : "低";
+      return `<div class="star-dim-card ${d.band}"><div class="star-dim-head"><strong style="color:${color}">${name}</strong><span class="risk-badge ${riskLevelClass(bandLabel)}">${bandLabel}</span></div><div class="bf-bar-wrap"><div class="bf-bar-fill" style="width:${d.pct}%;background:${color}"></div></div><div class="star-dim-meta"><span>${d.pct} 分</span><span>${d.note}</span></div></div>`;
+    }
+    const rawFeat = Number(f[feat]) || 0;
+    const pct = Math.round(rawFeat <= 1 ? rawFeat * 100 : rawFeat);
+    const band = pct >= 75 ? "high" : pct >= 50 ? "medium" : "low";
+    const bandLabel = band === "high" ? "高" : band === "medium" ? "中" : "低";
+    return `<div class="star-dim-card ${band}"><div class="star-dim-head"><strong style="color:${color}">${name}</strong><span class="risk-badge ${riskLevelClass(bandLabel)}">${bandLabel}</span></div><div class="bf-bar-wrap"><div class="bf-bar-fill" style="width:${pct}%;background:${color}"></div></div><div class="star-dim-meta"><span>${pct} 分</span><span>原子特征降级展示</span></div></div>`;
+  }).join("");
+
+  const defects = (star?.defects || []).slice(0, 3);
+  const defectHtml = defects.length ? `<div class="star-defects-wrap">${defects.map((d) => { const sc = d.severity === "high" ? "high" : d.severity === "medium" ? "medium" : "low"; return `<div class="star-defect-chip ${sc}"><span class="risk-badge ${sc}">${d.severity || "?"}</span>${safeText(d.label || d.defect_id, "")}</div>`; }).join("")}</div>` : "";
+
+  container.innerHTML = rows + defectHtml || `<div class="panel-empty-note">暂无 STAR 结构数据</div>`;
+}
+
+// ─── 跨模型人格映射面板 ────────────────────────────────────
+function renderMappingPanel(report) {
+  const container = document.getElementById("mappingCards");
+  if (!container) return;
+  const mapping = report.personality_mapping;
+  if (!mapping || typeof mapping !== "object") { container.innerHTML = `<div class="panel-empty-note">暂无跨模型人格映射数据（请使用「深度分析」模式）</div>`; return; }
+
+  const profile = mapping.integrated_personality_profile || mapping;
+  const primary = safeText(profile.primary_style_label, "");
+  const primaryDesc = safeText(profile.primary_style_description, "");
+  const enngInt = profile.enneagram_integration || {};
+  const bfInt = profile.bigfive_integration || {};
+  const discInt = profile.disc_integration || {};
+  const enngLabel = safeText(enngInt.dominant_type, "");
+  const bfLabel = safeText(bfInt.dominant_trait, "");
+  const discLabel = safeText(discInt.dominant_style, "");
+
+  const adj = (mapping.confidence_adjustments || []).slice(0, 4);
+  const adjHtml = adj.length ? adj.map((a) => { const dirIcon = a.direction === "up" ? "↑" : a.direction === "down" ? "↓" : "→"; return `<div class="adj-item ${a.direction}"><span class="adj-icon">${dirIcon}</span><div><strong>${safeText(a.target, "")}</strong> <span>${a.amount || ""}</span><p>${safeText(a.reason, "")}</p></div></div>`; }).join("") : "";
+
+  container.innerHTML = `${primary ? `<div class="mapping-primary"><strong>综合画像</strong><p>${primary}</p><p class="mapping-primary-desc">${primaryDesc}</p></div>` : ""}<div class="mapping-tags-row">${discLabel ? `<div class="mapping-tag disc-tag">DISC <strong>${discLabel}</strong></div>` : ""}${bfLabel ? `<div class="mapping-tag bf-tag">BigFive <strong>${bfLabel}</strong></div>` : ""}${enngLabel ? `<div class="mapping-tag enng-tag">九型 <strong>${enngLabel}</strong></div>` : ""}</div>${adjHtml ? `<div class="mapping-adj-section"><strong>置信度调整</strong>${adjHtml}</div>` : ""}` || `<div class="panel-empty-note">暂无跨模型映射数据</div>`;
+}
+
+// ─── 深度人格总面板 ───────────────────────────────────────
+function renderPersonalitySection(report) {
+  renderBigFivePanel(report);
+  renderEnneagramPanel(report);
+  renderSTARPanel(report);
+  renderMappingPanel(report);
+}
+
+// ─── 主渲染入口 ───────────────────────────────────────────
+function renderReport(report, source = "local") {
+  console.log(`渲染报告 [来源: ${source}]`, report);
+  const primary = getPrimaryAnalysis(report);
+  const isFull = getCurrentMode() === "full";
+
+  // 核心渲染层
+  renderDecisionLayer(report, primary.analysis, primary.source);
+  renderMetricsLayer(report, primary.analysis);
+  renderWorkflow(report);
+  renderInterviewOverview(report);
+  renderDetailedLayer(report, primary.analysis, primary.source);
+
+  // MBTI 渲染（始终展示，因为当前 engine 都会跑 MBTI）
+  renderMBTILayer(report);
+
+  // 跨模型冲突（仅完整模式）
+  const conflictSection = document.getElementById("conflictSection");
+  if (conflictSection) conflictSection.classList.toggle("hidden", !isFull);
+  if (isFull) renderAllConflicts(report);
+
+  // 深度人格面板（仅完整模式）
+  const personalitySection = document.getElementById("personalitySection");
+  if (personalitySection) { personalitySection.style.display = isFull ? "" : "none"; if (isFull) renderPersonalitySection(report); }
+
+  // 状态栏
+  statusEl.textContent = report.llm_status?.enabled
+    ? `解析模型：${safeText(report.llm_status.parser_model)} / 主分析模型：${safeText(report.llm_status.analysis_model)}${report.llm_status.personality_model ? ` / 人格模型：${safeText(report.llm_status.personality_model)}` : ""}`
+    : primary.source;
+
+  // 分析来源标识
+  const sourceBadge = document.getElementById("analysisSource");
+  if (sourceBadge) {
+    if (source === "local") { sourceBadge.textContent = "⚡ 快速分析（本地规则）"; sourceBadge.className = "source-badge source-local"; }
+    else { sourceBadge.textContent = "✨ 深度分析（LLM）"; sourceBadge.className = "source-badge source-llm"; }
+  }
+
+  lastReport = report;
+}
+
+// ─── LLM 异步分析核心函数（快速模式）────────────────────────
+async function performAnalysis(payload) {
+  showView("loading");
+  startLoadingSequence();
+  hideError();
+
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+
+  try {
+    console.log("📤 发送分析请求...", payload);
+    const res = await fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) { const errData = await res.json(); throw new Error(errData.error || TEXT.requestFailed); }
+    const data = await res.json();
+    currentTaskId = data.task_id;
+    console.log(`📥 收到任务 ID: ${currentTaskId}`);
+    startFastPolling(currentTaskId);
+  } catch (err) {
+    console.error("❌ 分析失败:", err);
+    showError(err.message || TEXT.requestFailed);
+  }
+}
+
+function showLLMLoadingBanner(reason) {
+  document.getElementById("llmBanner")?.remove();
+  const banner = document.createElement("div");
+  banner.id = "llmBanner";
+  banner.className = "llm-loading-banner";
+  banner.innerHTML = `<div class="llm-banner-content"><div class="llm-spinner"></div><div class="llm-banner-text"><strong>正在调用 LLM 深度分析...</strong><p class="llm-reason">${reason}</p><p class="llm-progress" id="llmProgress">准备中...</p></div></div><button id="cancelLLM" class="llm-cancel-btn" title="取消深度分析">✕</button>`;
+  resultView.prepend(banner);
+  document.getElementById("cancelLLM")?.addEventListener("click", () => {
+    if (confirm("确定取消 LLM 深度分析吗？将仅保留本地规则结果。")) { stopPollingLLM(); banner.remove(); }
+  });
+}
+
+function startFastPolling(taskId) {
+  console.log(`🔄 开始快速轮询任务: ${taskId}`);
+  let attempts = 0, hasLocalResult = false;
+  pollTimer = setInterval(async () => {
+    attempts++;
+    try {
+      const res = await fetch(`/api/llm_status/${taskId}`);
+      if (!res.ok) throw new Error("无法获取任务状态");
+      const data = await res.json();
+      console.log(`📊 [${attempts}] 状态: ${data.status}`);
+
+      if (!hasLocalResult && data.local_result) {
+        hasLocalResult = true;
+        console.log("✅ 收到本地结果，立即展示");
+        stopLoadingSequence();
+        lastReport = data.local_result;
+        renderReport(data.local_result, "local");
+        showView("result");
+        if (data.llm_triggered) showLLMLoadingBanner(data.llm_reason);
+        else showLocalCompleteBanner(data.llm_reason || "本地规则置信度充足");
+      }
+
+      if (data.status === "completed" && data.llm_result) {
+        stopPollingLLM();
+        onLLMCompleted(data.llm_result);
+      }
+      if (data.status === "failed") { stopPollingLLM(); onLLMFailed(data.error); }
+      if (attempts >= 120) { stopPollingLLM(); onLLMTimeout(); }
+    } catch (err) {
+      console.error("❌ 轮询失败:", err);
+      stopPollingLLM();
+      onLLMFailed(err.message);
+    }
+  }, 500);
+}
+
+function showLocalCompleteBanner(reason) {
+  const banner = document.createElement("div");
+  banner.id = "llmBanner";
+  banner.className = "llm-banner-success";
+  banner.innerHTML = `<div class="llm-banner-content"><div class="llm-check">✓</div><div class="llm-banner-text"><strong>本地规则分析完成</strong><p>${reason} · 已节省 API 费用</p></div></div>`;
+  resultView.prepend(banner);
+  setTimeout(() => { banner.style.opacity = "0"; setTimeout(() => banner.remove(), 300); }, 3000);
+}
+
+function stopPollingLLM() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; console.log("⏸️ 停止轮询"); } }
+
+function onLLMCompleted(llmResult) {
+  console.log("✨ LLM 分析完成:", llmResult);
+  const banner = document.getElementById("llmBanner");
+  if (banner) { banner.className = "llm-banner-success"; banner.innerHTML = `<div class="llm-banner-content"><div class="llm-check">✓</div><div class="llm-banner-text"><strong>LLM 深度分析已完成</strong><p>结果已更新，变化部分已高亮显示</p></div></div>`; setTimeout(() => { banner.style.opacity = "0"; setTimeout(() => banner.remove(), 300); }, 3000); }
+  lastReport = llmResult;
+  updateResultWithAnimation(llmResult);
+}
+
+function onLLMFailed(error) {
+  console.error("❌ LLM 分析失败:", error);
+  const banner = document.getElementById("llmBanner");
+  if (banner) { banner.className = "llm-banner-error"; banner.innerHTML = `<div class="llm-banner-content"><div class="llm-error-icon">!</div><div class="llm-banner-text"><strong>LLM 分析失败</strong><p>${error || "未知错误"}</p><p class="llm-fallback">已保留本地规则分析结果</p></div></div><button onclick="this.parentElement.remove()" class="llm-cancel-btn">✕</button>`; }
+}
+
+function onLLMTimeout() {
+  console.warn("⏱️ LLM 分析超时");
+  const banner = document.getElementById("llmBanner");
+  if (banner) { banner.className = "llm-banner-error"; banner.innerHTML = `<div class="llm-banner-content"><div class="llm-error-icon">⏱</div><div class="llm-banner-text"><strong>LLM 分析超时</strong><p>深度分析耗时过长，已自动取消</p><p class="llm-fallback">当前显示本地规则分析结果</p></div></div><button onclick="this.parentElement.remove()" class="llm-cancel-btn">✕</button>`; }
+}
+
+function updateResultWithAnimation(newResult) {
+  resultView.classList.add("result-updating");
+  setTimeout(() => { renderReport(newResult, "llm"); setTimeout(() => resultView.classList.remove("result-updating"), 300); }, 200);
+}
+
+// ─── 样例库 ───────────────────────────────────────────────
+async function loadSampleLibrary() {
+  try {
+    const response = await fetch("/samples/index.json");
+    if (!response.ok) throw new Error(TEXT.sampleLoadFailed);
+    sampleLibrary = await response.json();
+    sampleSelectEl.innerHTML = [`<option value="">${TEXT.selectSample}</option>`].concat(sampleLibrary.map((item) => `<option value="${item.id}">${item.title}</option>`)).join("");
+    if (!defaultSampleLoaded && sampleLibrary.length) { sampleSelectEl.value = sampleLibrary[0].id; await fillSelectedSample(); defaultSampleLoaded = true; }
+  } catch { sampleSelectEl.innerHTML = `<option value="">${TEXT.sampleLoadFailed}</option>`; }
+>>>>>>> Stashed changes
 }
 
 async function fillSelectedSample() {
@@ -1449,6 +2046,7 @@ async function fillSelectedSample() {
     if (!resp.ok) throw new Error(TEXT.sampleTextLoadFailed);
     transcriptEl.value = await resp.text();
     jobHintEl.value = item.job_hint || "";
+<<<<<<< Updated upstream
   } catch {
     transcriptEl.value = DEFAULT_TRANSCRIPT;
     jobHintEl.value = item.job_hint || "后端研发";
@@ -1493,6 +2091,74 @@ retryBtn.addEventListener("click", () => { hideError(); if (lastPayload) runAnal
 backBtn.addEventListener("click", () => { hideError(); stopLoadingSequence(); showView("input"); });
 editAgainBtn.addEventListener("click", () => { showView("input"); if (lastReport) statusEl.textContent = TEXT.sourceLocal; });
 
+=======
+  } catch { transcriptEl.value = DEFAULT_TRANSCRIPT; jobHintEl.value = item.job_hint || "后端研发"; }
+  finally { sampleBtn.disabled = false; sampleBtn.textContent = TEXT.fill; }
+}
+
+// ─── 事件绑定 ──────────────────────────────────────────────
+sampleBtn.addEventListener("click", fillSelectedSample);
+
+analyzeBtn.addEventListener("click", async () => {
+  const transcript = transcriptEl.value.trim();
+  const jobHint = jobHintEl.value.trim();
+  if (!transcript) { alert(TEXT.pasteTranscriptFirst); return; }
+
+  const mode = getCurrentMode();
+
+  if (mode === "quick") {
+    // 快速模式：使用异步轮询
+    lastPayload = { interview_transcript: transcript, job_hint_optional: jobHint, force_llm: false };
+    await performAnalysis(lastPayload);
+  } else {
+    // 完整模式：直接调用同步 API
+    lastPayload = { interview_transcript: transcript, job_hint_optional: jobHint };
+    hideError();
+    showView("loading");
+    startLoadingSequence();
+    analyzeBtn.disabled = true;
+    analyzeBtn.textContent = TEXT.analyzingFull;
+    try {
+      const response = await fetch("/api/analyze/full", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(lastPayload),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || TEXT.requestFailed);
+      stopLoadingSequence();
+      renderReport(data);
+      showView("result");
+    } catch (err) { showError(err.message || TEXT.requestFailed); }
+    finally { analyzeBtn.disabled = false; analyzeBtn.textContent = TEXT.runFull; }
+  }
+});
+
+retryBtn.addEventListener("click", () => {
+  const transcript = transcriptEl.value.trim();
+  const jobHint = jobHintEl.value.trim();
+  if (transcript) {
+    lastPayload = { interview_transcript: transcript, job_hint_optional: jobHint };
+    hideError();
+    showView("loading");
+    startLoadingSequence();
+    fetch(getAnalysisEndpoint(), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(lastPayload) })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!r.ok) throw new Error(data.error || TEXT.requestFailed);
+        stopLoadingSequence();
+        renderReport(data);
+        showView("result");
+      })
+      .catch((err) => showError(err.message));
+  }
+});
+
+backBtn.addEventListener("click", () => { hideError(); stopLoadingSequence(); showView("input"); });
+editAgainBtn.addEventListener("click", () => { showView("input"); if (lastReport) statusEl.textContent = TEXT.sourceLocal; });
+
+// ─── 初始化 ───────────────────────────────────────────────
+>>>>>>> Stashed changes
 transcriptEl.value = DEFAULT_TRANSCRIPT;
 jobHintEl.value = "后端研发";
 renderLoading(0, LOADING_STEPS_QUICK);
@@ -1501,3 +2167,5 @@ initModeSelector();
 updateAnalyzeBtnText();
 >>>>>>> Stashed changes
 loadSampleLibrary();
+initModeSelector();
+updateAnalyzeBtnText();

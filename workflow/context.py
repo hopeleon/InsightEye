@@ -43,6 +43,7 @@ class WorkflowContext:
 >>>>>>> Stashed changes
     analysis_output: dict[str, Any] | None = None
     analysis_error: str | None = None
+<<<<<<< Updated upstream
     # 人格分析新增字段
     bigfive_result: dict[str, Any] | None = None
     enneagram_result: dict[str, Any] | None = None
@@ -52,6 +53,9 @@ class WorkflowContext:
     llm_enneagram_output: dict[str, Any] | None = None
     # STAR 分析字段
     star_result: dict[str, Any] | None = None
+=======
+    llm_called: bool = False  # 标记 LLM 是否真正被调用过（区别于 API key 是否配置）
+>>>>>>> Stashed changes
     stage_trace: list[dict[str, Any]] = field(default_factory=list)
 
     def mark_stage(self, name: str, status: str, detail: str = "") -> None:

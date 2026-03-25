@@ -1720,4 +1720,615 @@ button:hover {
   .star-cards-grid { grid-template-columns: 1fr 1fr; }
   .conflict-head { flex-wrap: wrap; }
 }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ========== 模式选择器样式 ========== */
+.mode-selector-wrap {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.mode-toggle-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.mode-toggle-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border-radius: 16px;
+  border: 2px solid rgba(91,108,255,0.15);
+  background: rgba(255,255,255,0.60);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.mode-toggle-card input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.mode-toggle-card:hover {
+  border-color: rgba(91,108,255,0.30);
+  background: rgba(255,255,255,0.90);
+}
+
+.mode-toggle-card.active {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, rgba(91,108,255,0.08), rgba(138,124,255,0.06));
+  box-shadow: 0 0 0 3px rgba(91,108,255,0.12);
+}
+
+.mode-toggle-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.mode-toggle-icon {
+  font-size: 24px;
+  flex: 0 0 auto;
+}
+
+.quick-icon { color: var(--primary); }
+.full-icon { color: var(--secondary); }
+
+.mode-toggle-card.active .mode-toggle-icon {
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.mode-toggle-inner strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.mode-toggle-inner p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.mode-check-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(91,108,255,0.20);
+  flex: 0 0 auto;
+  transition: all 0.2s ease;
+}
+
+.mode-toggle-card.active .mode-check-dot {
+  background: var(--primary);
+  box-shadow: 0 0 0 3px rgba(91,108,255,0.20);
+}
+
+/* ========== 跨模型冲突区域 ========== */
+.dashboard-conflict-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.conflict-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 24px;
+  border-radius: 16px;
+  background: rgba(76,217,100,0.06);
+  border: 1px solid rgba(76,217,100,0.20);
+  text-align: center;
+}
+
+.conflict-empty strong {
+  font-size: 15px;
+  color: var(--success);
+}
+
+.conflict-empty p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.conflict-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(76,217,100,0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: var(--success);
+}
+
+.conflict-summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.conflict-summary-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.conflict-summary-chip.high { background: rgba(255,122,122,0.14); color: var(--risk); }
+.conflict-summary-chip.medium { background: rgba(255,182,72,0.14); color: var(--amber); }
+.conflict-summary-chip.low { background: rgba(138,124,255,0.14); color: var(--secondary); }
+
+.conflict-item {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border-left: 4px solid var(--secondary);
+  background: rgba(255,255,255,0.90);
+  margin-bottom: 12px;
+}
+
+.conflict-item.high { border-left-color: var(--risk); background: rgba(255,122,122,0.06); }
+.conflict-item.medium { border-left-color: var(--amber); background: rgba(255,182,72,0.06); }
+.conflict-item.low { border-left-color: var(--secondary); }
+
+.conflict-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.conflict-icon { font-size: 16px; flex: 0 0 auto; }
+
+.conflict-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.conflict-badge.high { color: var(--risk); background: rgba(255,122,122,0.14); }
+.conflict-badge.medium { color: var(--amber); background: rgba(255,182,72,0.14); }
+.conflict-badge.low { color: var(--secondary); background: rgba(138,124,255,0.14); }
+
+.conflict-type-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.conflict-desc {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #475467;
+}
+
+.conflict-rec {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.conflict-mini-note {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ========== 深度人格面板 ========== */
+.dashboard-personality-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.personality-section-header {
+  background: linear-gradient(135deg, rgba(91,108,255,0.06), rgba(138,124,255,0.04));
+  border-radius: 16px;
+  padding: 20px 24px;
+  border: 1px solid rgba(91,108,255,0.12);
+}
+
+.personality-model-badges {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.model-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.disc-badge { background: rgba(91,108,255,0.14); color: var(--primary); }
+.bf-badge { background: rgba(76,217,100,0.14); color: var(--success); }
+.enng-badge { background: rgba(138,124,255,0.14); color: var(--secondary); }
+.star-badge { background: rgba(255,182,72,0.14); color: var(--amber); }
+
+.personality-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.personality-panel {
+  background: rgba(255,255,255,0.90);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid rgba(91,108,255,0.08);
+}
+
+.personality-card-body {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.panel-empty-note {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+  padding: 20px 0;
+  font-style: italic;
+}
+
+/* BigFive 面板样式 */
+.bf-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(91,108,255,0.04);
+  border: 1px solid rgba(91,108,255,0.06);
+}
+
+.bf-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bf-label strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.bf-label small {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.bf-bar-wrap {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(17,24,39,0.06);
+  overflow: hidden;
+}
+
+.bf-bar-wrap.short { margin-top: 6px; }
+
+.bf-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.4s ease;
+}
+
+.bf-score {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.bf-score strong {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+/* Enneagram 面板样式 */
+.enng-primary-row {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 14px;
+}
+
+.enng-primary-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  padding: 14px 8px;
+  gap: 6px;
+}
+
+.enng-primary-type {
+  font-size: 28px;
+  font-weight: 900;
+  color: inherit;
+}
+
+.enng-primary-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: inherit;
+  opacity: 0.8;
+}
+
+.enng-primary-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.enng-primary-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.enng-primary-score {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.enng-other-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(91,108,255,0.04);
+  margin-bottom: 8px;
+}
+
+.enng-type-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.enng-cross-note {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(91,108,255,0.04);
+  line-height: 1.5;
+}
+
+/* STAR 面板样式 */
+.star-panel { }
+
+.star-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.star-dim-card {
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(91,108,255,0.04);
+  border: 1px solid rgba(91,108,255,0.06);
+}
+
+.star-dim-card.high { background: rgba(76,217,100,0.06); border-color: rgba(76,217,100,0.15); }
+.star-dim-card.medium { background: rgba(255,182,72,0.06); border-color: rgba(255,182,72,0.15); }
+.star-dim-card.low { background: rgba(255,122,122,0.05); border-color: rgba(255,122,122,0.12); }
+
+.star-dim-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.star-dim-head strong {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.star-dim-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.star-defects-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(91,108,255,0.08);
+}
+
+.star-defect-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: rgba(255,122,122,0.08);
+  color: var(--risk);
+}
+
+.star-defect-chip.medium { background: rgba(255,182,72,0.08); color: var(--amber); }
+.star-defect-chip.low { background: rgba(138,124,255,0.08); color: var(--secondary); }
+
+/* 跨模型映射面板样式 */
+.mapping-panel { }
+
+.mapping-primary {
+  padding: 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(91,108,255,0.06), rgba(138,124,255,0.04));
+  border: 1px solid rgba(91,108,255,0.12);
+  margin-bottom: 14px;
+}
+
+.mapping-primary strong {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.mapping-primary p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #475467;
+}
+
+.mapping-primary-desc {
+  margin-top: 4px !important;
+  color: var(--muted) !important;
+  font-size: 12px !important;
+}
+
+.mapping-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.mapping-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.disc-tag { background: rgba(91,108,255,0.12); color: var(--primary); }
+.bf-tag { background: rgba(76,217,100,0.12); color: var(--success); }
+.enng-tag { background: rgba(138,124,255,0.12); color: var(--secondary); }
+
+.mapping-adj-section {
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(91,108,255,0.04);
+  border: 1px solid rgba(91,108,255,0.06);
+}
+
+.mapping-adj-section > strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.adj-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.70);
+}
+
+.adj-item:last-child { margin-bottom: 0; }
+
+.adj-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+
+.adj-item.up .adj-icon { background: rgba(76,217,100,0.14); color: var(--success); }
+.adj-item.down .adj-icon { background: rgba(255,122,122,0.14); color: var(--risk); }
+.adj-item .adj-icon { background: rgba(91,108,255,0.10); color: var(--secondary); }
+
+.adj-item strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.adj-item span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.adj-item p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
 >>>>>>> Stashed changes

@@ -6,7 +6,10 @@ from workflow.context import WorkflowContext
 
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
 # ─────────────────────────────────────────────────────────────────────────────
 # 跨模型冲突检测
 # ─────────────────────────────────────────────────────────────────────────────
@@ -361,6 +364,9 @@ def _enneagram_followup_question(enng_type: str, disc_type: str) -> str:
 # Stage 入口
 # ─────────────────────────────────────────────────────────────────────────────
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 def run_personality_mapping_stage(context: WorkflowContext) -> WorkflowContext:
     context.mark_stage("personality_mapping_stage", "started", "Run cross-model personality mapping")
@@ -371,7 +377,10 @@ def run_personality_mapping_stage(context: WorkflowContext) -> WorkflowContext:
         features=context.features,
     )
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
 
     # ── 冲突检测并注入 mbti_analysis.conflicts ────────────────────────────
     disc_scores = context.local_disc_result.get("scores", {}) if context.local_disc_result else {}
@@ -396,6 +405,9 @@ def run_personality_mapping_stage(context: WorkflowContext) -> WorkflowContext:
                 existing.append(c)
         context.mbti_analysis["conflicts"] = existing[:8]
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     context.mark_stage("personality_mapping_stage", "completed", "Cross-model personality mapping ready")
     return context
