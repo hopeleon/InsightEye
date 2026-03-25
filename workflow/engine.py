@@ -73,9 +73,12 @@ def run_disc_workflow(transcript: str, job_hint: str = "") -> dict:
 
 def run_local_workflow(transcript: str, job_hint: str = "") -> dict:
     """
-    仅运行本地规则分析（不调用 LLM）
+    仅运行本地规则分析（不调用任何 LLM，包括 parser）
     用于快速返回初步结果
     """
+    import app.config as config
+    import time  # 新增
+    
     context = WorkflowContext(
         transcript=transcript,
         job_hint=job_hint,
@@ -83,21 +86,40 @@ def run_local_workflow(transcript: str, job_hint: str = "") -> dict:
         mbti_knowledge=load_mbti_knowledge(),
     )
 
-    # 只运行本地阶段
-    for stage in (
-        run_parse_stage,
-        run_feature_stage,
-        run_disc_evidence_stage,
-        run_mbti_stage,
-        run_masking_stage,
-        run_decision_stage,
-    ):
-        context = stage(context)
+    # ========== 临时禁用所有 LLM 调用 ==========
+    original_api_key = config.OPENAI_API_KEY
+    original_parser_model = config.OPENAI_PARSER_MODEL
+    original_analysis_model = config.OPENAI_ANALYSIS_MODEL
+    
+    try:
+        # 强制禁用所有 LLM
+        config.OPENAI_API_KEY = None
+        config.OPENAI_PARSER_MODEL = None
+        config.OPENAI_ANALYSIS_MODEL = None
+        
+        # 运行所有本地阶段并计时
+        stages = [
+            ("parse", run_parse_stage),
+            ("feature", run_feature_stage),
+            ("disc_evidence", run_disc_evidence_stage),
+            ("mbti", run_mbti_stage),
+            ("masking", run_masking_stage),
+            ("decision", run_decision_stage),
+        ]
+        
+        for stage_name, stage_func in stages:
+            start = time.time()
+            context = stage_func(context)
+            elapsed = time.time() - start
+            print(f"  ⏱️  {stage_name}_stage: {elapsed:.2f}s")  # 打印耗时
+    
+    finally:
+        # 恢复配置
+        config.OPENAI_API_KEY = original_api_key
+        config.OPENAI_PARSER_MODEL = original_parser_model
+        config.OPENAI_ANALYSIS_MODEL = original_analysis_model
 
-    # 不调用 LLM
     return build_response(context)
-
-
 def should_trigger_llm(local_result: dict) -> tuple[bool, str]:
     """
     判断是否需要调用 LLM 深度分析

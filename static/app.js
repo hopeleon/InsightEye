@@ -352,6 +352,7 @@ async function performAnalysis(payload) {
   try {
     console.log("📤 发送分析请求...", payload);
     
+    // ========== 1. 发起任务，立即返回任务 ID ==========
     const res = await fetch("/api/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -364,20 +365,11 @@ async function performAnalysis(payload) {
     }
     
     const data = await res.json();
-    console.log("📥 收到响应:", data);
+    currentTaskId = data.task_id;
+    console.log(`📥 收到任务 ID: ${currentTaskId}`);
     
-    // ========== 1. 立即展示本地规则结果 ==========
-    stopLoadingSequence();
-    lastReport = data.local_result;
-    renderReport(data.local_result, "local");
-    showView("result");
-    
-    // ========== 2. 如果触发了 LLM，开始轮询 ==========
-    if (data.llm_status.triggered) {
-      currentTaskId = data.llm_status.task_id;
-      showLLMLoadingBanner(data.llm_status.reason);
-      startPollingLLM(currentTaskId);
-    }
+    // ========== 2. 立即开始轮询（快速轮询本地结果）==========
+    startFastPolling(currentTaskId);
     
   } catch (err) {
     console.error("❌ 分析失败:", err);
@@ -416,6 +408,93 @@ function showLLMLoadingBanner(reason) {
   });
 }
 
+function startFastPolling(taskId) {
+  console.log(`🔄 开始快速轮询任务: ${taskId}`);
+  
+  let attempts = 0;
+  const maxAttempts = 120; // 最多 4 分钟
+  let hasLocalResult = false;
+  
+  pollTimer = setInterval(async () => {
+    attempts++;
+    
+    try {
+      const res = await fetch(`/api/llm_status/${taskId}`);
+      
+      if (!res.ok) {
+        throw new Error("无法获取任务状态");
+      }
+      
+      const data = await res.json();
+      const status = data.status;
+      
+      console.log(`📊 [${attempts}] 状态: ${status}`);
+      
+      // ========== 第一次拿到本地结果 ==========
+      if (!hasLocalResult && data.local_result) {
+        hasLocalResult = true;
+        console.log("✅ 收到本地结果，立即展示");
+        
+        stopLoadingSequence();
+        lastReport = data.local_result;
+        renderReport(data.local_result, "local");
+        showView("result");
+        
+        // 如果触发了 LLM，显示横幅
+        if (data.llm_triggered) {
+          showLLMLoadingBanner(data.llm_reason);
+        } else {
+          showLocalCompleteBanner(data.llm_reason || "本地规则置信度充足");
+        }
+      }
+      
+      // ========== LLM 分析完成 ==========
+      if (status === "completed" && data.llm_result) {
+        stopPollingLLM();
+        onLLMCompleted(data.llm_result);
+      }
+      
+      // ========== 任务失败 ==========
+      if (status === "failed") {
+        stopPollingLLM();
+        onLLMFailed(data.error);
+      }
+      
+      // ========== 超时 ==========
+      if (attempts >= maxAttempts) {
+        stopPollingLLM();
+        onLLMTimeout();
+      }
+      
+    } catch (err) {
+      console.error("❌ 轮询失败:", err);
+      stopPollingLLM();
+      onLLMFailed(err.message);
+    }
+  }, 500); // ← 快速轮询：每 0.5 秒一次
+}
+
+function showLocalCompleteBanner(reason) {
+  const banner = document.createElement("div");
+  banner.id = "llmBanner";
+  banner.className = "llm-banner-success";
+  banner.innerHTML = `
+    <div class="llm-banner-content">
+      <div class="llm-check">✓</div>
+      <div class="llm-banner-text">
+        <strong>本地规则分析完成</strong>
+        <p>${reason} · 已节省 API 费用</p>
+      </div>
+    </div>
+  `;
+  
+  resultView.prepend(banner);
+  
+  setTimeout(() => {
+    banner.style.opacity = "0";
+    setTimeout(() => banner.remove(), 300);
+  }, 3000);
+}
 
 function startPollingLLM(taskId) {
   console.log(`🔄 开始轮询任务: ${taskId}`);
