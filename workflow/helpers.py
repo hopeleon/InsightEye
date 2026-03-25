@@ -117,7 +117,7 @@ def call_openai_compatible(model: str, messages: list[dict]) -> dict | None:
         },
         method="POST",
     )
-    with request.urlopen(req) as resp:
+    with request.urlopen(req, timeout=120) as resp:
         response_json = json.loads(resp.read().decode("utf-8"))
     content = response_json["choices"][0]["message"]["content"]
     return json.loads(content)

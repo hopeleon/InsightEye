@@ -32,6 +32,7 @@ def load_disc_prompt() -> str:
     return _read_text(DISC_PROMPT_PATH)
 
 
+<<<<<<< Updated upstream
 @lru_cache(maxsize=1)
 def load_bigfive_knowledge() -> dict:
     return yaml.safe_load(_read_text(BIGFIVE_KNOWLEDGE_PATH))
@@ -52,6 +53,8 @@ def load_enneagram_prompt() -> str:
     return _read_text(ENNEAGRAM_PROMPT_PATH)
 
 
+=======
+>>>>>>> Stashed changes
 @lru_cache(maxsize=1)
 def load_mbti_knowledge() -> dict:
     return yaml.safe_load(_read_text(MBTI_KNOWLEDGE_PATH))
@@ -63,5 +66,30 @@ def load_mbti_prompt() -> str:
 
 
 @lru_cache(maxsize=1)
+<<<<<<< Updated upstream
 def load_star_knowledge() -> dict:
     return yaml.safe_load(_read_text(STAR_KNOWLEDGE_PATH))
+=======
+def load_bigfive_knowledge() -> dict:
+    return yaml.safe_load(_read_text(BIGFIVE_KNOWLEDGE_PATH))
+
+
+@lru_cache(maxsize=1)
+def load_bigfive_prompt() -> str:
+    return _read_text(BIGFIVE_PROMPT_PATH)
+
+
+@lru_cache(maxsize=1)
+def load_enneagram_knowledge() -> dict:
+    return yaml.safe_load(_read_text(ENNEAGRAM_KNOWLEDGE_PATH))
+
+
+@lru_cache(maxsize=1)
+def load_enneagram_prompt() -> str:
+    return _read_text(ENNEAGRAM_PROMPT_PATH)
+
+
+@lru_cache(maxsize=1)
+def load_star_knowledge() -> dict:
+    return yaml.safe_load(_read_text(STAR_KNOWLEDGE_PATH))
+>>>>>>> Stashed changes

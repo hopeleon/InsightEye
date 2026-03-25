@@ -3,6 +3,7 @@ from __future__ import annotations
 from workflow.engine import run_disc_workflow, run_personality_workflow
 
 
+<<<<<<< Updated upstream
 def analyze_interview(
     transcript: str,
     job_hint: str = "",
@@ -28,3 +29,12 @@ def analyze_interview_full(
         job_hint=job_hint,
         apply_knowledge_graph=apply_knowledge_graph,
     )
+=======
+def analyze_interview(transcript: str, job_hint: str = "") -> dict:
+    return run_disc_workflow(transcript=transcript, job_hint=job_hint)
+
+
+def analyze_interview_full(transcript: str, job_hint: str = "") -> dict:
+    """完整人格分析：DISC + BigFive + 九型 + MBTI + 跨模型映射（ywj 分支新增）。"""
+    return run_personality_workflow(transcript=transcript, job_hint=job_hint)
+>>>>>>> Stashed changes

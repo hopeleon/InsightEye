@@ -12,11 +12,25 @@
     />
   </head>
   <body>
+<<<<<<< Updated upstream
     <main class="shell">
       <section class="hero-band">
         <div class="hero-copy">
           <p class="eyebrow">
             &#x6167;&#x773c;&#x8bc6;&#x4eba; INTERVIEW INTELLIGENCE
+=======
+    <main class="app-shell">
+      <!-- ══════════════════════════════════════════════════════════════
+           输入页面
+      ══════════════════════════════════════════════════════════════ -->
+      <section id="inputView" class="view view-input active">
+        <header class="input-header">
+          <p class="eyebrow">INSIGHTEYE / INTERVIEW INTELLIGENCE</p>
+          <h1>慧眼识人</h1>
+          <p class="subtitle">
+            基于 DISC 与证据工作流的面试辅助决策台。
+            在一屏内完成岗位选择、文本输入与结果发起。
+>>>>>>> Stashed changes
           </p>
           <h1>&#x6167;&#x773c;&#x8bc6;&#x4eba;</h1>
           <p class="subtitle">
@@ -42,26 +56,141 @@
                 >&#x7b49;&#x5f85;&#x5206;&#x6790;</strong
               >
             </div>
+<<<<<<< Updated upstream
             <div class="hero-stat">
               <span>&#x95ee;&#x7b54;&#x8f6e;&#x6b21;</span
               ><strong id="turnCountTop">0</strong>
+=======
+
+            <!-- 模式选择 -->
+            <div class="field-block mode-selector-wrap">
+              <label>分析模式</label>
+              <div class="mode-toggle-row">
+                <label class="mode-toggle-card active" id="modeQuickCard">
+                  <input type="radio" name="modeGroup" id="modeSelect" value="quick" checked />
+                  <div class="mode-toggle-inner">
+                    <span class="mode-toggle-icon quick-icon">◈</span>
+                    <div>
+                      <strong>快速 DISC 分析</strong>
+                      <p>专注行为风格分析，秒级响应</p>
+                    </div>
+                  </div>
+                  <span class="mode-check-dot"></span>
+                </label>
+                <label class="mode-toggle-card full-icon-label" id="modeFullCard">
+                  <input type="radio" name="modeGroup" value="full" />
+                  <div class="mode-toggle-inner">
+                    <span class="mode-toggle-icon full-icon">◉</span>
+                    <div>
+                      <strong>深度人格分析</strong>
+                      <p>DISC · BigFive · 九型 · MBTI · 跨模型映射</p>
+                    </div>
+                  </div>
+                  <span class="mode-check-dot"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="input-grid">
+              <div class="field-block field-inline">
+                <div class="field-item">
+                  <label for="jobHint">岗位提示</label>
+                  <input id="jobHint" type="text" placeholder="例如：销售 / 研发 / 产品" />
+                </div>
+                <div class="field-item sample-field">
+                  <label for="sampleSelect">示例填充（可选）</label>
+                  <div class="sample-toolbar">
+                    <select id="sampleSelect"><option value="">请选择样例</option></select>
+                    <button id="sampleBtn" type="button" class="secondary-btn">填充示例</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field-block">
+                <label for="transcript">整段面试文本</label>
+                <textarea id="transcript"></textarea>
+              </div>
+>>>>>>> Stashed changes
             </div>
             <div class="hero-stat">
               <span>&#x5de5;&#x4f5c;&#x6d41;&#x9636;&#x6bb5;</span
               ><strong id="workflowStageTop">0</strong>
             </div>
+<<<<<<< Updated upstream
             <div class="hero-stat">
               <span>&#x98ce;&#x9669;&#x7b49;&#x7ea7;</span
               ><strong id="riskLevelTop">&#x672a;&#x5224;&#x5b9a;</strong>
+=======
+          </article>
+
+          <aside class="input-side">
+            <article class="micro-card">
+              <p class="section-kicker">WHY THIS FORMAT</p>
+              <h3>输入建议</h3>
+              <ul class="mini-list">
+                <li>优先使用带角色标记的原始面试对话</li>
+                <li>保留追问和反问，不要只截单轮回答</li>
+                <li>岗位提示可以留空，系统会尝试给出猜测</li>
+              </ul>
+            </article>
+            <article class="micro-card accent-card">
+              <p class="section-kicker">DEFAULT DEBUG</p>
+              <h3>快速调试</h3>
+              <p class="micro-copy">
+                页面会默认预填一段样例，你可以直接点击"开始分析"进入结果页。
+              </p>
+            </article>
+          </aside>
+        </section>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════════
+           加载页面
+      ══════════════════════════════════════════════════════════════ -->
+      <section id="loadingView" class="view view-loading hidden">
+        <div class="loading-card">
+          <p class="eyebrow">ANALYSIS IN PROGRESS</p>
+          <h2>正在生成候选人结论</h2>
+          <p id="loadingMessage" class="subtitle small">请稍候，系统正在拆解问答、提取证据并生成评估。</p>
+          <div class="loading-orbit"></div>
+          <div id="loadingSteps" class="loading-steps"></div>
+          <div id="errorBox" class="error-box hidden">
+            <strong id="errorText"></strong>
+            <div class="error-actions">
+              <button id="retryBtn" type="button" class="primary-btn">重试</button>
+              <button id="backBtn" type="button" class="secondary-btn">返回输入</button>
+>>>>>>> Stashed changes
             </div>
           </div>
         </div>
       </section>
+<<<<<<< Updated upstream
 
       <section class="workspace">
         <aside class="control-rail">
           <article class="panel control-panel sticky-panel">
             <div class="panel-header compact-header">
+=======
+
+      <!-- ══════════════════════════════════════════════════════════════
+           结果页面
+      ══════════════════════════════════════════════════════════════ -->
+      <section id="resultView" class="view view-result hidden">
+        <header class="result-topbar">
+          <div>
+            <p class="eyebrow">RESULT DASHBOARD</p>
+            <h2>候选人评估与面试决策</h2>
+          </div>
+          <div class="result-actions">
+            <button id="editAgainBtn" type="button" class="secondary-btn">返回修改输入</button>
+          </div>
+        </header>
+
+        <!-- 概览行 -->
+        <section class="dashboard-overview-lite">
+          <article class="overview-hero-card">
+            <div class="panel-head panel-head-space">
+>>>>>>> Stashed changes
               <div>
                 <p class="section-kicker">&#x8f93;&#x5165;&#x533a;</p>
                 <h2>&#x9762;&#x8bd5;&#x8f93;&#x5165;</h2>
@@ -160,9 +289,57 @@
             </div>
           </article>
 
+<<<<<<< Updated upstream
           <div class="metric-row">
             <article class="panel metric-card wide-card">
               <div class="panel-header compact-header">
+=======
+        <!-- 主体网格 -->
+        <section class="dashboard-main-grid">
+          <div class="dashboard-main-left">
+            <section class="insight-stack">
+              <article class="insight-structured-card risk-card">
+                <div class="insight-card-head">
+                  <span class="insight-icon-wrap danger">!</span>
+                  <div>
+                    <p class="section-kicker">INSIGHT 01</p>
+                    <h3>最大风险</h3>
+                  </div>
+                </div>
+                <div id="riskHeadline" class="insight-title"></div>
+                <div id="riskBulletList" class="bullet-list"></div>
+              </article>
+
+              <article class="insight-structured-card action-card">
+                <div class="insight-card-head">
+                  <span class="insight-icon-wrap primary">→</span>
+                  <div>
+                    <p class="section-kicker">INSIGHT 02</p>
+                    <h3>建议动作</h3>
+                  </div>
+                </div>
+                <div id="nextAction" class="insight-title"></div>
+                <div id="actionBulletList" class="bullet-list"></div>
+              </article>
+
+              <article class="insight-structured-card truth-card">
+                <div class="insight-card-head">
+                  <span class="insight-icon-wrap neutral">◎</span>
+                  <div>
+                    <p class="section-kicker">INSIGHT 03</p>
+                    <h3>判断依据</h3>
+                  </div>
+                </div>
+                <div id="candidateStyleNote" class="insight-title subdued"></div>
+                <div id="evidenceBulletList" class="bullet-list"></div>
+              </article>
+            </section>
+          </div>
+
+          <aside class="dashboard-main-right">
+            <article class="panel disc-focus-card">
+              <div class="panel-head compact-head">
+>>>>>>> Stashed changes
                 <div>
                   <p class="section-kicker">&#x5173;&#x952e;&#x6307;&#x6807;</p>
                   <h2>DISC &#x5206;&#x5e03;</h2>
@@ -185,6 +362,7 @@
               <div id="riskMeter" class="risk-meter"></div>
               <div id="riskTags" class="tag-list"></div>
             </article>
+<<<<<<< Updated upstream
             <article class="panel metric-card">
               <div class="panel-header compact-header">
                 <div>
@@ -196,6 +374,117 @@
               </div>
               <div id="capabilityTags" class="tag-list"></div>
               <div id="capabilitySummary" class="summary-box compact"></div>
+=======
+          </aside>
+        </section>
+
+        <!-- 优势 / 追问 -->
+        <section class="dashboard-compare-row">
+          <article class="compare-surface">
+            <div class="panel-head compact-head">
+              <div>
+                <p class="section-kicker">COMPARE</p>
+                <h3>优势与风险</h3>
+              </div>
+            </div>
+            <div class="compare-columns bare-columns">
+              <div>
+                <span class="compare-heading positive">优势</span>
+                <div id="strengthList" class="micro-list bare-list"></div>
+              </div>
+              <div>
+                <span class="compare-heading negative">风险</span>
+                <div id="riskList" class="micro-list bare-list"></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="followup-surface">
+            <div class="panel-head compact-head">
+              <div>
+                <p class="section-kicker">FOLLOW-UP</p>
+                <h3>建议追问</h3>
+              </div>
+            </div>
+            <div id="topFollowups" class="numbered-followups"></div>
+          </article>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════════
+             MBTI 认知风格分析区域（仅完整模式展示）
+        ══════════════════════════════════════════════════════════ -->
+        <section class="dashboard-mbti-section hidden" id="mbtiDashboardSection">
+          <article class="panel mbti-overview-card">
+            <div class="panel-head panel-head-space">
+              <div>
+                <p class="section-kicker">MBTI COGNITIVE STYLE</p>
+                <h3>认知风格补充视角</h3>
+              </div>
+              <div id="mbtiConfidence" class="source-badge"></div>
+            </div>
+            <div class="mbti-hero-layout">
+              <div class="mbti-type-display">
+                <div id="mbtiTypeBadge" class="mbti-type-badge">XXXX</div>
+                <p id="mbtiTypeDesc" class="mbti-type-desc">等待分析...</p>
+              </div>
+              <div class="mbti-hero-right">
+                <div id="mbtiConflicts" class="mbti-conflict-list"></div>
+              </div>
+            </div>
+          </article>
+
+          <div class="mbti-dimensions-grid">
+            <article class="panel mbti-dimension-card">
+              <div class="mbti-dim-head">
+                <span class="mbti-dim-label">能量来源</span>
+                <span id="mbtiEI" class="mbti-pref-badge">-</span>
+              </div>
+              <div id="mbtiEIBar" class="mbti-pref-bar-wrap"><div class="mbti-pref-bar"></div></div>
+              <p id="mbtiEISummary" class="mbti-dim-summary">等待分析</p>
+              <details class="mbti-evidence-toggle">
+                <summary>查看证据</summary>
+                <div id="mbtiEIEvidence" class="mbti-evidence-content"></div>
+              </details>
+            </article>
+
+            <article class="panel mbti-dimension-card">
+              <div class="mbti-dim-head">
+                <span class="mbti-dim-label">信息获取</span>
+                <span id="mbtiNS" class="mbti-pref-badge">-</span>
+              </div>
+              <div id="mbtiNSBar" class="mbti-pref-bar-wrap"><div class="mbti-pref-bar"></div></div>
+              <p id="mbtiNSSummary" class="mbti-dim-summary">等待分析</p>
+              <details class="mbti-evidence-toggle">
+                <summary>查看证据</summary>
+                <div id="mbtiNSEvidence" class="mbti-evidence-content"></div>
+              </details>
+            </article>
+
+            <article class="panel mbti-dimension-card">
+              <div class="mbti-dim-head">
+                <span class="mbti-dim-label">决策方式</span>
+                <span id="mbtiTF" class="mbti-pref-badge">-</span>
+              </div>
+              <div id="mbtiTFBar" class="mbti-pref-bar-wrap"><div class="mbti-pref-bar"></div></div>
+              <p id="mbtiTFSummary" class="mbti-dim-summary">等待分析</p>
+              <details class="mbti-evidence-toggle">
+                <summary>查看证据</summary>
+                <div id="mbtiTFEvidence" class="mbti-evidence-content"></div>
+              </details>
+            </article>
+
+            <article class="panel mbti-dimension-card">
+              <div class="mbti-dim-head">
+                <span class="mbti-dim-label">生活方式</span>
+                <span id="mbtiJP" class="mbti-pref-badge">-</span>
+              </div>
+              <div id="mbtiJPBar" class="mbti-pref-bar-wrap"><div class="mbti-pref-bar"></div></div>
+              <p id="mbtiJPSummary" class="mbti-dim-summary">等待分析</p>
+              <details class="mbti-evidence-toggle">
+                <summary>查看证据</summary>
+                <div id="mbtiJPEvidence" class="mbti-evidence-content"></div>
+              </details>
+>>>>>>> Stashed changes
             </article>
           </div>
 
@@ -286,16 +575,139 @@
                 <h2>&#x9762;&#x8bd5;&#x7ed3;&#x6784;&#x901f;&#x89c8;</h2>
               </div>
             </div>
+<<<<<<< Updated upstream
             <div id="overview" class="chips"></div>
             <div id="turns" class="turn-list"></div>
+=======
+            <div id="mbtiFollowups" class="question-stack compact-questions"></div>
+          </article>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════════
+             跨模型冲突检测（MBTI + BigFive + Enneagram）
+        ══════════════════════════════════════════════════════════ -->
+        <section class="dashboard-conflict-section" id="conflictSection"></section>
+
+        <!-- ══════════════════════════════════════════════════════════
+             深度人格分析面板（仅完整模式展示）
+        ══════════════════════════════════════════════════════════ -->
+        <section class="dashboard-personality-section" id="personalitySection" style="display:none">
+
+          <!-- 面板标题 -->
+          <div class="personality-section-header">
+            <div class="panel-head">
+              <div>
+                <p class="section-kicker">DEEP PERSONALITY ANALYSIS</p>
+                <h2>深度人格多维分析</h2>
+              </div>
+              <div class="personality-model-badges">
+                <span class="model-badge disc-badge">DISC</span>
+                <span class="model-badge bf-badge">BigFive</span>
+                <span class="model-badge enng-badge">九型</span>
+                <span class="model-badge star-badge">STAR</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- BigFive + 九型双列 -->
+          <div class="personality-two-col">
+            <!-- BigFive 大五人格 -->
+            <article class="panel personality-panel">
+              <div class="panel-head compact-head">
+                <div>
+                  <p class="section-kicker">BIGFIVE</p>
+                  <h3>大五人格分析</h3>
+                </div>
+              </div>
+              <div id="bigfiveCards" class="personality-card-body"></div>
+            </article>
+
+            <!-- 九型人格 -->
+            <article class="panel personality-panel">
+              <div class="panel-head compact-head">
+                <div>
+                  <p class="section-kicker">ENNEAGRAM</p>
+                  <h3>九型人格分析</h3>
+                </div>
+              </div>
+              <div id="enneagramCards" class="personality-card-body"></div>
+            </article>
+          </div>
+
+          <!-- STAR 结构 -->
+          <article class="panel personality-panel star-panel">
+            <div class="panel-head compact-head">
+              <div>
+                <p class="section-kicker">STAR STRUCTURE</p>
+                <h3>STAR 行为结构分析</h3>
+              </div>
+            </div>
+            <div id="starCards" class="star-cards-grid"></div>
+          </article>
+
+          <!-- 跨模型人格映射 -->
+          <article class="panel personality-panel mapping-panel">
+            <div class="panel-head compact-head">
+              <div>
+                <p class="section-kicker">CROSS-MODEL MAPPING</p>
+                <h3>跨模型人格综合画像</h3>
+              </div>
+            </div>
+            <div id="mappingCards" class="personality-card-body"></div>
+          </article>
+
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════════
+             底部区域
+        ══════════════════════════════════════════════════════════ -->
+        <section class="dashboard-bottom-lite">
+          <article class="risk-strip-card">
+            <div class="risk-strip-copy">
+              <span class="section-kicker">RISK</span>
+              <strong id="riskStripHeadline">暂无风险总结</strong>
+              <p id="riskStripDetail">暂无风险细节。</p>
+            </div>
+            <div id="riskMeter" class="risk-strip-meter"></div>
+>>>>>>> Stashed changes
           </article>
 
           <details class="panel detail-panel" open>
             <summary>
+<<<<<<< Updated upstream
               <span>&#x8be6;&#x7ec6;&#x5206;&#x6790;&#x5c42;</span
               ><span
                 >&#x5c55;&#x5f00;&#x67e5;&#x770b;&#x7ef4;&#x5ea6;&#x8bc1;&#x636e;&#x3001;&#x7f3a;&#x53e3;&#x3001;&#x539f;&#x5b50;&#x7279;&#x5f81;&#x4e0e;&#x539f;&#x59cb;&#x8fd4;&#x56de;</span
               >
+=======
+              <span>工作流过程</span>
+              <span>默认收起，仅在需要时查看 parse / feature / decision 等阶段</span>
+            </summary>
+            <div class="workflow-board workflow-board-refined">
+              <article class="workflow-card workflow-card-wide">
+                <div class="panel-head compact-head"><div><p class="section-kicker">WORKFLOW</p><h3>阶段轨迹</h3></div></div>
+                <div id="workflowStages" class="workflow-list workflow-stepper"></div>
+              </article>
+              <article class="workflow-card">
+                <div class="panel-head compact-head"><div><p class="section-kicker">WORKFLOW</p><h3>DISC 证据</h3></div></div>
+                <div id="workflowEvidence" class="workflow-kv"></div>
+              </article>
+              <article class="workflow-card">
+                <div class="panel-head compact-head"><div><p class="section-kicker">WORKFLOW</p><h3>缺陷扫描</h3></div></div>
+                <div id="workflowMasking" class="workflow-kv"></div>
+              </article>
+              <article class="workflow-card">
+                <div class="panel-head compact-head"><div><p class="section-kicker">WORKFLOW</p><h3>决策载荷</h3></div></div>
+                <div id="workflowDecision" class="workflow-kv"></div>
+              </article>
+            </div>
+          </details>
+
+          <details class="panel detail-panel">
+            <summary>
+              <span>结构化详情</span>
+              <span>包括面试映射、维度证据、追问建议和原始返回</span>
+>>>>>>> Stashed changes
             </summary>
             <div class="detail-content">
               <div class="detail-grid two-col">

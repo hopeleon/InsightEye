@@ -39,6 +39,29 @@ def _serve_file(handler: BaseHTTPRequestHandler, path: Path) -> None:
     handler.wfile.write(data)
 
 
+def _parse_payload(raw_body: bytes) -> dict | None:
+    try:
+        return json.loads(raw_body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return None
+
+
+def _run_analysis(handler: BaseHTTPRequestHandler, payload: dict, full: bool = False) -> None:
+    transcript = (payload.get("interview_transcript") or "").strip()
+    if not transcript:
+        _json_response(handler, {"error": "缺少 interview_transcript。"}, status=400)
+        return
+
+    job_hint = (payload.get("job_hint_optional") or "").strip()
+
+    if full:
+        report = analyze_interview_full(transcript, job_hint)
+    else:
+        report = analyze_interview(transcript, job_hint)
+
+    _json_response(handler, report)
+
+
 class DemoHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
@@ -62,17 +85,34 @@ class DemoHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
         route = parsed.path
+<<<<<<< Updated upstream
         if route not in ("/api/analyze", "/api/analyze/full"):
+=======
+
+        # ywj 新增：完整人格分析接口（/api/analyze/full）
+        if route == "/api/analyze/full":
+            content_length = int(self.headers.get("Content-Length", "0"))
+            raw_body = self.rfile.read(content_length)
+            payload = _parse_payload(raw_body)
+            if payload is None:
+                _json_response(self, {"error": "请求体必须是合法 JSON。"}, status=400)
+                return
+            _run_analysis(self, payload, full=True)
+            return
+
+        # 原有 DISC 分析接口（完全不变）
+        if route != "/api/analyze":
+>>>>>>> Stashed changes
             self.send_error(HTTPStatus.NOT_FOUND, "Not found")
             return
 
         content_length = int(self.headers.get("Content-Length", "0"))
         raw_body = self.rfile.read(content_length)
-        try:
-            payload = json.loads(raw_body.decode("utf-8"))
-        except json.JSONDecodeError:
+        payload = _parse_payload(raw_body)
+        if payload is None:
             _json_response(self, {"error": "请求体必须是合法 JSON。"}, status=400)
             return
+<<<<<<< Updated upstream
 
         transcript = (payload.get("interview_transcript") or "").strip()
         if not transcript:
@@ -98,6 +138,9 @@ class DemoHandler(BaseHTTPRequestHandler):
                 apply_knowledge_graph=use_knowledge_graph,
             )
         _json_response(self, report)
+=======
+        _run_analysis(self, payload, full=False)
+>>>>>>> Stashed changes
 
     def log_message(self, format: str, *args) -> None:
         return

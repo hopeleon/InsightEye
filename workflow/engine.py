@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+<<<<<<< Updated upstream
 from functools import lru_cache
+=======
+>>>>>>> Stashed changes
 
 from app.config import (
     OPENAI_ANALYSIS_MODEL,
@@ -16,6 +19,10 @@ from app.knowledge import (
     load_disc_prompt,
     load_enneagram_knowledge,
     load_enneagram_prompt,
+<<<<<<< Updated upstream
+=======
+    load_mbti_knowledge,
+>>>>>>> Stashed changes
     load_star_knowledge,
 )
 from app.star_analyzer import analyze_star
@@ -58,7 +65,11 @@ def _star_dimension_scores_usable(ds: object) -> bool:
 
 def _coalesce_star_analysis(context: WorkflowContext) -> dict | None:
     """确保 JSON 中 star_analysis 带有可展示的 dimension_scores（容错 / 旧缓存场景）。"""
+<<<<<<< Updated upstream
     star = context.star_result
+=======
+    star = getattr(context, "star_result", None)
+>>>>>>> Stashed changes
     if isinstance(star, dict) and _star_dimension_scores_usable(star.get("dimension_scores")):
         return star
     try:
@@ -88,6 +99,7 @@ def build_response(context: WorkflowContext, *, apply_knowledge_graph: bool = Tr
         "atomic_features": context.features,
         "disc_analysis": context.disc_analysis,
         "star_analysis": _coalesce_star_analysis(context),
+<<<<<<< Updated upstream
         "bigfive_analysis": context.bigfive_result,
         "enneagram_analysis": context.enneagram_result,
         "mbti_analysis": context.mbti_result,
@@ -95,6 +107,15 @@ def build_response(context: WorkflowContext, *, apply_knowledge_graph: bool = Tr
         "llm_analysis": context.analysis_output,
         "llm_bigfive_analysis": context.llm_bigfive_output,
         "llm_enneagram_analysis": context.llm_enneagram_output,
+=======
+        "bigfive_analysis": getattr(context, "bigfive_result", None) or getattr(context, "bigfive_analysis", None),
+        "enneagram_analysis": getattr(context, "enneagram_result", None) or getattr(context, "enneagram_analysis", None),
+        "mbti_analysis": getattr(context, "mbti_result", None) or getattr(context, "mbti_analysis", None),
+        "personality_mapping": getattr(context, "personality_mapping_result", None),
+        "llm_analysis": context.analysis_output,
+        "llm_bigfive_analysis": getattr(context, "llm_bigfive_output", None),
+        "llm_enneagram_analysis": getattr(context, "llm_enneagram_output", None),
+>>>>>>> Stashed changes
         "llm_status": {
             "enabled": bool(OPENAI_API_KEY),
             "parser_model": OPENAI_PARSER_MODEL,
@@ -130,32 +151,56 @@ def build_response(context: WorkflowContext, *, apply_knowledge_graph: bool = Tr
             graph = get_graph_accelerator()
 
             # ① MBTI 冲突检查：用图谱预计算补充 stage 分析结果
+<<<<<<< Updated upstream
             if context.mbti_result and isinstance(context.mbti_result, dict):
+=======
+            mbti_result = response["mbti_analysis"]
+            if mbti_result and isinstance(mbti_result, dict):
+>>>>>>> Stashed changes
                 disc_scores: dict[str, float] = {}
                 if context.disc_analysis and isinstance(context.disc_analysis, dict):
                     raw = context.disc_analysis.get("scores", {})
                     disc_scores = {k: float(v or 0) for k, v in raw.items()}
 
                 bigfive_scores: dict[str, float] | None = None
+<<<<<<< Updated upstream
                 if context.bigfive_result and isinstance(context.bigfive_result, dict):
                     bf_raw = context.bigfive_result.get("scores", {})
                     bigfive_scores = {k: float(v or 0) for k, v in bf_raw.items()}
 
                 mbti_dims = context.mbti_result.get("dimensions") or {}
+=======
+                bf_result = response.get("bigfive_analysis")
+                if bf_result and isinstance(bf_result, dict):
+                    bf_raw = bf_result.get("scores", {})
+                    bigfive_scores = {k: float(v or 0) for k, v in bf_raw.items()}
+
+                mbti_dims = mbti_result.get("dimensions") or {}
+>>>>>>> Stashed changes
                 graph_conflicts = graph.get_conflicts(
                     disc_scores, mbti_dims, bigfive_scores
                 )
                 if graph_conflicts:
+<<<<<<< Updated upstream
                     existing = response["mbti_analysis"].get("conflicts") or []
+=======
+                    existing = mbti_result.get("conflicts") or []
+>>>>>>> Stashed changes
                     # 图谱冲突去重合并
                     seen_keys = {c["type"] + c["description"][:20] for c in existing}
                     for c in graph_conflicts:
                         key = c["type"] + c["description"][:20]
                         if key not in seen_keys:
                             existing.append(c)
+<<<<<<< Updated upstream
                     response["mbti_analysis"]["conflicts"] = existing[:6]
 
             # ② 图谱加速效果报告（供前端计时器旁的图谱指示器）
+=======
+                    mbti_result["conflicts"] = existing[:6]
+
+            # ② 图谱加速效果报告
+>>>>>>> Stashed changes
             report = graph.get_speedup_report()
             response["graph_boost"] = {
                 "enabled": report["enabled"],
@@ -171,7 +216,18 @@ def build_response(context: WorkflowContext, *, apply_knowledge_graph: bool = Tr
     return response
 
 
+<<<<<<< Updated upstream
 def run_disc_workflow(transcript: str, job_hint: str = "", *, apply_knowledge_graph: bool = True) -> dict:
+=======
+# ─── 原有 DISC 工作流（main 分支逻辑，保持完全不变）──────────────────────────
+
+
+def run_disc_workflow(transcript: str, job_hint: str = "", *, apply_knowledge_graph: bool = True) -> dict:
+    """
+    原有 DISC 分析工作流（main 分支逻辑）。
+    与 run_personality_workflow 完全独立，互不影响。
+    """
+>>>>>>> Stashed changes
     context = WorkflowContext(
         transcript=transcript,
         job_hint=job_hint,
@@ -194,7 +250,11 @@ def run_disc_workflow(transcript: str, job_hint: str = "", *, apply_knowledge_gr
     return build_response(context, apply_knowledge_graph=apply_knowledge_graph)
 
 
+<<<<<<< Updated upstream
 # ─── 并行人格分析工作流 ───────────────────────────────────────────
+=======
+# ─── 并行人格分析工作流（ywj 分支新增）───────────────────────────────────────
+>>>>>>> Stashed changes
 
 
 def _run_disc_chain(context: WorkflowContext, disc_knowledge, disc_prompt: str) -> WorkflowContext:
@@ -212,6 +272,10 @@ def _run_disc_chain(context: WorkflowContext, disc_knowledge, disc_prompt: str) 
         run_decision_stage,
     ):
         context = stage(context)
+<<<<<<< Updated upstream
+=======
+    context.local_disc_result = context.disc_analysis
+>>>>>>> Stashed changes
     return context
 
 
@@ -226,7 +290,11 @@ def _run_llm_personality_stage(
             turns=context.detailed_turns,
             features=context.features,
             job_inference=context.job_inference,
+<<<<<<< Updated upstream
             local_bigfive=context.bigfive_result,
+=======
+            local_bigfive=getattr(context, "bigfive_result", None),
+>>>>>>> Stashed changes
         )
         context.llm_bigfive_output = call_openai_compatible(OPENAI_PERSONALITY_MODEL, bf_msgs)
         context.mark_stage("llm_personality_stage", "completed", "LLM Big Five analysis done")
@@ -240,7 +308,11 @@ def _run_llm_personality_stage(
             turns=context.detailed_turns,
             features=context.features,
             job_inference=context.job_inference,
+<<<<<<< Updated upstream
             local_enneagram=context.enneagram_result,
+=======
+            local_enneagram=getattr(context, "enneagram_result", None),
+>>>>>>> Stashed changes
         )
         context.llm_enneagram_output = call_openai_compatible(OPENAI_PERSONALITY_MODEL, en_msgs)
         context.mark_stage("llm_personality_stage", "completed", "LLM Enneagram analysis done")
@@ -256,7 +328,10 @@ def _parallel_personality_stage(context: WorkflowContext, bigfive_knowledge, enn
     三个阶段互相独立（只依赖 feature_stage 的输出），
     并行执行可节省约 2/3 的规则阶段时间。
     """
+<<<<<<< Updated upstream
     # 闭包捕获 context 引用，分别提交到线程池
+=======
+>>>>>>> Stashed changes
     def do_bigfive() -> None:
         context.knowledge = bigfive_knowledge
         run_bigfive_stage(context)
@@ -267,6 +342,10 @@ def _parallel_personality_stage(context: WorkflowContext, bigfive_knowledge, enn
 
     def do_mbti() -> None:
         try:
+<<<<<<< Updated upstream
+=======
+            context.mbti_knowledge = load_mbti_knowledge()
+>>>>>>> Stashed changes
             run_mbti_stage(context)
         except Exception as e:
             print(f"[MBTI] 阶段异常: {e}")
@@ -277,7 +356,10 @@ def _parallel_personality_stage(context: WorkflowContext, bigfive_knowledge, enn
         pool.submit(do_bigfive)
         pool.submit(do_enneagram)
         pool.submit(do_mbti)
+<<<<<<< Updated upstream
         # result() 等待所有线程完成后再继续
+=======
+>>>>>>> Stashed changes
         pool.shutdown(wait=True)
 
     return context
@@ -287,12 +369,17 @@ def run_personality_workflow(
     transcript: str, job_hint: str = "", *, apply_knowledge_graph: bool = True
 ) -> dict:
     """
+<<<<<<< Updated upstream
     完整人格分析工作流：DISC + BigFive + 九型 + 跨模型映射。
 
     性能优化（v0.4）：
     - BigFive / Enneagram / MBTI 三个本地规则阶段并行运行
     - llm_stage / llm_personality_stage 两个 LLM 阶段并行运行
     - 约节省 10-15 秒（取决于网络延迟）
+=======
+    完整人格分析工作流：DISC + BigFive + 九型 + MBTI + 跨模型映射。
+    新增功能入口，不影响原有 run_disc_workflow。
+>>>>>>> Stashed changes
     """
     disc_knowledge = load_disc_knowledge()
     bigfive_knowledge = load_bigfive_knowledge()
@@ -301,7 +388,11 @@ def run_personality_workflow(
     bigfive_prompt = load_bigfive_prompt()
     enneagram_prompt = load_enneagram_prompt()
 
+<<<<<<< Updated upstream
     # ── 阶段一：必须顺序（parse → feature） ─────────────────────
+=======
+    # ── 阶段一：必须顺序（parse → feature）
+>>>>>>> Stashed changes
     context = WorkflowContext(
         transcript=transcript,
         job_hint=job_hint,
@@ -310,6 +401,7 @@ def run_personality_workflow(
     for stage in (run_parse_stage, run_feature_stage):
         context = stage(context)
 
+<<<<<<< Updated upstream
     # ── 阶段二：DISC 分析链（必须顺序）─────────────────────────
     context = _run_disc_chain(context, disc_knowledge, disc_prompt)
 
@@ -324,6 +416,21 @@ def run_personality_workflow(
         f_disc = pool.submit(run_llm_stage, context, disc_prompt)
         f_llm = pool.submit(_run_llm_personality_stage, context, bigfive_prompt, enneagram_prompt)
         # 等待两个都完成后再返回
+=======
+    # ── 阶段二：DISC 分析链（必须顺序）
+    context = _run_disc_chain(context, disc_knowledge, disc_prompt)
+
+    # ── 阶段三：三个本地人格阶段并行
+    context = _parallel_personality_stage(context, bigfive_knowledge, enneagram_knowledge)
+
+    # ── 阶段四：跨模型人格映射（需要三个本地结果）
+    context = run_personality_mapping_stage(context)
+
+    # ── 阶段五：两个 LLM 阶段并行
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        f_disc = pool.submit(run_llm_stage, context, disc_prompt)
+        f_llm = pool.submit(_run_llm_personality_stage, context, bigfive_prompt, enneagram_prompt)
+>>>>>>> Stashed changes
         context = f_disc.result()
         context = f_llm.result()
 

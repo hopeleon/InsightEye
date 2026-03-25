@@ -51,6 +51,7 @@ def _ratio(count: int, total: int) -> float:
 def _apply_feature_rules(dim: str, features: dict) -> tuple[float, list[str], list[str]]:
     positive: list[str] = []
     negative: list[str] = []
+<<<<<<< Updated upstream
     score = 20.0
 
     if dim == "O":
@@ -142,6 +143,99 @@ def _apply_feature_rules(dim: str, features: dict) -> tuple[float, list[str], li
             positive.append("确定性词汇较多，情绪表达相对平稳。")
         if features.get("hedge_words_ratio", 0) < 0.004:
             score -= 8
+=======
+    score = 40.0   # 基础分提高，让短文本也能有基础分
+
+    if dim == "O":
+        if features.get("abstraction_level") == "abstract":
+            score += 15
+            positive.append("表达偏抽象概念层，关注「为什么」多过「怎么做」，开放性信号强。")
+        if features.get("hedge_words_ratio", 0) >= 0.005:
+            score += 10
+            positive.append("使用较多可能性表达（可能/也许），思维倾向开放探索。")
+        if features.get("qualifier_ratio", 0) >= 0.006:
+            score += 8
+            positive.append("限定条件和假设性表达较多，体现多元思考倾向。")
+        if features.get("process_words_ratio", 0) >= 0.006:
+            score += 6
+            positive.append("提及多种方法论，有探索不同路径的迹象。")
+        if features.get("abstraction_level") == "grounded" and features.get("detail_words_ratio", 0) >= 0.010:
+            score -= 8
+            negative.append("表达更偏具体执行而非抽象思考，务实取向明显。")
+
+    if dim == "C":
+        if features.get("process_words_ratio", 0) >= 0.008:
+            score += 15
+            positive.append("过程和规范词汇丰富，体现较强的计划性和结构意识。")
+        if features.get("detail_words_ratio", 0) >= 0.008:
+            score += 12
+            positive.append("细节关注度高，说明对质量和准确性的重视。")
+        if features.get("star_structure_score", 0) >= 0.60:
+            score += 10
+            positive.append("STAR结构较完整，说明叙事有头有尾，责任感信号强。")
+        if features.get("logical_connector_ratio", 0) >= 0.008:
+            score += 8
+            positive.append("逻辑连接较清晰，表达结构化倾向明显。")
+        if features.get("qualifier_ratio", 0) >= 0.006:
+            score += 5
+            positive.append("有限定条件和边界意识，说明对标准的遵循。")
+        if features.get("hedge_words_ratio", 0) >= 0.010:
+            score -= 6
+            negative.append("保留性表达过多，削弱了尽责性常见的确定感和自律感。")
+
+    if dim == "E":
+        if features.get("emotional_words_ratio", 0) >= 0.005:
+            score += 15
+            positive.append("情绪词丰富，表达具有感染力，外向信号明显。")
+        if features.get("social_words_ratio", 0) >= 0.006:
+            score += 12
+            positive.append("人际相关词较多，对社交互动有较高关注。")
+        if features.get("first_person_plural_ratio", 0) >= 0.006:
+            score += 10
+            positive.append("「我们/大家」等集体表达较多，社交导向明显。")
+        if features.get("story_richness_score", 0) >= 0.55:
+            score += 7
+            positive.append("叙事丰富饱满，回答有感染力，符合外向者的表达特点。")
+        if features.get("avg_sentence_length", 0) >= 15:
+            score += 5
+            positive.append("平均句长偏长，表达充分，符合外向者的表达习惯。")
+        if features.get("social_words_ratio", 0) < 0.005 and features.get("process_words_ratio", 0) >= 0.008:
+            score -= 10
+            negative.append("表达以执行细节为主，人际互动词偏少，更偏向内向务实风格。")
+
+    if dim == "A":
+        if features.get("first_person_plural_ratio", 0) >= 0.008:
+            score += 15
+            positive.append("「我们/大家」等集体代词频率高，合作意识明显。")
+        if features.get("social_words_ratio", 0) >= 0.006:
+            score += 12
+            positive.append("人际词汇丰富，关注他人需求和团队和谐。")
+        if features.get("hedge_words_ratio", 0) >= 0.004:
+            score += 8
+            positive.append("缓和表达适中，语气温和有分寸，符合宜人特征。")
+        if features.get("contrast_connector_ratio", 0) >= 0.006:
+            score -= 10
+            negative.append("对比转折词较多，可能表明对抗性或竞争性倾向。")
+        if features.get("imperative_like_ratio", 0) >= 0.010:
+            score -= 8
+            negative.append("指令性表达偏多（必须/先/直接），直接强势倾向与高宜人性相悖。")
+
+    if dim == "N":
+        if features.get("emotional_words_ratio", 0) >= 0.007:
+            score += 18
+            positive.append("负面情绪词汇出现频率较高，焦虑和压力信号明显。")
+        if features.get("risk_words_ratio", 0) >= 0.006:
+            score += 12
+            positive.append("风险和问题词汇多，对不确定性的关注度高。")
+        if features.get("hedge_words_ratio", 0) >= 0.008:
+            score += 8
+            positive.append("保留表达多（「可能」「也许」），对确定性的信心不足。")
+        if features.get("certainty_words_ratio", 0) >= 0.006:
+            score -= 10
+            positive.append("确定性词汇较多，情绪表达相对平稳。")
+        if features.get("hedge_words_ratio", 0) < 0.003:
+            score -= 6
+>>>>>>> Stashed changes
             positive.append("保留性表达极少，表达直接确定，情绪稳定性信号较强。")
 
     return max(0.0, min(100.0, score)), positive, negative
@@ -160,6 +254,7 @@ def _score_band(score: float) -> str:
 def _confidence_level(word_count: int, turn_count: int, scores: dict) -> tuple[str, list[str]]:
     notes: list[str] = []
     level = "medium"
+<<<<<<< Updated upstream
     if word_count < 120 or turn_count <= 1:
         level = "low"
         notes.append("样本量偏少，结论仅作为初步倾向参考。")
@@ -170,6 +265,20 @@ def _confidence_level(word_count: int, turn_count: int, scores: dict) -> tuple[s
     if extreme_count >= 2:
         level = "low"
         notes.append("多个维度出现极端分数，可能存在面试呈现偏差，置信度降权。")
+=======
+    if word_count < 60 or turn_count <= 1:
+        level = "low"
+        notes.append("样本量偏少，结论仅作为初步倾向参考。")
+    elif word_count >= 300 and turn_count >= 3:
+        level = "high"
+        notes.append("样本充分，多个回答维度有较一致的信号。")
+    extreme_count = sum(1 for s in scores.values() if s > 90 or s < 12)
+    if extreme_count >= 3:
+        level = "low"
+        notes.append("多个维度出现极端分数，可能存在面试呈现偏差，置信度降权。")
+    elif extreme_count == 2 and level == "low":
+        notes.append("部分极端维度存在，需扩大样本验证。")
+>>>>>>> Stashed changes
     return level, notes
 
 

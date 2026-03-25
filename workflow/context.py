@@ -22,6 +22,25 @@ class WorkflowContext:
     masking_assessment: dict[str, Any] = field(default_factory=dict)
     decision_payload: dict[str, Any] = field(default_factory=dict)
     disc_analysis: dict[str, Any] = field(default_factory=dict)
+<<<<<<< Updated upstream
+=======
+    
+    # ========== 新增 MBTI 字段 ==========
+    mbti_analysis: dict[str, Any] = field(default_factory=dict)
+    mbti_knowledge: dict[str, Any] = field(default_factory=dict)
+    # ====================================
+
+    # ========== 新增 BigFive / Enneagram / STAR ==========
+    bigfive_result: dict[str, Any] = field(default_factory=dict)
+    enneagram_result: dict[str, Any] = field(default_factory=dict)
+    star_result: dict[str, Any] = field(default_factory=dict)
+    mbti_result: dict[str, Any] = field(default_factory=dict)
+    llm_bigfive_output: dict[str, Any] = field(default_factory=dict)
+    llm_enneagram_output: dict[str, Any] = field(default_factory=dict)
+    personality_mapping_result: dict[str, Any] = field(default_factory=dict)
+    # ======================================================
+
+>>>>>>> Stashed changes
     analysis_output: dict[str, Any] | None = None
     analysis_error: str | None = None
     # 人格分析新增字段
