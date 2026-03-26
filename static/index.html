@@ -29,6 +29,27 @@
               <span class="subtle-pill">localhost:8000</span>
             </div>
 
+
+
+            <div class="field-block mode-selector-wrap">
+              <label>&#x5206;&#x6790;&#x6A21;&#x5F0F;</label>
+              <div class="mode-toggle-row">
+                <label class="mode-toggle-card active" id="modeQuickCard">
+                  <input id="modeQuick" type="radio" name="analysisMode" value="quick" checked />
+                  <div class="mode-toggle-inner">
+                    <strong>&#x5FEB;&#x901F;&#x5206;&#x6790;&#x6A21;&#x5F0F;</strong>
+                    <p>&#x4FDD;&#x7559;&#x4E3B;&#x7EBF; DISC &#x4E0E; MBTI &#x67B6;&#x6784;&#xFF0C;&#x4EC5;&#x5728;&#x5FC5;&#x8981;&#x65F6;&#x8C03;&#x7528;&#x6A21;&#x578B;&#x589E;&#x5F3A;&#x5206;&#x6790;&#x3002;</p>
+                  </div>
+                </label>
+                <label class="mode-toggle-card" id="modeFullCard">
+                  <input id="modeFull" type="radio" name="analysisMode" value="full" />
+                  <div class="mode-toggle-inner">
+                    <strong>&#x5B8C;&#x6574;&#x4EBA;&#x683C;&#x6A21;&#x5F0F;</strong>
+                    <p>&#x52A0;&#x5165; STAR&#x3001;&#x4E94;&#x5927;&#x4EBA;&#x683C;&#x3001;&#x4E5D;&#x578B;&#x4EBA;&#x683C;&#x4E0E;&#x8DE8;&#x6A21;&#x578B;&#x7EFC;&#x5408;&#x5224;&#x65AD;&#x3002;</p>
+                  </div>
+                </label>
+              </div>
+            </div>
             <div class="input-grid">
               <div class="field-block field-inline">
                 <div class="field-item">
@@ -331,6 +352,58 @@
             <div id="mbtiFollowups" class="question-stack compact-questions"></div>
           </article>
         </section>        
+
+
+
+        <section id="conflictSection" class="dashboard-conflict-section hidden"></section>
+
+        <section id="personalitySection" class="dashboard-personality-section hidden">
+          <div class="panel-head panel-head-space personality-section-head">
+            <div>
+              <p class="section-kicker">&#x5B8C;&#x6574;&#x4EBA;&#x683C;</p>
+              <h3>&#x6DF1;&#x5EA6;&#x4EBA;&#x683C;&#x5206;&#x6790;</h3>
+            </div>
+            <span class="source-badge">STAR / Big Five / Enneagram</span>
+          </div>
+          <div class="personality-two-col">
+            <article class="panel personality-panel">
+              <div class="panel-head compact-head">
+                <div>
+                  <p class="section-kicker">BIG FIVE</p>
+                  <h3>&#x4E94;&#x5927;&#x4EBA;&#x683C;&#x7279;&#x5F81;</h3>
+                </div>
+              </div>
+              <div id="bigfiveCards" class="personality-card-body"></div>
+            </article>
+            <article class="panel personality-panel">
+              <div class="panel-head compact-head">
+                <div>
+                  <p class="section-kicker">ENNEAGRAM</p>
+                  <h3>&#x4E5D;&#x578B;&#x4EBA;&#x683C;&#x52A8;&#x673A;</h3>
+                </div>
+              </div>
+              <div id="enneagramCards" class="personality-card-body"></div>
+            </article>
+          </div>
+          <article class="panel personality-panel">
+            <div class="panel-head compact-head">
+              <div>
+                <p class="section-kicker">STAR</p>
+                <h3>STAR &#x884C;&#x4E3A;&#x7ED3;&#x6784;</h3>
+              </div>
+            </div>
+            <div id="starCards" class="star-cards-grid"></div>
+          </article>
+          <article class="panel personality-panel">
+            <div class="panel-head compact-head">
+              <div>
+                <p class="section-kicker">MAPPING</p>
+                <h3>&#x8DE8;&#x6A21;&#x578B;&#x7EFC;&#x5408;&#x753B;&#x50CF;</h3>
+              </div>
+            </div>
+            <div id="mappingCards" class="personality-card-body"></div>
+          </article>
+        </section>
 
         <section class="dashboard-bottom-lite">
           <article class="risk-strip-card">

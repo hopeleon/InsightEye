@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 import os
 
 
@@ -9,19 +9,24 @@ STATIC_DIR = BASE_DIR / "static"
 
 DISC_KNOWLEDGE_PATH = KNOWLEDGE_DIR / "DISC.yaml"
 DISC_PROMPT_PATH = PROMPTS_DIR / "disc_system_prompt.txt"
-# ========== MBTI 相关配置 ==========
 MBTI_KNOWLEDGE_PATH = KNOWLEDGE_DIR / "MBTI.yaml"
 MBTI_PROMPT_PATH = PROMPTS_DIR / "mbti_system_prompt.txt"
+BIGFIVE_KNOWLEDGE_PATH = KNOWLEDGE_DIR / "BIGFIVE.yaml"
+BIGFIVE_PROMPT_PATH = PROMPTS_DIR / "bigfive_system_prompt.txt"
+ENNEAGRAM_KNOWLEDGE_PATH = KNOWLEDGE_DIR / "ENNEAGRAM.yaml"
+ENNEAGRAM_PROMPT_PATH = PROMPTS_DIR / "enneagram_system_prompt.txt"
+STAR_KNOWLEDGE_PATH = KNOWLEDGE_DIR / "STAR.yaml"
 
 DEFAULT_OPENAI_BASE_URL = "https://api.zhizengzeng.com/v1"
 DEFAULT_OPENAI_PARSER_MODEL = "gpt-5-mini"
 DEFAULT_OPENAI_ANALYSIS_MODEL = "gpt-5.4"
+DEFAULT_OPENAI_PERSONALITY_MODEL = "gpt-5-mini"
 
 local_settings = {}
 local_settings_path = BASE_DIR / "local_settings.py"
 if local_settings_path.exists():
     namespace = {}
-    content = local_settings_path.read_text(encoding="utf-8").lstrip("\ufeff")
+    content = local_settings_path.read_text(encoding="utf-8").lstrip("﻿")
     exec(content, namespace)
     local_settings = namespace
 
@@ -29,3 +34,4 @@ OPENAI_API_KEY = str(local_settings.get("OPENAI_API_KEY", os.getenv("OPENAI_API_
 OPENAI_BASE_URL = str(local_settings.get("OPENAI_BASE_URL", os.getenv("OPENAI_BASE_URL", DEFAULT_OPENAI_BASE_URL))).rstrip("/")
 OPENAI_PARSER_MODEL = str(local_settings.get("OPENAI_PARSER_MODEL", os.getenv("OPENAI_PARSER_MODEL", DEFAULT_OPENAI_PARSER_MODEL))).strip()
 OPENAI_ANALYSIS_MODEL = str(local_settings.get("OPENAI_ANALYSIS_MODEL", os.getenv("OPENAI_ANALYSIS_MODEL", DEFAULT_OPENAI_ANALYSIS_MODEL))).strip()
+OPENAI_PERSONALITY_MODEL = str(local_settings.get("OPENAI_PERSONALITY_MODEL", os.getenv("OPENAI_PERSONALITY_MODEL", DEFAULT_OPENAI_PERSONALITY_MODEL))).strip()

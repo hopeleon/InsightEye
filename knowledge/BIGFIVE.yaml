@@ -1,0 +1,723 @@
+version: "1.0"
+model: "Big Five"
+scenario: "job_interview"
+purpose: "infer Big Five (OCEAN) personality traits from interview language and atomic NLP features"
+disclaimer:
+  - "Big Five scores are probabilistic trait estimates, not clinical diagnoses."
+  - "Infer from repeated linguistic evidence; never rely on isolated keywords."
+  - "Interview self-presentation bias may distort Extraversion and Neuroticism signals."
+  - "Neuroticism (N) here is used as internal risk calibration; do not expose as a label to candidates."
+
+# ═══════════════════════════════════════════════════════════════════════
+# 全局规则
+# ═══════════════════════════════════════════════════════════════════════
+
+global_rules:
+  minimum_sample_words: 120
+  preferred_sample_words: 300
+  critique_priority:
+    - "absence of evidence is a negative signal, not neutral"
+    - "generic optimistic language may inflate Extraversion"
+    - "technical precision may inflate Openness without real creative orientation"
+    - "N-trait inferences require the most caution due to interview pressure artifacts"
+  confidence_rules:
+    low:
+      - "sample too short or single-topic"
+      - "answers overly polished and rehearsed"
+      - "contradictory signals across dimensions"
+      - "Neuroticism signals could be interview pressure artifact only"
+    medium:
+      - "multiple answers across different topics"
+      - "consistent signals in 2-3 dimensions"
+      - "some spontaneous detail present"
+    high:
+      - "multiple segments across diverse interview topics"
+      - "stable repeated signals in same dimensions"
+      - "spontaneous anecdote quality present"
+      - "cross-question consistency in emotional expression patterns"
+  anti_overclaim:
+    - "never use deterministic personality labels"
+    - "always use probabilistic tendency language"
+    - "state uncertainty explicitly for Neuroticism dimension"
+    - "distinguish between situational pressure and baseline trait"
+
+# ═══════════════════════════════════════════════════════════════════════
+# 输入特征（与 features.py extract_features() 严格对齐）
+# ═══════════════════════════════════════════════════════════════════════
+
+input_features:
+  lexical:
+    - action_verbs_ratio          # 已实现 features.py:95
+    - achievement_words_ratio       # 已实现 features.py:101
+    - emotional_words_ratio        # 已实现 features.py:97
+    - social_words_ratio           # 已实现 features.py:98
+    - certainty_words_ratio        # 已实现 features.py:99
+    - hedge_words_ratio            # 已实现 features.py:100
+    - detail_words_ratio           # 已实现 features.py:103
+    - risk_words_ratio             # 已实现 features.py:104
+    - buzzword_density             # 已实现 features.py:122
+    - process_words_ratio          # 已实现 features.py:102
+    - abstract_words_ratio         # 待实现（通过 features.py 的 abstract 关键词密度近似）
+  syntax:
+    - avg_sentence_length          # 已实现 features.py:94
+    - imperative_like_ratio        # 已实现 features.py:109
+    - question_ratio               # 已实现 features.py:110
+    - qualifier_ratio              # 已实现 features.py:111
+    - logical_connector_ratio       # 已实现 features.py:112
+    - contrast_connector_ratio      # 已实现 features.py:113
+    - modal_verb_ratio             # 已实现 features.py:114
+  pronouns:
+    - first_person_singular_ratio  # 已实现 features.py:105
+    - first_person_plural_ratio    # 已实现 features.py:106
+    - second_person_ratio          # 已实现 features.py:107
+  discourse:
+    - star_structure_score          # 已实现 features.py:115
+    - topic_stability_score        # 已实现 features.py:116
+    - self_vs_team_orientation     # 已实现 features.py:117
+    - problem_vs_people_focus      # 已实现 features.py:118
+    - action_vs_reflection_balance  # 已实现 features.py:119
+    - abstraction_level             # 已实现 features.py:120
+    - story_richness_score         # 已实现 features.py:121
+
+# ═══════════════════════════════════════════════════════════════════════
+# 维度定义（O-C-E-A-N）
+# ═══════════════════════════════════════════════════════════════════════
+
+dimensions:
+  # ─────────────────────────────────────────────────────────────────
+  # O — 开放性 Openness
+  # 高O：好奇心强、想象力丰富、接受新事物、思维发散、喜欢抽象和概念
+  # 低O：务实、传统、偏好稳定、关注具体执行
+  # ─────────────────────────────────────────────────────────────────
+  O:
+    label: "开放性 Openness"
+    core_motives:
+      - "intellectual curiosity"
+      - "novelty and variety seeking"
+      - "aesthetic sensitivity"
+      - "divergent thinking"
+      - "creative expression"
+    interview_behavior_hypothesis:
+      - "高O候选人倾向于谈论多种方法论和解决思路，喜欢引用跨领域案例"
+      - "高O候选人可能用抽象语言解释选择原因，关注「为什么」而非「怎么做」"
+      - "低O候选人倾向复用成熟方案，偏好稳定流程，谈论具体执行细节"
+    positive_language_cues:
+      lexical:
+        strong_keywords:
+          - "探索"
+          - "尝试"
+          - "创新"
+          - "好奇"
+          - "设计"
+          - "抽象"
+          - "概念"
+          - "思维"
+          - "模型"
+          - "框架"
+          - "假设"
+          - "可能"
+          - "多元"
+          - "跨界"
+          - "不同"
+          - "视角"
+        weak_keywords:
+          - "稳定"   # 低O信号
+          - "传统"
+          - "按部就班"
+          - "标准"
+        semantic_patterns:
+          - "我从另一个角度看……"
+          - "有没有可能……"
+          - "我联想到……"
+          - "这个和X有相似之处"
+      syntax:
+        - "用条件句表达可能性（如果……会不会）"
+        - "句式偏长，带从句结构"
+        - "倾向用「也许」「可能」「大概」"
+      discourse:
+        - "提到多个备选方案和权衡取舍"
+        - "提及对未知领域的兴趣或探索经历"
+        - "用比喻或类比解释复杂概念"
+      pronouns:
+        supportive: ["我", "自己"]
+    negative_or_counter_cues:
+      lexical:
+        - "按流程走"
+        - "标准做法"
+        - "成熟方案"
+        - "稳定"
+        - "传统"
+        - "不需要创新"
+      syntax:
+        - "短句为主，缺少条件从句"
+        - "极少使用可能性表达"
+      discourse:
+        - "回答只围绕一个熟悉的工具或方法"
+        - "回避对未做过的事的讨论"
+        - "表达更关注执行而非探索"
+    common_false_positive_sources:
+      - "技术面试培训中背诵的「创新思维」套话"
+      - "引用流行技术词汇而非真实探索经历"
+      - "抽象表达掩盖缺乏具体创意案例"
+    distinguishing_rules:
+      vs_C:
+        - "O关注可能性和多元思路，C关注正确性和结构完整性；两者都高时说明兼具创造与严谨"
+      vs_E:
+        - "O高不一定E高——内向者也可以有高开放性（inner exploration）"
+      vs_A:
+        - "O高A低时可能呈现为个人主义创新者；O低A高时可能呈现为维护传统的支持者"
+    feature_rules:
+      strong_positive:
+        - "abstract_words_ratio high (近似: abstraction_level == 'abstract')"
+        - "qualifier_ratio moderately high"
+        - "hedge_words_ratio high"
+        - "process_words_ratio high with multiple method mentions"
+        - "star_structure_score moderate (O高不必然结构完整)"
+      soft_positive:
+        - "avg_sentence_length high (complex thinking)"
+        - "first_person_singular_ratio moderately high"
+        - "topic_stability_score moderate (发散但可收敛)"
+      negative:
+        - "buzzword_density very high with low story richness"
+        - "imperative_like_ratio high with low abstraction"
+        - "hedge_words_ratio very low (过度确定可能压制好奇心表达)"
+    score_interpretation:
+      high: "表现出较强的好奇心和探索意愿，愿意接触新方法和跨领域视角，思维偏发散多元。"
+      medium: "有一定的开放性迹象，但务实取向明显，更倾向在已有框架内解决问题。"
+      low: "偏好稳定和成熟方案，较少主动探索新思路，执行导向明显。"
+    probe_questions:
+      confirm:
+        - "讲一个你主动尝试了某件之前没有把握做好的事，当时你怎么想的？"
+        - "当你对某个方案没有把握时，通常会怎么做来降低风险？"
+      challenge:
+        - "有没有一件你本可以尝试但最终选择了保守方案的事？为什么？"
+        - "你通常怎么判断一个「创新想法」是否值得投入？"
+
+  # ─────────────────────────────────────────────────────────────────
+  # C — 尽责性 Conscientiousness
+  # 高C：自律、组织性强、目标明确、责任感强、计划性高
+  # 低C：随意、灵活、容忍混乱、偏好即兴
+  # ─────────────────────────────────────────────────────────────────
+  C:
+    label: "尽责性 Conscientiousness"
+    core_motives:
+      - "achievement and accomplishment"
+      - "order and organization"
+      - "duty and responsibility"
+      - "planning and self-discipline"
+      - "goal-directed behavior"
+    interview_behavior_hypothesis:
+      - "高C候选人在回答中通常有清晰的时间线和目标设定"
+      - "高C候选人倾向于说「我计划」「我设定了」「按阶段」等结构化表达"
+      - "低C候选人表达较随意，计划性差但灵活性强"
+    positive_language_cues:
+      lexical:
+        strong_keywords:
+          - "计划"
+          - "目标"
+          - "标准"
+          - "规范"
+          - "流程"
+          - "步骤"
+          - "检查"
+          - "确保"
+          - "完成"
+          - "交付"
+          - "承诺"
+          - "跟进"
+          - "负责"
+          - "任务"
+          - "阶段"
+          - "优先"
+        semantic_patterns:
+          - "我先把目标拆解成……"
+          - "按计划分三步走"
+          - "我给自己定的标准是……"
+          - "必须确保……才能进入下一阶段"
+      syntax:
+        - "清晰的步骤句（第一步……第二步……）"
+        - "用条件句定义前置要求"
+        - "限定词较多（「只有……才」「必须……」）"
+      discourse:
+        - "提到具体的里程碑或检查节点"
+        - "有目标达成后的质量验证描述"
+        - "表达对承诺和交付负责的态度"
+      pronouns:
+        supportive: ["我", "我的"]
+    negative_or_counter_cues:
+      lexical:
+        - "差不多就行"
+        - "到时候再说"
+        - "灵活应变"
+        - "先做再说"
+        - "没有具体计划"
+      syntax:
+        - "缺少步骤连接词的松散叙述"
+        - "时间线模糊或全无"
+      discourse:
+        - "无法描述具体的里程碑或交付标准"
+        - "提到「边做边改」作为主要工作方式"
+        - "目标描述抽象且无可量化标准"
+    common_false_positive_sources:
+      - "岗位要求中标准化的职责描述被引用为个人习惯"
+      - "KPI要求被描述为个人自律习惯"
+      - "团队流程被个人化为计划行为"
+    distinguishing_rules:
+      vs_O:
+        - "C关注「正确地做事」，O关注「做正确的事」；两者都高时兼具计划与创造"
+      vs_A:
+        - "C高A低时可能过度关注任务完成而忽视人际和谐"
+      vs_N:
+        - "C与N常呈负相关——高C者通常情绪更稳定，自律带来安全感"
+    feature_rules:
+      strong_positive:
+        - "process_words_ratio high"
+        - "detail_words_ratio high"
+        - "logical_connector_ratio high"
+        - "star_structure_score high"
+        - "qualifier_ratio moderately high"
+        - "achievement_words_ratio high"
+      soft_positive:
+        - "imperative_like_ratio moderately high"
+        - "first_person_singular_ratio high"
+        - "topic_stability_score high"
+      negative:
+        - "hedge_words_ratio very high with low structure"
+        - "question_ratio high (过度询问可能反映计划性不足)"
+        - "story_richness_score low with high variability across turns"
+    score_interpretation:
+      high: "表现出较强的自律性和计划性，回答结构清晰，倾向于为行动设定明确标准和目标。"
+      medium: "有一定的责任感，但在目标设定和计划性上有一定随意性，执行依赖具体情境。"
+      low: "计划性不强，更偏好灵活应对，表达较随意，缺乏明确的里程碑和交付标准意识。"
+    probe_questions:
+      confirm:
+        - "你通常怎么给自己设定工作目标？有没有一个你印象深刻的个人目标设定案例？"
+        - "你做过最系统的一件事是什么？当时你是怎么规划步骤的？"
+      challenge:
+        - "有没有一件事你做了但最后没有达到你预期的标准？你怎么面对这种情况？"
+        - "当手头任务很多很杂的时候，你通常怎么安排优先级？"
+
+  # ─────────────────────────────────────────────────────────────────
+  # E — 外向性 Extraversion
+  # 高E：社交活跃、表达欲强、喜欢互动、在人际互动中获取能量
+  # 低E：内敛、独立、在独处中获取能量、偏好深度而非广度
+  # ─────────────────────────────────────────────────────────────────
+  E:
+    label: "外向性 Extraversion"
+    core_motives:
+      - "social engagement"
+      - "energy from interaction"
+      - "expressiveness"
+      - "dominance in groups"
+      - "excitement seeking"
+    interview_behavior_hypothesis:
+      - "高E候选人倾向于用较长、较有感染力的句子，容易「跑题」到个人故事"
+      - "高E候选人的情绪词丰富，回答中有较多感叹和夸张表达"
+      - "低E候选人表达简洁，更倾向深度而非广度，可能在追问下才展开"
+    positive_language_cues:
+      lexical:
+        strong_keywords:
+          - "大家"
+          - "一起"
+          - "聊天"
+          - "交流"
+          - "聚会"
+          - "热闹"
+          - "开心"
+          - "兴奋"
+          - "激动"
+          - "有意思"
+          - "和人"
+          - "社交"
+          - "外向"
+          - "活跃"
+          - "朋友"
+          - "氛围"
+        semantic_patterns:
+          - "我特别享受和团队一起……的感觉"
+          - "当时大家都很激动"
+          - "我们一起把气氛带动起来"
+          - "人一多我就来劲了"
+      syntax:
+        - "感叹句较多（太棒了！太好了！）"
+        - "句子偏长，有较多从句和补充说明"
+        - "较多修辞性形容词"
+      discourse:
+        - "回答中主动引入多人互动场景"
+        - "用夸张或强烈形容词描述经历"
+        - "主动扩展话题，答案可能比问题要求的更长"
+        - "较多谈及「认识新朋友」「拓展人脉」"
+      pronouns:
+        supportive: ["我们", "大家", "你们"]
+    negative_or_counter_cues:
+      lexical:
+        - "自己"
+        - "独立"
+        - "安静"
+        - "思考"
+        - "内向"
+        - "独处"
+        - "一个人"
+      syntax:
+        - "句子偏短，简洁直接"
+        - "缺少感叹性表达"
+      discourse:
+        - "回答聚焦个人工作，极少引入社交互动"
+        - "更愿意讨论独处时的思考或工作，而非团队氛围"
+        - "在被要求扩展时表现出轻微不自在"
+    common_false_positive_sources:
+      - "销售/市场岗位面试培训带来的人际互动表达"
+      - "刻意展示「团队合作能力」带来的虚假感染力"
+      - "候选人可能对「外向=好」有偏见，回答被社会期望效应扭曲"
+    distinguishing_rules:
+      vs_I:
+        - "E是外部能量获取方式，I是内部情感深度；高E不一定高I（可能热闹但浅）"
+      vs_A:
+        - "E高A高时是「温暖的外向者」；E高A低时是「主导型外向者」"
+      vs_O:
+        - "E高O高时是「探索型外向者」；E低O高时是「内省型创造者」"
+    feature_rules:
+      strong_positive:
+        - "emotional_words_ratio high"
+        - "social_words_ratio high"
+        - "first_person_plural_ratio high"
+        - "avg_sentence_length high"
+        - "adjective_ratio high (descriptive richness)"
+        - "story_richness_score high"
+      soft_positive:
+        - "first_person_singular_ratio moderately high"
+        - "action_verbs_ratio high (社交行动词)"
+      negative:
+        - "first_person_plural_ratio very low"
+        - "emotional_words_ratio very low"
+        - "avg_sentence_length very low (极端简洁)"
+        - "social_words_ratio low with high process_words_ratio"
+    score_interpretation:
+      high: "表现出明显的外向倾向，社交能量充足，喜欢人际互动，表达具有感染力和感染力。"
+      medium: "有一定的社交表达能力，但内敛倾向也明显，互动取决于具体场合。"
+      low: "明显内向，表达简洁，更偏好独立工作，在人际密集场合可能需要能量消耗。"
+    probe_questions:
+      confirm:
+        - "你通常怎么在团队里快速和人熟络起来？有没有什么屡试不爽的办法？"
+        - "当团队气氛比较低沉的时候，你会怎么做？"
+      challenge:
+        - "连续一周每天有大量人际沟通会议，对你来说是充电还是耗电？"
+        - "你有没有一段时间需要独自完成一件复杂的事？那个状态你感觉怎么样？"
+
+  # ─────────────────────────────────────────────────────────────────
+  # A — 宜人性 Agreeableness
+  # 高A：合作性强、同理心强、避免冲突、信任他人、支持导向
+  # 低A：竞争性强、独立性高、质疑他人、愿意对抗
+  # ─────────────────────────────────────────────────────────────────
+  A:
+    label: "宜人性 Agreeableness"
+    core_motives:
+      - "social harmony"
+      - "trust and goodwill"
+      - "cooperation"
+      - "empathy"
+      - "conflict avoidance"
+    interview_behavior_hypothesis:
+      - "高A候选人倾向于用「我们」多于「我」，强调团队而非个人"
+      - "高A候选人在描述冲突时更多从对方立场解释，较少强调自己的立场"
+      - "低A候选人直接，较少缓和语，可能主动表达不同意见"
+    positive_language_cues:
+      lexical:
+        strong_keywords:
+          - "帮助"
+          - "支持"
+          - "配合"
+          - "理解"
+          - "信任"
+          - "合作"
+          - "和气"
+          - "照顾"
+          - "让步"
+          - "包容"
+          - "体谅"
+          - "共识"
+          - "协调"
+          - "退让"
+          - "倾听"
+          - "让步"
+        semantic_patterns:
+          - "我理解他的出发点是……"
+          - "我们最后达成了共识"
+          - "我愿意配合他的想法"
+          - "大家都不容易"
+      syntax:
+        - "缓和句较多（「其实也可以理解……」「也不是不可以……」）"
+        - "较少极端表达，倾向「各退一步」"
+        - "疑问句较多（不是用来挑战，而是用来确认理解）"
+      discourse:
+        - "描述冲突时提及多方立场，表现出对对方需求的理解"
+        - "较少描述「我赢了」的叙事"
+        - "提到支持他人、帮助他人的具体行为"
+      pronouns:
+        supportive: ["我们", "大家", "对方"]
+    negative_or_counter_cues:
+      lexical:
+        - "直接说"
+        - "我不认同"
+        - "必须按我的来"
+        - "竞争"
+        - "不服"
+        - "据理力争"
+        - "不行就不行"
+      syntax:
+        - "直接陈述句为主，较少缓和"
+        - "语气强硬，较少使用缓和副词"
+      discourse:
+        - "冲突描述中以自己立场为主，较少提及对方视角"
+        - "较少出现支持、配合、帮助等词"
+        - "强调个人主张而非集体和谐"
+    common_false_positive_sources:
+      - "面试培训中「团队合作」标准回答"
+      - "文化性礼貌（尤其在中国职场文化中，高A信号可能被高估）"
+      - "候选人描述的是理想而非实际行为偏好"
+    distinguishing_rules:
+      vs_D:
+        - "A与D在冲突场景下最易区分：高A回避冲突，高D直面冲突并主导解决"
+      vs_C:
+        - "A高C高时是「有原则的合作者」；A低C高时是「批评性完美主义者」"
+      vs_S:
+        - "A与S高度相关；区分在于S更强调稳定和可预测性，A更强调人际和谐"
+    feature_rules:
+      strong_positive:
+        - "first_person_plural_ratio high"
+        - "social_words_ratio high"
+        - "hedge_words_ratio moderately high"
+        - "contrast_connector_ratio low"
+        - "imperative_like_ratio low"
+        - "qualifier_ratio moderately high"
+      soft_positive:
+        - "emotional_words_ratio moderately high (共情情感)"
+        - "second_person_ratio moderately high (指向对方)"
+      negative:
+        - "first_person_plural_ratio very low with high first_person_singular"
+        - "contrast_connector_ratio very high (频繁使用「但是」）"
+        - "imperative_like_ratio high"
+        - "certainty_words_ratio high with low qualifier"
+    score_interpretation:
+      high: "表现出较强的合作性和同理心，倾向于通过协调而非对抗解决问题，关注团队和谐。"
+      medium: "有一定的合作意识，但在关键利益冲突时可能坚持立场，兼顾和谐与效率。"
+      low: "独立性较强，在冲突中更愿意直接表达不同意见，竞争和主导倾向明显。"
+    probe_questions:
+      confirm:
+        - "讲一个你为了让团队达成共识而主动做了让步的事，当时你怎么想的？"
+        - "当团队里有人和你的想法很不一样时，你通常怎么处理？"
+      challenge:
+        - "有没有一次你觉得自己让步太多，后来后悔了？当时是什么情况？"
+        - "如果你发现领导的决定明显有问题，你会怎么处理？"
+
+  # ─────────────────────────────────────────────────────────────────
+  # N — 神经质 Neuroticism（内部风险指标，不对外展示）
+  # 高N：情绪波动大、焦虑感强、对压力敏感、消极表达多
+  # 低N：情绪稳定、抗压能力强、在压力下保持冷静
+  # ─────────────────────────────────────────────────────────────────
+  N:
+    label: "情绪稳定性 Neuroticism（内部参考）"
+    internal_only: true    # 不对外展示，不用于标签输出
+    core_motives:
+      - "emotional stability under stress"
+      - "anxiety management"
+      - "self-regulation"
+      - "resilience"
+    interview_behavior_hypothesis:
+      - "高N候选人在回答中可能表现出更多关于压力、焦虑、担忧的描述"
+      - "高N候选人可能在结果描述中加入较多不确定性或自我怀疑"
+      - "低N候选人表达平稳，较少情绪极端词，压力场景描述较中性"
+    positive_language_cues:
+      lexical:
+        strong_keywords:
+          - "担心"
+          - "焦虑"
+          - "压力"
+          - "害怕"
+          - "紧张"
+          - "睡不着"
+          - "害怕"
+          - "不安"
+          - "失控"
+          - "崩溃"
+          - "失眠"
+          - "纠结"
+          - "恐惧"
+          - "忧虑"
+        weak_keywords:
+          - "冷静"
+          - "稳住"
+          - "没什么"
+          - "照常"
+          - "淡定"
+          - "平静"
+        semantic_patterns:
+          - "我当时特别担心……"
+          - "整晚睡不着"
+          - "当时真的很崩溃"
+          - "压力特别大"
+      syntax:
+        - "感叹句较多，情绪表达强烈"
+        - "有较多自我质疑的表达（「不知道能不能行」）"
+        - "用反问句表达不确定性"
+      discourse:
+        - "压力场景描述详细且带有强烈情绪色彩"
+        - "较多反思和后悔词（「要是当时……就好了」）"
+        - "结果描述不确定性多（「可能吧」「不好说」）"
+    negative_or_counter_cues:
+      lexical:
+        - "冷静"
+        - "正常"
+        - "还好"
+        - "没太当回事"
+        - "按部就班"
+        - "淡定"
+      syntax:
+        - "语气平稳，较少情绪夸张词"
+        - "结果判断较确定，较少自我质疑"
+      discourse:
+        - "压力场景中性描述，不放大情绪"
+        - "失败描述有具体归因，较少自我否定"
+    common_false_positive_sources:
+      - "面试压力本身会临时提高N读数（情境效应）"
+      - "候选人可能主动放大负面情绪以示谦逊"
+      - "失败反思类问题可能暂时激活N语言"
+    distinguishing_rules:
+      vs_C:
+        - "C与N呈负相关：高C通常低N（自律带来安全感）"
+      vs_E:
+        - "E与N也可能负相关：高E社交能量可能缓冲焦虑"
+      vs_D:
+        - "高D高N表示「有压力的主导者」——冲动决策风险"
+      vs_S:
+        - "高S低N是最稳定的组合——稳定且抗压"
+    feature_rules:
+      strong_positive:
+        - "emotional_words_ratio very high (负面情绪词)"
+        - "risk_words_ratio high"
+        - "hedge_words_ratio high"
+        - "certainty_words_ratio low"
+        - "first_person_singular_ratio high"
+      soft_positive:
+        - "story_richness_score low with high emotional density"
+        - "modal_verb_ratio high (不确定性)"
+      negative:
+        - "emotional_words_ratio low"
+        - "hedge_words_ratio low with high certainty"
+        - "avg_sentence_length short and direct"
+    risk_interpretation:
+      high: "压力下情绪波动风险较高，对焦虑的管理能力需进一步观察，可能在高压环境中出现稳定性下降。"
+      medium: "压力反应适中，情绪稳定性一般，在极端压力下可能出现一定波动。"
+      low: "情绪稳定性较好，在压力场景下能保持相对冷静，自我调节能力较强。"
+    probe_questions:
+      confirm:
+        - "你最近一次感到工作压力大到影响睡眠是什么时候？你通常怎么应对？"
+      challenge:
+        - "有没有一次你在压力下做出了让你后来后悔的决定？当时是什么情况？"
+
+# ═══════════════════════════════════════════════════════════════════════
+# 跨维度组合模式
+# ═══════════════════════════════════════════════════════════════════════
+
+cross_dimension_patterns:
+  high_O_and_high_C:
+    description: "有原则的创新者"
+    cues:
+      - "兼具好奇心和自律性"
+      - "有新想法但会系统验证"
+      - "可能兼具创造力和执行力"
+    risks:
+      - "可能过度分析，行动偏慢"
+      - "对不完美的容忍度低"
+  high_E_and_high_A:
+    description: "温暖的支持者"
+    cues:
+      - "人际连接能力强"
+      - "团队氛围带动者"
+      - "合作导向明显"
+    risks:
+      - "回避冲突可能导致关键问题被掩盖"
+      - "决策可能过度依赖他人意见"
+  high_C_and_low_A:
+    description: "批评性完美主义者"
+    cues:
+      - "高标准严要求"
+      - "直接指出问题"
+      - "较少顾及他人感受"
+    risks:
+      - "在人际协作中可能产生摩擦"
+      - "可能忽视团队情绪"
+  high_O_and_low_C:
+    description: "自由探索者"
+    cues:
+      - "想法多但落地弱"
+      - "享受过程超过结果"
+      - "不喜欢被框架束缚"
+    risks:
+      - "项目收尾能力弱"
+      - "可能偏离目标"
+  high_E_and_high_D:
+    description: "主导型影响者"
+    cues:
+      - "社交活跃且强势"
+      - "领导力明显"
+      - "决策快速"
+    risks:
+      - "可能忽视他人意见"
+      - "压力大时可能冲动"
+  high_S_and_low_N:
+    description: "稳定磐石型"
+    cues:
+      - "情绪稳定"
+      - "抗压能力强"
+      - "协作可靠"
+    risks:
+      - "可能安于现状，缺乏变革动力"
+      - "对新挑战反应较慢"
+  high_C_and_low_N:
+    description: "高效自律型"
+    cues:
+      - "情绪稳定且高度自律"
+      - "目标导向明确"
+      - "在压力下反而表现更好"
+    risks:
+      - "可能对他人要求过高"
+      - "灵活性可能不足"
+
+# ═══════════════════════════════════════════════════════════════════════
+# 风险标记（主要用于内部置信度调整）
+# ═══════════════════════════════════════════════════════════════════════
+
+risk_flags:
+  n_artifacts:
+    cues:
+      - "N高分但E分也高（可能是面试焦虑而非真实N特质）"
+      - "N高分但只出现在失败/压力话题中（情境激活而非基线）"
+      - "其他维度一致但N不稳定（N可能是假信号）"
+  impression_management:
+    cues:
+      - "E分极端高（>85）且I分极端低（<30）"
+      - "所有维度都接近中间值（防御性呈现）"
+      - "回答风格高度一致但细节缺乏"
+
+# ═══════════════════════════════════════════════════════════════════════
+# 输出映射
+# ═══════════════════════════════════════════════════════════════════════
+
+output_mapping:
+  score_bands:
+    "0_24": "弱信号"
+    "25_49": "轻度倾向"
+    "50_74": "中度倾向"
+    "75_100": "强倾向"
+  confidence_factors:
+    increase:
+      - "跨多个问题的一致性信号"
+      - "细节丰富且非模板化的自发描述"
+      - "正负向线索均存在（表明真实而非刻意呈现）"
+      - "N维度在非压力话题中也出现（非情境假象）"
+    decrease:
+      - "极端分数（>90或<15）"
+      - "回答过于模板化"
+      - "所有维度信号相互矛盾"
+      - "N信号仅在失败话题中出现"

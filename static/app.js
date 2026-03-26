@@ -14,162 +14,159 @@ const errorTextEl = document.getElementById("errorText");
 const retryBtn = document.getElementById("retryBtn");
 const backBtn = document.getElementById("backBtn");
 const editAgainBtn = document.getElementById("editAgainBtn");
-let sampleLibrary = [];
-let defaultSampleLoaded = false;
-let lastPayload = null;
-let lastReport = null;
-let loadingTimer = null;
-let currentTaskId = null;  // 新增：当前 LLM 任务 ID
-let pollTimer = null;      // 新增：轮询定时器
+const quickCard = document.getElementById("modeQuickCard");
+const fullCard = document.getElementById("modeFullCard");
+const modeQuickEl = document.getElementById("modeQuick");
+const modeFullEl = document.getElementById("modeFull");
+
 const TEXT = {
-  na: "暂无数据",
-  sourceLlm: "LLM 主分析",
-  sourceLocal: "本地规则分析",
-  unknown: "未知",
-  fill: "填充示例",
-  loading: "加载中...",
-  analyzing: "分析中...",
-  run: "开始分析",
-  selectSample: "请选择样例",
-  sampleLoadFailed: "样例库加载失败",
-  sampleTextLoadFailed: "样例文本加载失败",
-  pasteTranscriptFirst: "请先粘贴完整的面试文本。",
-  requestFailed: "请求失败",
-  askFirst: "优先追问：",
-  noFollowup: "暂无推荐追问",
-  noRiskSummary: "暂无明确风险总结。",
-  noRiskDetail: "暂无风险细节。",
-  continueValidate: "建议继续，但需优先核验薄弱点。",
-  needMoreSamples: "当前样本不足，建议继续补充面试信息。",
-  weakSignals: "当前信号过弱，暂时无法形成稳定总结。",
-  validateEvidence: "这些标签只能作为快速提示，仍需结合证据核验。",
-  loadingMessage: "请稍候，系统正在拆解问答、提取证据并生成评估。",
+  na: "\u6682\u65e0",
+  selectSample: "\u8bf7\u9009\u62e9\u6837\u4f8b",
+  fill: "\u586b\u5145\u793a\u4f8b",
+  loading: "\u52a0\u8f7d\u4e2d...",
+  run: "\u5f00\u59cb\u5206\u6790",
+  requestFailed: "\u8bf7\u6c42\u5931\u8d25",
+  noFollowup: "\u6682\u65e0\u8ffd\u95ee\u5efa\u8bae",
+  weakSignals: "\u5f53\u524d\u6837\u672c\u4fe1\u53f7\u4ecd\u7136\u504f\u5f31\u3002",
 };
+
 const DISC_META = {
-  D: { label: "D / 红色", className: "d", style: "结果导向、推进直接" },
-  I: { label: "I / 黄色", className: "i", style: "外放表达、感染带动" },
-  S: { label: "S / 绿色", className: "s", style: "稳定协作、节奏平和" },
-  C: { label: "C / 蓝色", className: "c", style: "结构清晰、注重细节" },
+  D: { label: "D / \u652f\u914d", className: "d", style: "\u76f4\u63a5\u63a8\u52a8\u578b" },
+  I: { label: "I / \u5f71\u54cd", className: "i", style: "\u8868\u8fbe\u611f\u67d3\u578b" },
+  S: { label: "S / \u7a33\u5b9a", className: "s", style: "\u7a33\u5b9a\u8010\u5fc3\u578b" },
+  C: { label: "C / \u8c28\u614e", className: "c", style: "\u4e25\u8c28\u5ba1\u614e\u578b" },
 };
-const LOADING_STEPS = ["正在解析面试文本","正在提取行为与证据信号","正在生成 DISC 评估与面试建议"];
-const DEFAULT_TRANSCRIPT = `面试官：讲一个你做过的技术项目。
-候选人：我之前参与过一个订单系统优化项目，高峰期响应时间不太稳定。我主要参与了接口和数据流程优化，也看了日志和监控，调整了一些逻辑，还加了一部分缓存，整体性能有一定改善。
-面试官：你具体是怎么定位问题的？
-候选人：我主要先看日志和响应时间，再看哪些接口比较慢。有些问题比较明显，比如重复查询，优化后会有一些效果。`;
-function setHtml(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
-function setText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
-function safeText(value, fallback = TEXT.na) { return value === null || value === undefined || value === "" ? fallback : value; }
-function createList(items, renderer, empty = TEXT.na) { return !items || !items.length ? `<div class="list-item">${empty}</div>` : items.map(renderer).join(""); }
-function rankDimensions(scores) { return Object.entries(scores || {}).sort((a, b) => b[1] - a[1]).map(([key, value]) => ({ key, value })); }
-function getPrimaryAnalysis(report) { return report.llm_analysis && report.llm_analysis.scores ? { source: TEXT.sourceLlm, analysis: report.llm_analysis } : { source: TEXT.sourceLocal, analysis: report.disc_analysis }; }
-function riskLevelClass(level) { const lowered = String(level || "low").toLowerCase(); if (lowered.includes("高") || lowered.includes("high") || lowered.includes("failed")) return "high"; if (lowered.includes("中") || lowered.includes("medium") || lowered.includes("skipped")) return "medium"; return "low"; }
-function scoreByRisk(level) { const type = riskLevelClass(level); return type === "high" ? 42 : type === "medium" ? 67 : 84; }
-function trimSentence(value, fallback = TEXT.na, limit = 60) {
-  const content = safeText(value, fallback).replace(/\s+/g, " ").trim();
-  if (content.length <= limit) return content;
-  const compact = content.split(/[。；!！?？]/)[0].trim();
-  return compact && compact.length >= 8 ? `${compact}。` : `${content.slice(0, limit)}...`;
+
+const DEFAULT_TRANSCRIPT = `Interviewer: Walk me through a project you led.
+Candidate: I worked on an order system optimization project. Traffic spikes caused unstable latency, so I reviewed logs, compared response times, reduced duplicate queries, and added a cache layer. Overall performance improved after the change.
+Interviewer: How did you locate the root cause?
+Candidate: I started from logs and slow endpoints, then checked repeated reads and timing patterns before deciding where to optimize.`;
+
+const LOADING_STEPS_QUICK = [
+  "\u89e3\u6790\u9762\u8bd5\u6587\u672c",
+  "\u63d0\u53d6\u5173\u952e\u8bc1\u636e",
+  "\u751f\u6210 DISC / MBTI \u7ed3\u679c",
+];
+
+const LOADING_STEPS_FULL = [
+  "\u89e3\u6790\u9762\u8bd5\u6587\u672c",
+  "\u8fd0\u884c DISC / MBTI / STAR \u5206\u6790",
+  "\u8fd0\u884c\u4e94\u5927\u4eba\u683c / \u4e5d\u578b\u4eba\u683c / \u7efc\u5408\u6620\u5c04",
+];
+
+let sampleLibrary = [];
+let lastPayload = null;
+let currentTaskId = null;
+let pollTimer = null;
+let loadingTimer = null;
+
+function byId(id) {
+  return document.getElementById(id);
 }
-function buildStyleSummary(analysis) {
-  if (analysis.decision_summary) return trimSentence(analysis.decision_summary, TEXT.weakSignals, 42);
-  const ranking = rankDimensions(analysis.scores);
-  const top = ranking[0];
-  const second = ranking[1];
-  if (!top || !second) return TEXT.weakSignals;
-  return `整体偏${DISC_META[top.key]?.style || TEXT.unknown}，次要信号为${DISC_META[second.key]?.style || TEXT.unknown}。`;
+
+function setText(id, value, fallback = TEXT.na) {
+  const el = byId(id);
+  if (el) el.textContent = value === undefined || value === null || value === "" ? fallback : String(value);
 }
-function buildStyleNote(analysis) { return trimSentence(analysis.overall_style_summary || TEXT.needMoreSamples, TEXT.needMoreSamples, 40); }
-function buildRiskHeadline(analysis) { return trimSentence(analysis.risk_summary || TEXT.noRiskSummary, TEXT.noRiskSummary, 36); }
-function buildRiskDetail(analysis) { return analysis.critical_findings?.length ? analysis.critical_findings.slice(0, 2).map((item) => item.finding).join("；") : trimSentence((analysis.meta?.notes || []).slice(0, 2).join("；") || TEXT.noRiskDetail, TEXT.noRiskDetail, 50); }
-function buildNextAction(analysis) { return trimSentence(analysis.recommended_action || TEXT.continueValidate, TEXT.continueValidate, 36); }
-function buildCapabilityTags(report) {
-  const f = report.atomic_features || {};
-  const tags = [];
-  if ((f.star_structure_score || 0) >= 0.75) tags.push("结构完整"); else if ((f.star_structure_score || 0) >= 0.5) tags.push("结构中等"); else tags.push("结构偏弱");
-  if ((f.logical_connector_ratio || 0) >= 0.015) tags.push("逻辑较清晰"); else tags.push("逻辑待验证");
-  if ((f.story_richness_score || 0) >= 0.65) tags.push("细节丰富"); else if ((f.story_richness_score || 0) >= 0.45) tags.push("细节一般"); else tags.push("细节偏薄");
-  if ((f.action_verbs_ratio || 0) >= 0.02) tags.push("动作表达较强");
-  return tags;
+
+function setHtml(id, html) {
+  const el = byId(id);
+  if (el) el.innerHTML = html;
 }
-function buildDiscTagline(analysis) {
-  const ranking = rankDimensions(analysis.scores);
-  const top = ranking[0];
-  const second = ranking[1];
-  if (!top) return TEXT.na;
-  const firstLabel = DISC_META[top.key]?.style || TEXT.unknown;
-  const secondLabel = second ? DISC_META[second.key]?.style : "";
-  return secondLabel ? `人格标签：${firstLabel} / ${secondLabel}` : `人格标签：${firstLabel}`;
+
+function safeText(value, fallback = TEXT.na) {
+  return value === undefined || value === null || value === "" ? fallback : String(value);
 }
-function buildStrengthItems(report, analysis) {
-  const items = [];
-  const tags = buildCapabilityTags(report);
-  if (tags[0]) items.push(tags[0]);
-  if (analysis.dimension_analysis) items.push(...Object.values(analysis.dimension_analysis).flatMap((item) => item.evidence_for || []).slice(0, 3));
-  return [...new Set(items.filter(Boolean))].slice(0, 3);
+
+function createList(items, renderItem, empty = TEXT.na) {
+  if (!items || !items.length) return `<div class="list-item"><p>${empty}</p></div>`;
+  return items.map(renderItem).join("");
 }
-function buildRiskItems(analysis) {
-  const findings = (analysis.critical_findings || []).map((item) => item.finding);
-  const gaps = analysis.evidence_gaps || [];
-  return [...new Set([...findings, ...gaps].filter(Boolean))].slice(0, 3);
+
+function trimText(value, limit = 120, fallback = TEXT.na) {
+  const raw = safeText(value, fallback).replace(/\s+/g, " ").trim();
+  return raw.length <= limit ? raw : `${raw.slice(0, limit)}...`;
 }
-function scoreToLevel(value) { return value >= 75 ? "high" : value >= 50 ? "medium" : "low"; }
-function levelLabel(level) { return level === "high" ? "高" : level === "medium" ? "中" : "低"; }
-function bulletHtml(items, empty = TEXT.na) {
-  if (!items || !items.length) return `<div class="bullet-item"><span class="bullet-dot"></span><span>${empty}</span></div>`;
-  return items.slice(0, 3).map((item) => `<div class="bullet-item"><span class="bullet-dot"></span><span>${trimSentence(item, TEXT.na, 36)}</span></div>`).join("");
+
+function rankDimensions(scores) {
+  return Object.entries(scores || {}).sort((a, b) => Number(b[1] || 0) - Number(a[1] || 0));
 }
-function buildInsightBullets(report, analysis) {
-  const capabilityTags = buildCapabilityTags(report);
-  const riskBullets = [...(analysis.critical_findings || []).map((item) => item.finding), ...(analysis.evidence_gaps || [])].filter(Boolean).slice(0, 3);
-  const actionBullets = [analysis.recommended_action, analysis.follow_up_questions?.[0]?.question, analysis.follow_up_questions?.[1]?.question].filter(Boolean).slice(0, 3);
-  const evidenceBullets = [...capabilityTags, ...(analysis.meta?.notes || [])].filter(Boolean).slice(0, 3);
-  return { riskBullets, actionBullets, evidenceBullets };
+
+function getCurrentMode() {
+  return modeFullEl && modeFullEl.checked ? "full" : "quick";
 }
-function buildCapabilityCards(report, analysis) {
-  const f = report.atomic_features || {};
-  const riskClass = riskLevelClass(analysis.meta?.impression_management_risk);
-  const riskScore = riskClass === "high" ? 82 : riskClass === "medium" ? 56 : 24;
-  const cards = [
-    { title: "表达能力", score: Math.round(((f.logical_connector_ratio || 0) / 0.03) * 100), desc: "看表达是否顺畅、重点是否能快速落位。" },
-    { title: "结构能力", score: Math.round((f.star_structure_score || 0) * 100), desc: "看回答是否具备问题、动作、结果的完整骨架。" },
-    { title: "证据强度", score: Math.round((f.story_richness_score || 0) * 100), desc: "看细节、量化与验证锚点是否足够。" },
-    { title: "包装风险", score: riskScore, desc: "看是否存在套话、泛化和证据支撑不足。", risk: true },
-  ];
-  return cards.map((item) => {
-    const safeScore = Math.max(8, Math.min(100, item.score || 0));
-    const level = scoreToLevel(safeScore);
-    const badgeLevel = item.risk ? riskLevelClass(analysis.meta?.impression_management_risk) : level;
-    const badgeText = item.risk ? safeText(analysis.meta?.impression_management_risk, "中") : levelLabel(level);
-    return `<div class="ability-row"><div class="ability-row-head"><strong>${item.title}</strong><span class="capability-badge ${badgeLevel}">${badgeText}</span></div><div class="ability-progress"><span style="width:${safeScore}%"></span></div><div class="ability-note">${item.desc}</div></div>`;
-  }).join("");
+
+function applyModeCards() {
+  const full = getCurrentMode() === "full";
+  if (quickCard) quickCard.classList.toggle("active", !full);
+  if (fullCard) fullCard.classList.toggle("active", full);
+  if (analyzeBtn) analyzeBtn.textContent = full ? "\u5f00\u59cb\u5b8c\u6574\u4eba\u683c\u5206\u6790" : "\u5f00\u59cb\u5feb\u901f\u5206\u6790";
 }
-function showView(name) { inputView.classList.toggle("hidden", name !== "input"); loadingView.classList.toggle("hidden", name !== "loading"); resultView.classList.toggle("hidden", name !== "result"); }
+
+function showView(name) {
+  inputView.classList.toggle("hidden", name !== "input");
+  loadingView.classList.toggle("hidden", name !== "loading");
+  resultView.classList.toggle("hidden", name !== "result");
+}
+
 function renderLoading(stepIndex = 0) {
-  loadingMessageEl.textContent = TEXT.loadingMessage;
-  loadingStepsEl.innerHTML = LOADING_STEPS.map((step, index) => {
-    const state = index < stepIndex ? "done" : index === stepIndex ? "active" : "";
-    return `<div class="loading-step ${state}"><span class="loading-step-dot"></span><span>${step}</span></div>`;
-  }).join("");
+  const steps = getCurrentMode() === "full" ? LOADING_STEPS_FULL : LOADING_STEPS_QUICK;
+  loadingStepsEl.innerHTML = steps
+    .map((step, index) => {
+      const state = index < stepIndex ? "done" : index === stepIndex ? "active" : "";
+      return `<div class="loading-step ${state}"><span class="loading-step-dot"></span><span>${step}</span></div>`;
+    })
+    .join("");
+  loadingMessageEl.textContent = getCurrentMode() === "full"
+    ? "\u6b63\u5728\u6267\u884c\u5b8c\u6574\u4eba\u683c\u5206\u6790\uff0c\u8bf7\u7a0d\u5019..."
+    : "\u6b63\u5728\u6267\u884c\u5feb\u901f DISC / MBTI \u5206\u6790\uff0c\u8bf7\u7a0d\u5019...";
 }
+
 function startLoadingSequence() {
   let stepIndex = 0;
   renderLoading(stepIndex);
   clearInterval(loadingTimer);
   loadingTimer = setInterval(() => {
-    stepIndex = (stepIndex + 1) % LOADING_STEPS.length;
+    const steps = getCurrentMode() === "full" ? LOADING_STEPS_FULL : LOADING_STEPS_QUICK;
+    stepIndex = (stepIndex + 1) % steps.length;
     renderLoading(stepIndex);
-  }, 1100);
+  }, 1200);
 }
-function stopLoadingSequence() { clearInterval(loadingTimer); loadingTimer = null; }
-function showError(message) { stopLoadingSequence(); errorBoxEl.classList.remove("hidden"); errorTextEl.textContent = message || TEXT.requestFailed; }
-function hideError() { errorBoxEl.classList.add("hidden"); errorTextEl.textContent = ""; }
-function renderDiscBars(analysis) {
-  return rankDimensions(analysis.scores).map(({ key, value }) => `<div class="metric-bar"><div class="metric-bar-head"><span>${DISC_META[key]?.label || key}</span><strong>${value}</strong></div><div class="bar-track"><div class="bar-fill ${DISC_META[key]?.className || ""}" style="width:${Math.max(8, value)}%"></div></div></div>`).join("");
+
+function stopLoadingSequence() {
+  clearInterval(loadingTimer);
+  loadingTimer = null;
 }
+
+function stopPolling() {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+}
+
+function hideError() {
+  errorBoxEl.classList.add("hidden");
+  errorTextEl.textContent = "";
+}
+
+function showError(message) {
+  stopLoadingSequence();
+  errorBoxEl.classList.remove("hidden");
+  errorTextEl.textContent = message || TEXT.requestFailed;
+}
+
+function getPrimaryAnalysis(report) {
+  if (report.llm_analysis && report.llm_analysis.scores) {
+    return { source: "\u6a21\u578b\u5206\u6790", analysis: report.llm_analysis };
+  }
+  return { source: "\u672c\u5730\u89c4\u5219", analysis: report.disc_analysis || {} };
+}
+
 function renderDiscPie(analysis) {
   const scores = analysis.scores || {};
-  const total = Object.values(scores).reduce((sum, value) => sum + Number(value || 0), 0) || 1;
   const ordered = ["D", "I", "S", "C"].map((key) => ({ key, value: Number(scores[key] || 0) }));
+  const total = ordered.reduce((sum, item) => sum + item.value, 0) || 1;
   let angle = 0;
   const stops = ordered.map(({ key, value }) => {
     const start = angle;
@@ -177,636 +174,392 @@ function renderDiscPie(analysis) {
     return `${getComputedStyle(document.documentElement).getPropertyValue(`--${key.toLowerCase()}-color`).trim()} ${start.toFixed(1)}deg ${angle.toFixed(1)}deg`;
   });
   const top = rankDimensions(scores)[0];
-  return `<div class="disc-pie" style="background: conic-gradient(${stops.join(", ")});"><div class="disc-pie-center"><div><strong>${top?.value || 0}</strong><span>${DISC_META[top?.key]?.label || TEXT.na}</span></div></div></div><div class="disc-pie-caption">基于当前分值分布计算的 D / I / S / C 相对占比。</div>`;
+  return `<div class="disc-pie" style="background: conic-gradient(${stops.join(", ")});"><div class="disc-pie-center"><div><strong>${top ? top[1] : 0}</strong><span>${top ? DISC_META[top[0]].label : TEXT.na}</span></div></div></div><div class="disc-pie-caption">D / I / S / C \u56db\u4e2a\u7ef4\u5ea6\u7684\u76f8\u5bf9\u5206\u5e03\u3002</div>`;
+}
+
+function renderDiscBars(analysis) {
+  return rankDimensions(analysis.scores || {})
+    .map(([key, value]) => {
+      const pct = Math.max(8, Math.min(100, Number(value || 0)));
+      return `<div class="metric-bar"><div class="metric-bar-head"><span>${DISC_META[key]?.label || key}</span><strong>${value}</strong></div><div class="bar-track"><div class="bar-fill ${DISC_META[key]?.className || ""}" style="width:${pct}%"></div></div></div>`;
+    })
+    .join("");
 }
 function renderHeroScore(analysis) {
-  const riskClass = riskLevelClass(analysis.meta?.impression_management_risk);
-  const score = scoreByRisk(analysis.meta?.impression_management_risk);
-  const ringColor = riskClass === "high" ? "var(--risk)" : riskClass === "medium" ? "#a16bff" : "var(--success)";
-  return `<div class="score-ring" style="background: conic-gradient(${ringColor} ${score * 3.6}deg, rgba(255,255,255,0.12) 0deg);"><div class="score-ring-inner"><strong>${score}</strong><span>可信度 / 可用度</span></div></div>`;
+  const risk = String(analysis.meta?.impression_management_risk || "low").toLowerCase();
+  const score = risk.includes("high") ? 42 : risk.includes("medium") ? 68 : 86;
+  const color = score < 50 ? "var(--risk)" : score < 75 ? "var(--amber)" : "var(--success)";
+  return `<div class="score-ring" style="background: conic-gradient(${color} ${score * 3.6}deg, rgba(255,255,255,0.12) 0deg);"><div class="score-ring-inner"><strong>${score}</strong><span>\u7efc\u5408\u7f6e\u4fe1\u5ea6</span></div></div>`;
 }
-function renderDimensionCards(targetId, analysis) {
-  setHtml(targetId, Object.entries(analysis || {}).map(([dim, item]) => `<div class="dimension-card"><h3>${dim} - ${safeText(item.score, 0)}</h3><p>${safeText(item.summary)}</p><strong>支持证据</strong><ul>${(item.evidence_for || []).slice(0, 3).map((entry) => `<li>${entry}</li>`).join("") || "<li>暂无</li>"}</ul><strong>反证线索</strong><ul>${(item.evidence_against || []).slice(0, 2).map((entry) => `<li>${entry}</li>`).join("") || "<li>暂无</li>"}</ul></div>`).join("") || `<div class="list-item">${TEXT.na}</div>`);
-}
-function renderWorkflow(report) {
-  const workflow = report.workflow || {};
-  const stageTrace = workflow.stage_trace || [];
-  setText("workflowStageTop", String(stageTrace.length));
-  setHtml("workflowStages", createList(stageTrace, (item, index) => `<div class="workflow-stage"><div class="workflow-stage-top"><div class="workflow-stage-name"><span class="workflow-step-index">${index + 1}</span><strong>${safeText(item.stage)}</strong></div><span class="workflow-stage-status ${riskLevelClass(item.status)}">${safeText(item.status)}</span></div><div class="workflow-stage-meta"><span>${trimSentence(item.detail, TEXT.na, 48)}</span></div></div>`, TEXT.na));
-  const evidence = workflow.disc_evidence || {};
-  setHtml("workflowEvidence", `<div class="workflow-tile"><strong>维度排序</strong><div>${safeText((evidence.ranking || []).join(" / "), TEXT.na)}</div></div><div class="workflow-tile"><strong>分值摘要</strong><div>${Object.entries(evidence.scores || {}).map(([k, v]) => `<span class="inline-kpi">${k}: ${v}</span>`).join("") || TEXT.na}</div></div><div class="workflow-tile"><strong>证据亮点</strong><div>${trimSentence((evidence.feature_highlights || []).join("；") || TEXT.na, TEXT.na, 60)}</div></div>`);
-  const masking = workflow.masking_assessment || {};
-  setHtml("workflowMasking", `<div class="workflow-tile"><strong>关键缺陷</strong><div>${trimSentence((masking.critical_findings || []).map((item) => item.finding).join("；") || TEXT.na, TEXT.na, 60)}</div></div><div class="workflow-tile"><strong>证据缺口</strong><div>${trimSentence((masking.evidence_gaps || []).join("；") || TEXT.na, TEXT.na, 60)}</div></div><div class="workflow-tile"><strong>录用风险</strong><div>${trimSentence((masking.hire_risks || []).join("；") || TEXT.na, TEXT.na, 60)}</div></div>`);
-  const decision = workflow.decision_payload || {};
-  setHtml("workflowDecision", `<div class="workflow-tile"><strong>决策总结</strong><p>${trimSentence(decision.decision_summary, TEXT.na, 60)}</p></div><div class="workflow-tile"><strong>风险结论</strong><p>${trimSentence(decision.risk_summary, TEXT.na, 60)}</p></div><div class="workflow-tile"><strong>推荐动作</strong><p>${trimSentence(decision.recommended_action, TEXT.na, 60)}</p></div>`);
-}
+
 function renderDecisionLayer(report, analysis, source) {
-  const bullets = buildInsightBullets(report, analysis);
+  const topRank = rankDimensions(analysis.scores || {});
+  const topStyle = topRank[0] ? DISC_META[topRank[0][0]]?.style : TEXT.weakSignals;
   setText("analysisSource", source);
   setText("analysisSourceTop", source);
-  setText("candidateStyle", buildStyleSummary(analysis));
-  setText("candidateStyleNote", buildStyleNote(analysis));
-  setText("riskHeadline", buildRiskHeadline(analysis));
-  setText("nextAction", buildNextAction(analysis));
-  setText("riskLevelTop", safeText(analysis.meta?.impression_management_risk, "未判定"));
+  setText("candidateStyle", trimText(analysis.decision_summary || `\u5019\u9009\u4eba\u7684\u4e3b\u8981\u98ce\u683c\u504f\u5411${topStyle}\u3002`, 90));
+  setText("candidateStyleNote", trimText(analysis.overall_style_summary || analysis.risk_summary || TEXT.weakSignals, 120));
+  setText("riskHeadline", trimText(analysis.risk_summary || "\u5f53\u524d\u5c1a\u672a\u8bc6\u522b\u51fa\u660e\u786e\u9ad8\u98ce\u9669\u4fe1\u53f7\u3002", 80));
+  setText("nextAction", trimText(analysis.recommended_action || "\u5efa\u8bae\u7ee7\u7eed\u901a\u8fc7\u8ffd\u95ee\u9a8c\u8bc1\u5173\u952e\u5224\u65ad\u3002", 80));
+  setText("riskLevelTop", safeText(analysis.meta?.impression_management_risk, "\u672a\u77e5"));
   setHtml("heroScore", renderHeroScore(analysis));
-  setHtml("riskBulletList", bulletHtml(bullets.riskBullets));
-  setHtml("actionBulletList", bulletHtml(bullets.actionBullets));
-  setHtml("evidenceBulletList", bulletHtml(bullets.evidenceBullets));
-  setHtml("topFollowups", createList((analysis.follow_up_questions || []).slice(0, 3), (item, index) => `<div class="followup-item"><span class="followup-index">${index + 1}</span><div><strong>${trimSentence(item.question, TEXT.na, 42)}</strong><p>${trimSentence(item.purpose, TEXT.na, 54)}</p></div></div>`, TEXT.noFollowup));
-  setHtml("strengthList", createList(buildStrengthItems(report, analysis), (item) => `<div class="micro-item bare"><span class="micro-dot"></span><span>${trimSentence(item, TEXT.na, 34)}</span></div>`, TEXT.na));
-  setHtml("riskList", createList(buildRiskItems(analysis), (item) => `<div class="micro-item bare"><span class="micro-dot negative"></span><span>${trimSentence(item, TEXT.na, 34)}</span></div>`, TEXT.na));
-  const riskTags = [...buildCapabilityTags(report), ...(analysis.evidence_gaps || []).slice(0, 2)].filter(Boolean).slice(0, 5);
-  setHtml("riskTags", createList(riskTags, (note) => `<div class="tag summary-tag">${trimSentence(note, TEXT.na, 18)}</div>`, TEXT.na));
-  setText("riskStripHeadline", buildRiskHeadline(analysis));
-  setText("riskStripDetail", buildRiskDetail(analysis));
+  setHtml("riskBulletList", createList((analysis.critical_findings || []).slice(0, 3), (item) => `<div class="bullet-item"><span class="bullet-dot"></span><span>${trimText(item.finding, 80)}</span></div>`, "\u6682\u65e0\u98ce\u9669\u63d0\u793a"));
+  setHtml("actionBulletList", createList((analysis.follow_up_questions || []).slice(0, 3), (item) => `<div class="bullet-item"><span class="bullet-dot"></span><span>${trimText(item.question, 80)}</span></div>`, "\u6682\u65e0\u5efa\u8bae\u52a8\u4f5c"));
+  setHtml("evidenceBulletList", createList((analysis.meta?.notes || []).slice(0, 3), (item) => `<div class="bullet-item"><span class="bullet-dot"></span><span>${trimText(item, 80)}</span></div>`, "\u6682\u65e0\u5224\u65ad\u4f9d\u636e"));
+  setHtml("topFollowups", createList((analysis.follow_up_questions || []).slice(0, 3), (item, index) => `<div class="followup-item"><span class="followup-index">${index + 1}</span><div><strong>${trimText(item.question, 90)}</strong><p>${trimText(item.purpose, 100)}</p></div></div>`, TEXT.noFollowup));
+  setHtml("strengthList", createList(topRank.slice(0, 2), ([key, value]) => `<div class="micro-item bare"><span class="micro-dot"></span><span>${DISC_META[key]?.label || key}: ${value}</span></div>`, "\u6682\u65e0\u660e\u663e\u4f18\u52bf"));
+  setHtml("riskList", createList((analysis.evidence_gaps || []).slice(0, 3), (item) => `<div class="micro-item bare"><span class="micro-dot negative"></span><span>${trimText(item, 70)}</span></div>`, "\u6682\u65e0\u660e\u663e\u98ce\u9669\u7f3a\u53e3"));
+  setHtml("riskTags", createList((analysis.evidence_gaps || []).slice(0, 4), (item) => `<div class="tag summary-tag">${trimText(item, 22)}</div>`, "\u6682\u65e0\u6807\u7b7e"));
+  setText("riskStripHeadline", trimText(analysis.risk_summary || "\u6682\u65e0\u98ce\u9669\u6458\u8981", 80));
+  setText("riskStripDetail", trimText((analysis.critical_findings || []).map((item) => item.finding).join("\uff1b") || "\u6682\u65e0\u8be6\u7ec6\u8bf4\u660e", 120));
 }
+
 function renderMetricsLayer(report, analysis) {
   setHtml("discPie", renderDiscPie(analysis));
   setHtml("discBars", renderDiscBars(analysis));
-  setText("discTagline", buildDiscTagline(analysis));
-  setText("discExplain", trimSentence(analysis.validated_style || analysis.overall_style_summary || TEXT.validateEvidence, TEXT.validateEvidence, 56));
-  const riskClass = riskLevelClass(analysis.meta?.impression_management_risk);
-  const riskLabel = safeText(analysis.meta?.impression_management_risk, "低");
-  const riskScale = riskClass === "high" ? 88 : riskClass === "medium" ? 58 : 28;
-  setHtml("riskMeter", `<div class="risk-strip-value"><span class="risk-badge ${riskClass}">${riskLabel}</span><div class="risk-scale-bar compact"><div class="risk-scale-fill ${riskClass}" style="width:${riskScale}%"></div></div></div>`);
-  setHtml("capabilityCards", buildCapabilityCards(report, analysis));
+  const top = rankDimensions(analysis.scores || {})[0];
+  setText("discTagline", top ? `\u4e3b\u5bfc\u98ce\u683c\uff1a${DISC_META[top[0]].style}` : TEXT.na);
+  setText("discExplain", trimText(analysis.overall_style_summary || analysis.decision_summary || TEXT.weakSignals, 120));
+  setHtml(
+    "capabilityCards",
+    [
+      ["STAR \u7ed3\u6784\u5b8c\u6574\u5ea6", Math.round(Number(report.atomic_features?.star_structure_score || 0) * 100)],
+      ["\u903b\u8f91\u8fde\u63a5\u5bc6\u5ea6", Math.round(Number(report.atomic_features?.logical_connector_ratio || 0) * 5000)],
+      ["\u6545\u4e8b\u7ec6\u8282\u4e30\u5bcc\u5ea6", Math.round(Number(report.atomic_features?.story_richness_score || 0) * 100)],
+      ["\u884c\u52a8\u8868\u8fbe\u5bc6\u5ea6", Math.round(Number(report.atomic_features?.action_verbs_ratio || 0) * 5000)],
+    ]
+      .map(([label, score]) => {
+        const safeScore = Math.max(5, Math.min(100, Number(score || 0)));
+        const level = safeScore >= 75 ? "high" : safeScore >= 50 ? "medium" : "low";
+        return `<div class="ability-row"><div class="ability-row-head"><strong>${label}</strong><span class="capability-badge ${level}">${safeScore}</span></div><div class="ability-progress"><span style="width:${safeScore}%"></span></div></div>`;
+      })
+      .join("")
+  );
+  const risk = String(analysis.meta?.impression_management_risk || "low").toLowerCase();
+  const riskLevel = risk.includes("high") ? "high" : risk.includes("medium") ? "medium" : "low";
+  const riskScore = riskLevel === "high" ? 88 : riskLevel === "medium" ? 58 : 28;
+  setHtml("riskMeter", `<div class="risk-strip-value"><span class="risk-badge ${riskLevel}">${safeText(analysis.meta?.impression_management_risk, "low")}</span><div class="risk-scale-bar compact"><div class="risk-scale-fill ${riskLevel}" style="width:${riskScore}%"></div></div></div>`);
 }
+
 function renderInterviewOverview(report) {
-  setText("turnCountTop", String(report.input_overview?.turn_count || 0));
-  setText("jobGuessTop", report.interview_map?.job_inference?.value || TEXT.unknown);
-  setText("candidateCharTop", String(report.input_overview?.candidate_char_count || 0));
-  setText("sampleQualityTop", safeText(report.llm_analysis?.meta?.sample_quality || report.disc_analysis?.meta?.sample_quality));
-  setText("sampleQualityTopDetail", safeText(report.llm_analysis?.meta?.sample_quality || report.disc_analysis?.meta?.sample_quality));
-  setText("parseSourceTop", safeText(report.interview_map?.parse_source));
-  setHtml("overview", [`<div class="chip">岗位猜测：${report.interview_map?.job_inference?.value || TEXT.unknown}</div>`,`<div class="chip">问答轮次：${report.input_overview?.turn_count || 0}</div>`,`<div class="chip">候选人字数：${report.input_overview?.candidate_char_count || 0}</div>`,`<div class="chip">样本质量：${safeText(report.llm_analysis?.meta?.sample_quality || report.disc_analysis?.meta?.sample_quality)}</div>`,`<div class="chip">解析来源：${safeText(report.interview_map?.parse_source)}</div>`].join(""));
-  setHtml("turns", createList(report.interview_map?.turns, (turn) => `<div class="turn-item"><div class="type">第 ${turn.turn_id} 轮 · ${safeText(turn.question_type)}</div><p><strong>问题：</strong>${safeText(turn.question, TEXT.na)}</p><p><strong>回答摘要：</strong>${safeText(turn.answer_summary)}</p></div>`, TEXT.na));
+  setText("turnCountTop", report.input_overview?.turn_count || 0, "0");
+  setText("jobGuessTop", report.interview_map?.job_inference?.value || "\u672a\u77e5");
+  setText("sampleQualityTop", report.disc_analysis?.meta?.sample_quality || report.llm_analysis?.meta?.sample_quality || "\u672a\u77e5");
+  setText("sampleQualityTopDetail", report.disc_analysis?.meta?.sample_quality || report.llm_analysis?.meta?.sample_quality || "\u672a\u77e5");
+  setText("candidateCharTop", report.input_overview?.candidate_char_count || 0, "0");
+  setText("parseSourceTop", report.interview_map?.parse_source || "\u672a\u77e5");
+  setHtml("overview", [
+    `\u5c97\u4f4d\u731c\u6d4b\uff1a${safeText(report.interview_map?.job_inference?.value, "\u672a\u77e5")}`,
+    `\u95ee\u7b54\u8f6e\u6b21\uff1a${report.input_overview?.turn_count || 0}`,
+    `\u5019\u9009\u4eba\u6587\u672c\u91cf\uff1a${report.input_overview?.candidate_char_count || 0}`,
+    `\u89e3\u6790\u6765\u6e90\uff1a${safeText(report.interview_map?.parse_source, "\u672a\u77e5")}`,
+  ].map((item) => `<div class="chip">${item}</div>`).join(""));
+  setHtml("turns", createList(report.interview_map?.turns || [], (item) => `<div class="turn-item"><div class="type">\u7b2c ${item.turn_id || "-"} \u8f6e</div><p><strong>${trimText(item.question || "\u6682\u65e0\u95ee\u9898", 70)}</strong></p><p>${trimText(item.answer_summary || item.answer || "\u6682\u65e0\u56de\u7b54", 160)}</p></div>`, "\u6682\u65e0\u8f6e\u6b21\u6570\u636e"));
+}
+
+function renderWorkflow(report) {
+  const workflow = report.workflow || {};
+  const stageTrace = workflow.stage_trace || [];
+  setText("workflowStageTop", stageTrace.length, "0");
+  setHtml("workflowStages", createList(stageTrace, (item, index) => `<div class="workflow-stage"><div class="workflow-stage-top"><div class="workflow-stage-name"><span class="workflow-step-index">${index + 1}</span><strong>${safeText(item.stage)}</strong></div><span class="workflow-stage-status ${safeText(item.status, "low").toLowerCase()}">${safeText(item.status)}</span></div><div class="workflow-stage-meta"><span>${trimText(item.detail, 90)}</span></div></div>`, "\u6682\u65e0\u5de5\u4f5c\u6d41\u8bb0\u5f55"));
+  setHtml("workflowEvidence", `<div class="workflow-tile"><strong>\u7ef4\u5ea6\u6392\u5e8f</strong><p>${safeText((workflow.disc_evidence?.ranking || []).join(" / "), "\u6682\u65e0\u6392\u5e8f")}</p></div>`);
+  setHtml("workflowMasking", `<div class="workflow-tile"><strong>\u5173\u952e\u53d1\u73b0</strong><p>${trimText((workflow.masking_assessment?.critical_findings || []).map((item) => item.finding).join("\uff1b"), 140, "\u6682\u65e0\u5173\u952e\u53d1\u73b0")}</p></div>`);
+  setHtml("workflowDecision", `<div class="workflow-tile"><strong>\u51b3\u7b56\u6458\u8981</strong><p>${trimText(workflow.decision_payload?.decision_summary, 140, "\u6682\u65e0\u51b3\u7b56\u6458\u8981")}</p></div>`);
 }
 function renderDetailedLayer(report, analysis, source) {
-  renderDimensionCards("dimensions", analysis.dimension_analysis || {});
-  setHtml("criticalFindings", createList(analysis.critical_findings, (item) => `<div class="list-item"><div class="type">${safeText(item.severity)}</div><p><strong>${safeText(item.finding)}</strong></p><p>${(item.basis || []).join("；") || TEXT.na}</p><p>${safeText(item.impact, TEXT.na)}</p></div>`, TEXT.na));
-  setHtml("evidenceGaps", createList(analysis.evidence_gaps, (item) => `<div class="list-item"><p>${safeText(item)}</p></div>`, TEXT.na));
-  const features = report.atomic_features ? [{ label: "STAR 完整度", value: `${Math.round((report.atomic_features.star_structure_score || 0) * 100)}%` }, { label: "逻辑连接词比例", value: report.atomic_features.logical_connector_ratio }, { label: "动作动词比例", value: report.atomic_features.action_verbs_ratio }, { label: "故事丰富度", value: `${Math.round((report.atomic_features.story_richness_score || 0) * 100)}%` }, { label: "个人 / 团队取向", value: report.atomic_features.self_vs_team_orientation }, { label: "问题 / 人际取向", value: report.atomic_features.problem_vs_people_focus }] : [];
-  setHtml("features", createList(features, (item) => `<div class="feature-item"><strong>${item.label}</strong><div>${item.value}</div></div>`, TEXT.na));
-  setHtml("hypotheses", createList(analysis.behavioral_hypotheses, (item) => `<div class="list-item"><div class="type">${safeText(item.strength)}</div><p>${safeText(item.hypothesis)}</p><p>${(item.basis || []).join("；")}</p></div>`, TEXT.na));
-  setHtml("followups", createList(analysis.follow_up_questions, (item) => `<div class="list-item"><div class="type">${safeText(item.target_dimension)}</div><p>${safeText(item.question)}</p><p>${safeText(item.purpose)}</p></div>`, TEXT.noFollowup));
-  const llmStatus = report.llm_status?.enabled ? [`当前主视图：${source}`,`解析模型：${report.llm_status.parser_model}`,`主分析模型：${report.llm_status.analysis_model}`,report.llm_status.parser_error ? `解析错误：${report.llm_status.parser_error}` : "解析模型可用。",report.llm_status.analysis_error ? `分析错误：${report.llm_status.analysis_error}` : "分析模型可用。"].join("<br />") : TEXT.sourceLocal;
-  setHtml("llmStatus", llmStatus);
-  setText("llmOutput", JSON.stringify(report.llm_analysis || report.disc_analysis, null, 2));
+  setHtml("dimensions", createList(Object.entries(analysis.dimension_analysis || {}), ([key, item]) => `<div class="dimension-card"><div class="type">${key}</div><p><strong>${safeText(item.band, "")}</strong> \u00b7 \u5206\u6570 ${safeText(item.score, 0)}</p><p>${trimText(item.summary, 100)}</p></div>`, "\u6682\u65e0\u7ef4\u5ea6\u8be6\u60c5"));
+  setHtml("criticalFindings", createList(analysis.critical_findings || [], (item) => `<div class="list-item"><div class="type">${safeText(item.severity, "unknown")}</div><p><strong>${trimText(item.finding, 100)}</strong></p><p>${trimText(item.impact, 120, "\u6682\u65e0\u5f71\u54cd\u8bf4\u660e")}</p></div>`, "\u6682\u65e0\u5173\u952e\u53d1\u73b0"));
+  setHtml("evidenceGaps", createList(analysis.evidence_gaps || [], (item) => `<div class="list-item"><p>${trimText(item, 100)}</p></div>`, "\u6682\u65e0\u8bc1\u636e\u7f3a\u53e3"));
+  setHtml("hypotheses", createList(analysis.behavioral_hypotheses || [], (item) => `<div class="list-item"><div class="type">${safeText(item.strength, "unknown")}</div><p>${trimText(item.hypothesis, 100)}</p></div>`, "\u6682\u65e0\u884c\u4e3a\u5047\u8bbe"));
+  const features = report.atomic_features || {};
+  const featureRows = Object.entries(features)
+    .slice(0, 16)
+    .map(([key, value]) => `<div class="feature-item"><strong>${key}</strong><div>${typeof value === "number" ? (value.toFixed ? value.toFixed(4) : value) : safeText(value)}</div></div>`)
+    .join("");
+  setHtml("features", featureRows || `<div class="feature-item"><strong>\u6682\u65e0\u7279\u5f81\u6570\u636e</strong></div>`);
+  setHtml("followups", createList(analysis.follow_up_questions || [], (item) => `<div class="list-item"><div class="type">${safeText(item.target_dimension || item.dimension, "-")}</div><p>${trimText(item.question, 110)}</p><p>${trimText(item.purpose, 120)}</p></div>`, TEXT.noFollowup));
+  setHtml("llmStatus", [
+    `\u5206\u6790\u6765\u6e90\uff1a${source}`,
+    `\u89e3\u6790\u6a21\u578b\uff1a${safeText(report.llm_status?.parser_model)}`,
+    `\u5206\u6790\u6a21\u578b\uff1a${safeText(report.llm_status?.analysis_model)}`,
+    `\u4eba\u683c\u6a21\u578b\uff1a${safeText(report.llm_status?.personality_model, "\u672a\u4f7f\u7528")}`,
+    report.llm_status?.analysis_error ? `\u5206\u6790\u5f02\u5e38\uff1a${report.llm_status.analysis_error}` : "\u5206\u6790\u5f02\u5e38\uff1a\u65e0",
+  ].join("<br />"));
+  setText("llmOutput", JSON.stringify(report, null, 2));
 }
+
+function renderMBTIDimension(prefix, dimData, leftKey, rightKey) {
+  setText(`mbti${prefix}`, dimData.preference || "-");
+  const scores = dimData.scores || {};
+  const leftScore = Math.round(Number(scores[leftKey] || 50));
+  const rightScore = Math.round(Number(scores[rightKey] || 50));
+  setHtml(`mbti${prefix}Bar`, `<div class="mbti-pref-labels"><span>${leftKey} ${leftScore}%</span><span>${rightKey} ${rightScore}%</span></div><div class="mbti-pref-bar"><div class="mbti-pref-fill left" style="width:${leftScore}%"></div><div class="mbti-pref-fill right" style="width:${rightScore}%"></div><div class="mbti-pref-center"></div></div>`);
+  setText(`mbti${prefix}Summary`, `\u504f\u597d\uff1a${safeText(dimData.preference, "\u4e0d\u660e\u786e")} \u00b7 \u7f6e\u4fe1\u5ea6\uff1a${safeText(dimData.confidence, "\u4f4e")}`);
+  setHtml(`mbti${prefix}Evidence`, `<div class="mbti-evidence-section"><strong>${leftKey}</strong><ul>${(dimData.evidence?.[leftKey] || []).map((item) => `<li>${trimText(item, 80)}</li>`).join("") || "<li>\u6682\u65e0\u660e\u663e\u8bc1\u636e</li>"}</ul></div><div class="mbti-evidence-section"><strong>${rightKey}</strong><ul>${(dimData.evidence?.[rightKey] || []).map((item) => `<li>${trimText(item, 80)}</li>`).join("") || "<li>\u6682\u65e0\u660e\u663e\u8bc1\u636e</li>"}</ul></div>`);
+}
+
 function renderMBTILayer(report) {
   const mbti = report.mbti_analysis || {};
-  
-  if (!mbti.type) {
-    console.log("⚠️ 未检测到 MBTI 分析结果");
+  setText("mbtiConfidence", safeText(mbti.meta?.confidence, "\u672a\u77e5"));
+  setText("mbtiTypeBadge", safeText(mbti.type, "XXXX"));
+  setText("mbtiTypeDesc", trimText(mbti.type_description || "\u6682\u672a\u751f\u6210 MBTI \u7ed3\u679c", 120));
+  setHtml("mbtiConflicts", createList(mbti.conflicts || [], (item) => `<div class="mbti-conflict-item ${safeText(item.severity, "low")}"><div class="mbti-conflict-head"><span class="mbti-conflict-badge ${safeText(item.severity, "low")}">${safeText(item.severity, "-")}</span><strong>${trimText(item.type || item.risk_type || "MBTI \u51b2\u7a81", 60)}</strong></div><p class="mbti-conflict-rec">${trimText(item.description || item.message || item.recommendation || "", 140)}</p></div>`, "\u6682\u65e0\u660e\u663e MBTI \u51b2\u7a81"));
+  renderMBTIDimension("EI", mbti.dimensions?.E_I || {}, "E", "I");
+  renderMBTIDimension("NS", mbti.dimensions?.N_S || {}, "N", "S");
+  renderMBTIDimension("TF", mbti.dimensions?.T_F || {}, "T", "F");
+  renderMBTIDimension("JP", mbti.dimensions?.J_P || {}, "J", "P");
+  setHtml("mbtiFollowups", createList(mbti.follow_up_questions || [], (item) => `<div class="question-item"><strong>${trimText(item.question, 100)}</strong><div>${trimText(item.purpose, 120)}</div></div>`, TEXT.noFollowup));
+}
+
+function collectConflictItems(report) {
+  const items = [];
+  const pushItems = (source, values) => {
+    (values || []).forEach((item) => {
+      if (!item || typeof item !== "object") return;
+      items.push({
+        source,
+        severity: item.severity || "medium",
+        type: item.type || item.risk_type || source,
+        description: item.description || item.message || item.reason || "",
+        recommendation: item.recommendation || item.mitigation || "",
+      });
+    });
+  };
+  pushItems("MBTI", report.mbti_analysis?.conflicts);
+  pushItems("\u4e5d\u578b\u4eba\u683c", report.enneagram_analysis?.risk_flags);
+  return items;
+}
+
+function renderConflictSection(report, show) {
+  const el = byId("conflictSection");
+  if (!el) return;
+  el.classList.toggle("hidden", !show);
+  if (!show) return;
+  const items = collectConflictItems(report);
+  if (!items.length) {
+    el.innerHTML = `<div class="personality-row-item"><strong>\u6682\u672a\u53d1\u73b0\u8de8\u6a21\u578b\u51b2\u7a81\u4fe1\u53f7\u3002</strong><p>\u5f53\u524d\u5b8c\u6574\u4eba\u683c\u6a21\u5f0f\u6ca1\u6709\u8bc6\u522b\u5230\u989d\u5916\u7684\u77db\u76fe\u9884\u8b66\u3002</p></div>`;
     return;
   }
-  
-  console.log("📊 渲染 MBTI 分析...", mbti);
-  
-  // ========== 渲染整体置信度 ==========
-  const confidenceBadge = document.getElementById("mbtiConfidence");
-  if (confidenceBadge) {
-    const conf = mbti.meta?.confidence || "low";
-    confidenceBadge.textContent = conf === "high" ? "高置信" : conf === "medium" ? "中置信" : "低置信";
-    confidenceBadge.className = `source-badge confidence-${conf}`;
-  }
-  
-  // ========== 渲染 MBTI 类型 ==========
-  const typeBadge = document.getElementById("mbtiTypeBadge");
-  if (typeBadge) {
-    typeBadge.textContent = mbti.type;
-    typeBadge.className = `mbti-type-badge mbti-${mbti.type.toLowerCase().replace(/x/g, "neutral")}`;
-  }
-  
-  const typeDesc = document.getElementById("mbtiTypeDesc");
-  if (typeDesc) {
-    typeDesc.textContent = mbti.type_description || "认知风格类型";
-  }
-  
-  // ========== 渲染冲突列表 ==========
-  const conflictsEl = document.getElementById("mbtiConflicts");
-  if (conflictsEl) {
-    const conflicts = mbti.conflicts || [];
-    
-    if (conflicts.length === 0) {
-      conflictsEl.innerHTML = '<div class="mbti-no-conflict">✓ DISC 与 MBTI 无明显冲突</div>';
-    } else {
-      conflictsEl.innerHTML = conflicts.map((item) => {
-        const severityClass = item.severity === "high" ? "high" : item.severity === "medium" ? "medium" : "low";
-        return `
-          <div class="mbti-conflict-item ${severityClass}">
-            <div class="mbti-conflict-head">
-              <span class="mbti-conflict-badge ${severityClass}">${item.severity === "high" ? "高" : item.severity === "medium" ? "中" : "低"}</span>
-              <strong>${safeText(item.description, TEXT.na)}</strong>
-            </div>
-            <p class="mbti-conflict-rec">${safeText(item.recommendation, "")}</p>
-          </div>
-        `;
-      }).join("");
-    }
-  }
-  
-  // ========== 渲染四维度 ==========
-  const dimensions = mbti.dimensions || {};
-  
-  renderMBTIDimension("E_I", dimensions.E_I || {});
-  renderMBTIDimension("N_S", dimensions.N_S || {});
-  renderMBTIDimension("T_F", dimensions.T_F || {});
-  renderMBTIDimension("J_P", dimensions.J_P || {});
-  
-  // ========== 渲染追问建议 ==========
-  const followupsEl = document.getElementById("mbtiFollowups");
-  if (followupsEl) {
-    const questions = mbti.follow_up_questions || [];
-    
-    if (questions.length === 0) {
-      followupsEl.innerHTML = '<div class="question-item">暂无MBTI追问建议</div>';
-    } else {
-      followupsEl.innerHTML = questions.map((q) => `
-        <div class="question-item">
-          <strong>${safeText(q.question, TEXT.na)}</strong>
-          <div>${safeText(q.purpose, "")}</div>
-        </div>
-      `).join("");
-    }
-  }
-  
-  console.log("✅ MBTI 渲染完成");
+  el.innerHTML = `<div class="panel-head panel-head-space personality-section-head"><div><p class="section-kicker">\u51b2\u7a81\u63d0\u793a</p><h3>\u8de8\u6a21\u578b\u98ce\u9669\u63d0\u9192</h3></div><span class="source-badge">${items.length} \u6761</span></div>` + items.map((item) => `<div class="conflict-item ${item.severity}"><div class="conflict-item-head"><strong>${item.source}\uff1a${trimText(item.type, 50)}</strong><span class="risk-badge ${item.severity}">${item.severity}</span></div><p>${trimText(item.description, 160, "\u6682\u65e0\u8bf4\u660e")}</p>${item.recommendation ? `<p>${trimText(item.recommendation, 140)}</p>` : ""}</div>`).join("");
 }
-
-
-// ========== LLM 异步分析核心函数 ==========
-
-async function performAnalysis(payload) {
-  showView("loading");
-  startLoadingSequence();
-  hideError();
-  
-  // 停止之前的轮询
-  if (pollTimer) {
-    clearInterval(pollTimer);
-    pollTimer = null;
-  }
-  
-  try {
-    console.log("📤 发送分析请求...", payload);
-    
-    // ========== 1. 发起任务，立即返回任务 ID ==========
-    const res = await fetch("/api/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    
-    if (!res.ok) {
-      const errData = await res.json();
-      throw new Error(errData.error || TEXT.requestFailed);
-    }
-    
-    const data = await res.json();
-    currentTaskId = data.task_id;
-    console.log(`📥 收到任务 ID: ${currentTaskId}`);
-    
-    // ========== 2. 立即开始轮询（快速轮询本地结果）==========
-    startFastPolling(currentTaskId);
-    
-  } catch (err) {
-    console.error("❌ 分析失败:", err);
-    showError(err.message || TEXT.requestFailed);
-  }
-}
-
-
-function showLLMLoadingBanner(reason) {
-  // 移除旧的横幅
-  document.getElementById("llmBanner")?.remove();
-  
-  const banner = document.createElement("div");
-  banner.id = "llmBanner";
-  banner.className = "llm-loading-banner";
-  banner.innerHTML = `
-    <div class="llm-banner-content">
-      <div class="llm-spinner"></div>
-      <div class="llm-banner-text">
-        <strong>正在调用 LLM 深度分析...</strong>
-        <p class="llm-reason">${reason}</p>
-        <p class="llm-progress" id="llmProgress">准备中...</p>
-      </div>
-    </div>
-    <button id="cancelLLM" class="llm-cancel-btn" title="取消深度分析">✕</button>
-  `;
-  
-  resultView.prepend(banner);
-  
-  // 绑定取消按钮
-  document.getElementById("cancelLLM")?.addEventListener("click", () => {
-    if (confirm("确定取消 LLM 深度分析吗？将仅保留本地规则结果。")) {
-      stopPollingLLM();
-      banner.remove();
-    }
+function renderBigFive(report) {
+  const data = report.bigfive_analysis || {};
+  const container = byId("bigfiveCards");
+  if (!container) return;
+  const scores = data.scores || {};
+  const rows = ["O", "C", "E", "A", "N"].map((key) => {
+    const score = Number(scores[key] || 0);
+    return `<div class="bf-row"><div class="bf-row-head"><strong>${key}</strong><span>${score}</span></div><div class="bf-bar-wrap"><span class="bf-bar-fill" style="width:${Math.max(4, score)}%"></span></div><p>${trimText(data.trait_interpretations?.[key], 100, "\u6682\u65e0\u89e3\u91ca")}</p></div>`;
   });
+  container.innerHTML = rows.join("") || `<div class="panel-empty-note">\u6682\u65e0\u4e94\u5927\u4eba\u683c\u7ed3\u679c</div>`;
 }
 
-function startFastPolling(taskId) {
-  console.log(`🔄 开始快速轮询任务: ${taskId}`);
-  
-  let attempts = 0;
-  const maxAttempts = 120; // 最多 4 分钟
-  let hasLocalResult = false;
-  
-  pollTimer = setInterval(async () => {
-    attempts++;
-    
-    try {
-      const res = await fetch(`/api/llm_status/${taskId}`);
-      
-      if (!res.ok) {
-        throw new Error("无法获取任务状态");
-      }
-      
-      const data = await res.json();
-      const status = data.status;
-      
-      console.log(`📊 [${attempts}] 状态: ${status}`);
-      
-      // ========== 第一次拿到本地结果 ==========
-      if (!hasLocalResult && data.local_result) {
-        hasLocalResult = true;
-        console.log("✅ 收到本地结果，立即展示");
-        
-        stopLoadingSequence();
-        lastReport = data.local_result;
-        renderReport(data.local_result, "local");
-        showView("result");
-        
-        // 如果触发了 LLM，显示横幅
-        if (data.llm_triggered) {
-          showLLMLoadingBanner(data.llm_reason);
-        } else {
-          showLocalCompleteBanner(data.llm_reason || "本地规则置信度充足");
-        }
-      }
-      
-      // ========== LLM 分析完成 ==========
-      if (status === "completed" && data.llm_result) {
-        stopPollingLLM();
-        onLLMCompleted(data.llm_result);
-      }
-      
-      // ========== 任务失败 ==========
-      if (status === "failed") {
-        stopPollingLLM();
-        onLLMFailed(data.error);
-      }
-      
-      // ========== 超时 ==========
-      if (attempts >= maxAttempts) {
-        stopPollingLLM();
-        onLLMTimeout();
-      }
-      
-    } catch (err) {
-      console.error("❌ 轮询失败:", err);
-      stopPollingLLM();
-      onLLMFailed(err.message);
-    }
-  }, 500); // ← 快速轮询：每 0.5 秒一次
+function renderEnneagram(report) {
+  const data = report.enneagram_analysis || {};
+  const container = byId("enneagramCards");
+  if (!container) return;
+  const topTwo = data.top_two_types || [];
+  container.innerHTML = topTwo.length
+    ? topTwo.map((item) => `<div class="personality-row-item"><strong>${safeText(item.type_number, "-")} \u578b \u00b7 ${safeText(item.label, "\u672a\u77e5")}</strong><p>\u5f97\u5206\uff1a${safeText(item.raw_score, "-")} \u00b7 \u7f6e\u4fe1\u5ea6\uff1a${safeText(item.confidence_level, "-")}</p><p>${trimText((item.key_evidence || []).join("\uff1b"), 140, "\u6682\u65e0\u8bc1\u636e")}</p></div>`).join("")
+    : `<div class="panel-empty-note">\u6682\u65e0\u4e5d\u578b\u4eba\u683c\u7ed3\u679c</div>`;
 }
 
-function showLocalCompleteBanner(reason) {
-  const banner = document.createElement("div");
-  banner.id = "llmBanner";
-  banner.className = "llm-banner-success";
-  banner.innerHTML = `
-    <div class="llm-banner-content">
-      <div class="llm-check">✓</div>
-      <div class="llm-banner-text">
-        <strong>本地规则分析完成</strong>
-        <p>${reason} · 已节省 API 费用</p>
-      </div>
-    </div>
-  `;
-  
-  resultView.prepend(banner);
-  
-  setTimeout(() => {
-    banner.style.opacity = "0";
-    setTimeout(() => banner.remove(), 300);
-  }, 3000);
+function renderStar(report) {
+  const data = report.star_analysis || {};
+  const container = byId("starCards");
+  if (!container) return;
+  const dimensions = data.dimension_scores || {};
+  const keys = ["S", "T", "A", "R"];
+  container.innerHTML = keys.map((key) => {
+    const item = dimensions[key] || {};
+    const score = Number(item.score || 0);
+    return `<div class="star-dim-card"><div class="star-dim-head"><strong>${key}</strong><span class="risk-badge ${safeText(item.band, "low")}">${safeText(item.band, "-")}</span></div><div class="star-bar-wrap"><span class="star-bar-fill" style="width:${Math.max(4, score)}%"></span></div><p>${trimText(item.interpretation, 100, "\u6682\u65e0\u89e3\u91ca")}</p></div>`;
+  }).join("");
 }
 
-function startPollingLLM(taskId) {
-  console.log(`🔄 开始轮询任务: ${taskId}`);
-  
-  let attempts = 0;
-  const maxAttempts = 60; // 最多轮询 2 分钟
-  
-  pollTimer = setInterval(async () => {
-    attempts++;
-    
-    try {
-      const res = await fetch(`/api/llm_status/${taskId}`);
-      
-      if (!res.ok) {
-        throw new Error("无法获取任务状态");
-      }
-      
-      const data = await res.json();
-      console.log(`📊 任务状态 [${attempts}/${maxAttempts}]:`, data.status);
-      
-      // 更新进度文本
-      const progressEl = document.getElementById("llmProgress");
-      if (progressEl) {
-        progressEl.textContent = data.progress || "分析中...";
-      }
-      
-      if (data.status === "completed") {
-        stopPollingLLM();
-        onLLMCompleted(data.result);
-      } else if (data.status === "failed") {
-        stopPollingLLM();
-        onLLMFailed(data.error);
-      } else if (attempts >= maxAttempts) {
-        stopPollingLLM();
-        onLLMTimeout();
-      }
-      
-    } catch (err) {
-      console.error("❌ 轮询失败:", err);
-      stopPollingLLM();
-      onLLMFailed(err.message);
-    }
-  }, 2000); // 每 2 秒轮询一次
-}
-
-
-function stopPollingLLM() {
-  if (pollTimer) {
-    clearInterval(pollTimer);
-    pollTimer = null;
-    console.log("⏸️ 停止轮询");
+function renderMapping(report) {
+  const data = report.personality_mapping || {};
+  const profile = data.integrated_personality_profile || {};
+  const container = byId("mappingCards");
+  if (!container) return;
+  if (!Object.keys(profile).length) {
+    container.innerHTML = `<div class="panel-empty-note">\u6682\u65e0\u7efc\u5408\u753b\u50cf\u7ed3\u679c</div>`;
+    return;
   }
+  container.innerHTML = [
+    `<div class="mapping-row"><strong>${safeText(profile.primary_style_label, "\u6682\u65e0\u4e3b\u6807\u7b7e")}</strong><p>${trimText(profile.primary_style_description, 160, "\u6682\u65e0\u8bf4\u660e")}</p></div>`,
+    `<div class="mapping-row"><strong>DISC</strong><p>${safeText(profile.disc_integration?.dominant_style, "-")} / ${safeText(profile.disc_integration?.secondary_style, "-")}</p></div>`,
+    `<div class="mapping-row"><strong>\u4e94\u5927\u4eba\u683c</strong><p>${safeText(profile.bigfive_integration?.dominant_trait, "-")} \u00b7 \u7f6e\u4fe1\u5ea6 ${safeText(profile.bigfive_integration?.confidence, "-")}</p></div>`,
+    `<div class="mapping-row"><strong>\u4e5d\u578b\u4eba\u683c</strong><p>${safeText(profile.enneagram_integration?.dominant_type, "-")} \u00b7 \u4fa7\u7ffc ${safeText(profile.enneagram_integration?.wing, "-")}</p></div>`,
+  ].join("");
 }
 
-
-function onLLMCompleted(llmResult) {
-  console.log("✨ LLM 分析完成:", llmResult);
-  
-  // 移除加载横幅，显示成功提示
-  const banner = document.getElementById("llmBanner");
-  if (banner) {
-    banner.className = "llm-banner-success";
-    banner.innerHTML = `
-      <div class="llm-banner-content">
-        <div class="llm-check">✓</div>
-        <div class="llm-banner-text">
-          <strong>LLM 深度分析已完成</strong>
-          <p>结果已更新，变化部分已高亮显示</p>
-        </div>
-      </div>
-    `;
-    
-    // 3 秒后淡出移除
-    setTimeout(() => {
-      banner.style.opacity = "0";
-      setTimeout(() => banner.remove(), 300);
-    }, 3000);
-  }
-  
-  // 平滑更新结果
-  lastReport = llmResult;
-  updateResultWithAnimation(llmResult);
+function renderPersonalitySection(report, show) {
+  const section = byId("personalitySection");
+  if (!section) return;
+  section.classList.toggle("hidden", !show);
+  if (!show) return;
+  renderBigFive(report);
+  renderEnneagram(report);
+  renderStar(report);
+  renderMapping(report);
 }
 
-
-function onLLMFailed(error) {
-  console.error("❌ LLM 分析失败:", error);
-  
-  const banner = document.getElementById("llmBanner");
-  if (banner) {
-    banner.className = "llm-banner-error";
-    banner.innerHTML = `
-      <div class="llm-banner-content">
-        <div class="llm-error-icon">!</div>
-        <div class="llm-banner-text">
-          <strong>LLM 分析失败</strong>
-          <p>${error || "未知错误"}</p>
-          <p class="llm-fallback">已保留本地规则分析结果</p>
-        </div>
-      </div>
-      <button onclick="this.parentElement.remove()" class="llm-cancel-btn">✕</button>
-    `;
-  }
-}
-
-
-function onLLMTimeout() {
-  console.warn("⏱️ LLM 分析超时");
-  
-  const banner = document.getElementById("llmBanner");
-  if (banner) {
-    banner.className = "llm-banner-error";
-    banner.innerHTML = `
-      <div class="llm-banner-content">
-        <div class="llm-error-icon">⏱</div>
-        <div class="llm-banner-text">
-          <strong>LLM 分析超时</strong>
-          <p>深度分析耗时过长，已自动取消</p>
-          <p class="llm-fallback">当前显示本地规则分析结果</p>
-        </div>
-      </div>
-      <button onclick="this.parentElement.remove()" class="llm-cancel-btn">✕</button>
-    `;
-  }
-}
-
-
-function updateResultWithAnimation(newResult) {
-  // 添加更新动画类
-  resultView.classList.add("result-updating");
-  
-  setTimeout(() => {
-    // 重新渲染结果
-    renderReport(newResult, "llm");
-    
-    // 移除动画类
-    setTimeout(() => {
-      resultView.classList.remove("result-updating");
-    }, 300);
-  }, 200);
-}
-
-function renderMBTIDimension(dimKey, dimData) {
-  const preference = dimData.preference || "-";
-  const strength = dimData.strength || 50;
-  const summary = dimData.summary || "等待分析";
-  const evidence = dimData.evidence || {};
-  const scores = dimData.scores || {};
-  
-  // 更新偏好标签
-  const badgeEl = document.getElementById(`mbti${dimKey.replace("_", "")}`);
-  if (badgeEl) {
-    badgeEl.textContent = preference;
-    badgeEl.className = `mbti-pref-badge pref-${preference.toLowerCase()}`;
-  }
-  
-  // 更新进度条
-  const barWrapEl = document.getElementById(`mbti${dimKey.replace("_", "")}Bar`);
-  if (barWrapEl) {
-    const [leftKey, rightKey] = dimKey.split("_");
-    const leftScore = scores[leftKey] || 50;
-    const rightScore = scores[rightKey] || 50;
-    
-    barWrapEl.innerHTML = `
-      <div class="mbti-pref-labels">
-        <span>${leftKey} ${leftScore}%</span>
-        <span>${rightKey} ${rightScore}%</span>
-      </div>
-      <div class="mbti-pref-bar">
-        <div class="mbti-pref-fill left pref-${leftKey.toLowerCase()}" style="width: ${leftScore}%"></div>
-        <div class="mbti-pref-fill right pref-${rightKey.toLowerCase()}" style="width: ${rightScore}%"></div>
-        <div class="mbti-pref-center"></div>
-      </div>
-    `;
-  }
-  
-  // 更新总结
-  const summaryEl = document.getElementById(`mbti${dimKey.replace("_", "")}Summary`);
-  if (summaryEl) {
-    summaryEl.textContent = summary;
-  }
-  
-  // 更新证据
-  const evidenceEl = document.getElementById(`mbti${dimKey.replace("_", "")}Evidence`);
-  if (evidenceEl) {
-    const [leftKey, rightKey] = dimKey.split("_");
-    const leftEvidence = evidence[leftKey] || [];
-    const rightEvidence = evidence[rightKey] || [];
-    
-    evidenceEl.innerHTML = `
-      <div class="mbti-evidence-section">
-        <strong>${leftKey} 型证据:</strong>
-        <ul>
-          ${leftEvidence.length > 0 ? leftEvidence.map((e) => `<li>${e}</li>`).join("") : "<li>暂无</li>"}
-        </ul>
-      </div>
-      <div class="mbti-evidence-section">
-        <strong>${rightKey} 型证据:</strong>
-        <ul>
-          ${rightEvidence.length > 0 ? rightEvidence.map((e) => `<li>${e}</li>`).join("") : "<li>暂无</li>"}
-        </ul>
-      </div>
-    `;
-  }
-}
-function renderReport(report, source = "local") {
-  console.log(`渲染报告 [来源: ${source}]`, report);
-  
-  const { source: analysisSource, analysis } = getPrimaryAnalysis(report);
-  
-  // ========== 新增：显示分析来源标识 ==========
-  const sourceBadge = document.getElementById("analysisSource");
-  if (sourceBadge) {
-    if (source === "local") {
-      sourceBadge.textContent = "⚡ 快速分析（本地规则）";
-      sourceBadge.className = "source-badge source-local";
-    } else {
-      sourceBadge.textContent = "✨ 深度分析（LLM）";
-      sourceBadge.className = "source-badge source-llm";
-    }
-  }
-  
-  // ========== 原有渲染逻辑保持不变 ==========
+function renderReport(report, sourceHint = null) {
+  const primary = getPrimaryAnalysis(report);
+  const showFull = getCurrentMode() === "full" || Boolean(report.bigfive_analysis && Object.keys(report.bigfive_analysis).length);
+  const source = sourceHint || primary.source;
   renderInterviewOverview(report);
-  renderDecisionLayer(report, analysis, analysisSource);
-  renderMetricsLayer(report, analysis);
+  renderDecisionLayer(report, primary.analysis, source);
+  renderMetricsLayer(report, primary.analysis);
   renderWorkflow(report);
-  renderDetailedLayer(report, analysis, analysisSource);
+  renderDetailedLayer(report, primary.analysis, source);
   renderMBTILayer(report);
+  renderConflictSection(report, showFull);
+  renderPersonalitySection(report, showFull);
+  statusEl.textContent = source;
 }
+
 async function loadSampleLibrary() {
   try {
     const response = await fetch("/samples/index.json");
-    if (!response.ok) throw new Error(TEXT.sampleLoadFailed);
+    if (!response.ok) throw new Error(TEXT.requestFailed);
     sampleLibrary = await response.json();
     sampleSelectEl.innerHTML = [`<option value="">${TEXT.selectSample}</option>`].concat(sampleLibrary.map((item) => `<option value="${item.id}">${item.title}</option>`)).join("");
-    if (!defaultSampleLoaded && sampleLibrary.length) {
-      sampleSelectEl.value = sampleLibrary[0].id;
-      await fillSelectedSample();
-      defaultSampleLoaded = true;
-    }
-  } catch {
-    sampleSelectEl.innerHTML = `<option value="">${TEXT.sampleLoadFailed}</option>`;
+  } catch (error) {
+    sampleSelectEl.innerHTML = `<option value="">\u6837\u4f8b\u52a0\u8f7d\u5931\u8d25</option>`;
   }
 }
+
 async function fillSelectedSample() {
   const selectedId = sampleSelectEl.value;
-  if (!selectedId) { transcriptEl.value = DEFAULT_TRANSCRIPT; jobHintEl.value = "后端研发"; return; }
+  if (!selectedId) {
+    transcriptEl.value = DEFAULT_TRANSCRIPT;
+    jobHintEl.value = "\u540e\u7aef\u5de5\u7a0b\u5e08";
+    return;
+  }
   const item = sampleLibrary.find((entry) => entry.id === selectedId);
   if (!item) return;
   sampleBtn.disabled = true;
   sampleBtn.textContent = TEXT.loading;
   try {
     const response = await fetch(`/samples/${item.filename}`);
-    if (!response.ok) throw new Error(TEXT.sampleTextLoadFailed);
+    if (!response.ok) throw new Error(TEXT.requestFailed);
     transcriptEl.value = await response.text();
     jobHintEl.value = item.job_hint || "";
-  } catch {
+  } catch (error) {
     transcriptEl.value = DEFAULT_TRANSCRIPT;
-    jobHintEl.value = item.job_hint || "后端研发";
   } finally {
     sampleBtn.disabled = false;
     sampleBtn.textContent = TEXT.fill;
   }
 }
+
+async function startQuickPolling(taskId) {
+  stopPolling();
+  let localShown = false;
+  pollTimer = setInterval(async () => {
+    try {
+      const response = await fetch(`/api/llm_status/${taskId}`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || TEXT.requestFailed);
+      if (!localShown && data.local_result) {
+        localShown = true;
+        stopLoadingSequence();
+        renderReport(data.local_result, "\u672c\u5730\u89c4\u5219");
+        showView("result");
+      }
+      if (data.status === "completed") {
+        stopPolling();
+        stopLoadingSequence();
+        renderReport(data.llm_result || data.local_result, data.llm_result ? "\u6a21\u578b\u5206\u6790" : "\u672c\u5730\u89c4\u5219");
+        showView("result");
+      }
+      if (data.status === "failed") {
+        stopPolling();
+        showError(data.error || TEXT.requestFailed);
+      }
+    } catch (error) {
+      stopPolling();
+      showError(error.message || TEXT.requestFailed);
+    }
+  }, 700);
+}
+
+async function runQuickMode(payload) {
+  const response = await fetch("/api/analyze", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || TEXT.requestFailed);
+  currentTaskId = data.task_id;
+  await startQuickPolling(currentTaskId);
+}
+
+async function runFullMode(payload) {
+  const response = await fetch("/api/analyze/full", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || TEXT.requestFailed);
+  stopLoadingSequence();
+  renderReport(data, "\u5b8c\u6574\u4eba\u683c\u6a21\u5f0f");
+  showView("result");
+}
 async function runAnalysis() {
-  const interview_transcript = transcriptEl.value.trim();
-  if (!interview_transcript) { window.alert(TEXT.pasteTranscriptFirst); return; }
-  lastPayload = { interview_transcript, job_hint_optional: jobHintEl.value.trim() };
+  const transcript = transcriptEl.value.trim();
+  if (!transcript) {
+    window.alert("\u8bf7\u5148\u7c98\u8d34\u9762\u8bd5\u6587\u672c\u3002");
+    return;
+  }
+  const payload = {
+    interview_transcript: transcript,
+    job_hint_optional: jobHintEl.value.trim(),
+    force_llm: false,
+  };
+  lastPayload = payload;
   hideError();
   showView("loading");
   startLoadingSequence();
   analyzeBtn.disabled = true;
-  analyzeBtn.textContent = TEXT.analyzing;
+
   try {
-    const response = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(lastPayload) });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || TEXT.requestFailed);
-    stopLoadingSequence();
-    renderReport(data);
-    showView("result");
+    if (getCurrentMode() === "full") {
+      await runFullMode(payload);
+    } else {
+      await runQuickMode(payload);
+    }
   } catch (error) {
-    showError(error.message);
+    showError(error.message || TEXT.requestFailed);
   } finally {
     analyzeBtn.disabled = false;
-    analyzeBtn.textContent = TEXT.run;
+    applyModeCards();
   }
 }
+
 sampleBtn.addEventListener("click", fillSelectedSample);
-analyzeBtn.addEventListener("click", async () => {
-  const transcript = transcriptEl.value.trim();
-  const jobHint = jobHintEl.value.trim();
-  
-  if (!transcript) {
-    alert(TEXT.pasteTranscriptFirst);
-    return;
-  }
-  
-  lastPayload = { 
-    interview_transcript: transcript, 
-    job_hint_optional: jobHint,
-    force_llm: false,  // 不强制调用 LLM
-  };
-  
-  await performAnalysis(lastPayload);  // 改用新函数
+analyzeBtn.addEventListener("click", runAnalysis);
+retryBtn.addEventListener("click", () => {
+  hideError();
+  if (lastPayload) runAnalysis();
 });
-retryBtn.addEventListener("click", () => { if (lastPayload) runAnalysis(); });
-backBtn.addEventListener("click", () => { hideError(); stopLoadingSequence(); showView("input"); });
-editAgainBtn.addEventListener("click", () => { showView("input"); if (lastReport) statusEl.textContent = TEXT.sourceLocal; });
+backBtn.addEventListener("click", () => {
+  hideError();
+  stopLoadingSequence();
+  stopPolling();
+  showView("input");
+});
+editAgainBtn.addEventListener("click", () => showView("input"));
+modeQuickEl?.addEventListener("change", applyModeCards);
+modeFullEl?.addEventListener("change", applyModeCards);
+
 transcriptEl.value = DEFAULT_TRANSCRIPT;
-jobHintEl.value = "后端研发";
+jobHintEl.value = "\u540e\u7aef\u5de5\u7a0b\u5e08";
 renderLoading(0);
-loadingMessageEl.textContent = TEXT.loadingMessage;
 showView("input");
+applyModeCards();
 loadSampleLibrary();
