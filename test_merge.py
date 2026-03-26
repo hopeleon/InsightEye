@@ -100,6 +100,14 @@ try:
     print(f"      bigfive: {'present' if result.get('bigfive_analysis') else 'MISSING'}")
     print(f"      enneagram: {'present' if result.get('enneagram_analysis') else 'MISSING'}")
     print(f"      mapping: {'present' if result.get('personality_mapping') else 'MISSING'}")
+
+    from workflow.engine import run_personality_workflow
+    full_report = run_personality_workflow(cases["multi_line"], "????")
+    if full_report.get("workflow", {}).get("mode") != "full_personality":
+        raise AssertionError(f"full workflow mode mismatch: {full_report.get('workflow')}")
+    if not full_report.get("personality_mapping"):
+        raise AssertionError("full workflow missing personality_mapping")
+    print(f"  [OK] full personality workflow completed: {full_report.get('workflow', {}).get('mode')}")
 except Exception as exc:
     import traceback
 

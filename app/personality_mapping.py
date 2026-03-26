@@ -125,7 +125,7 @@ def _check_bigfive_condition(value: float, op: str, threshold: float) -> bool:
 
 
 def _eval_bigfive_conditions(conditions: tuple, bigfive_scores: dict) -> bool:
-    """评估一组 BigFive 条件（AND 关系）。"""
+    """???? BigFive ???AND ????"""
     for cond in conditions:
         dim, op, threshold = cond
         val = bigfive_scores.get(dim, 0)
@@ -134,14 +134,37 @@ def _eval_bigfive_conditions(conditions: tuple, bigfive_scores: dict) -> bool:
     return True
 
 
+def _split_bigfive_enneagram_rule(rule: tuple) -> tuple[tuple[tuple[str, str, float], ...], str, float, str]:
+    """?? BigFive???????? 2 ??? 3 ?????"""
+    conditions: list[tuple[str, str, float]] = []
+    index = 0
+    while index < len(rule):
+        item = rule[index]
+        if (
+            isinstance(item, tuple)
+            and len(item) == 3
+            and isinstance(item[0], str)
+            and isinstance(item[1], str)
+        ):
+            conditions.append(item)
+            index += 1
+            continue
+        break
+
+    if not conditions or index + 2 >= len(rule):
+        raise ValueError(f"Invalid BigFive?Enneagram rule: {rule!r}")
+
+    type_key = rule[index]
+    confidence = rule[index + 1]
+    reason = rule[index + 2] if index + 2 < len(rule) else ""
+    return tuple(conditions), str(type_key), float(confidence), str(reason)
+
+
 def _resolve_enng_from_bigfive(bigfive_scores: dict) -> list[dict]:
-    """基于 BigFive 推断可能的九型类型。"""
+    """?? BigFive ??????????"""
     candidates = []
     for rule in BIGFIVE_TO_ENNEAGRAM:
-        conditions = rule[:3]
-        type_key = rule[3]
-        confidence = rule[4]
-        reason = rule[5] if len(rule) > 5 else ""
+        conditions, type_key, confidence, reason = _split_bigfive_enneagram_rule(rule)
         if _eval_bigfive_conditions(conditions, bigfive_scores):
             candidates.append({"type": type_key, "confidence": confidence, "source": "bigfive", "reason": reason})
     candidates.sort(key=lambda x: x["confidence"], reverse=True)
