@@ -196,24 +196,59 @@
           </article>
 
           <article class="panel realtime-transcript-panel">
-            <div class="panel-head compact-head">
+            <div class="panel-head compact-head realtime-transcript-head">
               <div>
                 <p class="section-kicker">LIVE TRANSCRIPT</p>
                 <h3>&#x6D41;&#x5F0F;&#x5B57;&#x5E55;</h3>
               </div>
+              <div class="realtime-transcript-badge">Transcript Canvas</div>
+            </div>
+            <div class="realtime-transcript-intro">
+              <span>&#x5B9E;&#x65F6;&#x8F6C;&#x5F55;&#x662F;&#x5F53;&#x524D;&#x9762;&#x8BD5;&#x8BC1;&#x636E;&#x9762;&#x3002;</span>
+              <span>&#x5DE6;&#x4FA7;&#x770B;&#x72B6;&#x6001;&#xFF0C;&#x53F3;&#x4FA7;&#x76F4;&#x63A5;&#x51B3;&#x5B9A;&#x4E0B;&#x4E00;&#x53E5;&#x8FFD;&#x95EE;&#x3002;</span>
             </div>
             <div id="realtimeLiveTranscript" class="live-transcript-list"></div>
           </article>
 
           <article class="panel realtime-followup-panel">
-            <div class="panel-head compact-head">
+            <div class="panel-head compact-head realtime-followup-head">
               <div>
                 <p class="section-kicker">FOLLOW-UP</p>
                 <h3>&#x63A8;&#x8350;&#x63D0;&#x95EE;</h3>
               </div>
+              <div class="realtime-followup-head-note">Strategy Desk</div>
             </div>
-            <div id="realtimeSuggestionSummary" class="realtime-suggestion-summary">&#x6682;&#x65E0;&#x6EDA;&#x52A8;&#x5EFA;&#x8BAE;</div>
-            <div id="realtimeSuggestionList" class="numbered-followups realtime-followups-list"></div>
+            <div class="realtime-followup-shell">
+              <div class="realtime-strategy-strip">
+                <article class="realtime-strategy-chip">
+                  <span>&#x63D0;&#x95EE;&#x5E93;</span>
+                  <strong id="realtimePromptCount">0</strong>
+                </article>
+                <article class="realtime-strategy-chip">
+                  <span>&#x4E3B;&#x5BFC;&#x6765;&#x6E90;</span>
+                  <strong id="realtimePromptSource">&#x5F85;&#x751F;&#x6210;</strong>
+                </article>
+                <article class="realtime-strategy-chip wide">
+                  <span>&#x5F53;&#x524D;&#x7B56;&#x7565;</span>
+                  <strong id="realtimePromptState">&#x7B49;&#x5F85;&#x5019;&#x9009;&#x4EBA;&#x5185;&#x5BB9;</strong>
+                </article>
+              </div>
+              <div id="realtimeSuggestionSummary" class="realtime-suggestion-summary">&#x6682;&#x65E0;&#x6EDA;&#x52A8;&#x5EFA;&#x8BAE;</div>
+              <section class="realtime-followup-spotlight">
+                <div class="realtime-followup-section-head">
+                  <span class="realtime-followup-kicker">Primary Prompt</span>
+                  <span class="realtime-followup-caption">&#x5F53;&#x524D;&#x6700;&#x8BE5;&#x95EE;&#x7684;&#x4E00;&#x53E5;</span>
+                </div>
+                <div id="realtimeSuggestionLead" class="realtime-suggestion-lead"></div>
+              </section>
+              <section class="realtime-followup-backlog">
+                <div class="realtime-followup-section-head muted">
+                  <span class="realtime-followup-kicker">Queue</span>
+                  <span class="realtime-followup-caption">&#x5019;&#x8865;&#x63D0;&#x95EE;&#x4E0E;&#x5907;&#x7528;&#x89D2;&#x5EA6;</span>
+                </div>
+                <div id="realtimeSuggestionList" class="realtime-followups-list"></div>
+              </section>
+            </div>
           </article>
         </section>
 

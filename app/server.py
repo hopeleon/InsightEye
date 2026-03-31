@@ -233,6 +233,8 @@ def _realtime_session_response(session: dict[str, Any]) -> dict[str, Any]:
             "evidence_gaps": rolling.get("evidence_gaps", []),
             "follow_up_questions": rolling.get("follow_up_questions", []),
             "recommended_action": rolling.get("recommended_action", ""),
+            "mbti_type": rolling.get("mbti_type", ""),
+            "mbti_summary": rolling.get("mbti_summary", ""),
             "local_result": rolling.get("local_result"),
         },
         "final_report": session.get("final_report"),

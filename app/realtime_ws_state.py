@@ -87,6 +87,8 @@ def consume_realtime_event(session_id: str, speaker_id: str, event: dict[str, An
                     "evidence_gaps": rolling.get("evidence_gaps", []),
                     "follow_up_questions": rolling.get("follow_up_questions", []),
                     "recommended_action": rolling.get("recommended_action", ""),
+                    "mbti_type": rolling.get("mbti_type", ""),
+                    "mbti_summary": rolling.get("mbti_summary", ""),
                     "local_result": rolling.get("local_result"),
                 },
             },

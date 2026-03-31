@@ -32,6 +32,8 @@ def test_realtime_session_flow() -> None:
     current = store.status(session_id)
     assert current["rolling_analysis"] is not None
     assert current["rolling_analysis"]["transcript"]
+    assert current["rolling_analysis"]["follow_up_questions"]
+    assert any(item.get("source") for item in current["rolling_analysis"]["follow_up_questions"])
 
     final_session = store.end(session_id)
     final_report = final_session["final_report"]

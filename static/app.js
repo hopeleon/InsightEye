@@ -1151,13 +1151,51 @@ function renderRealtimeSessionPanel(session) {
   scrollRealtimeTranscriptToLatest();
 
   const rolling = session.rolling_analysis || {};
-  setText("realtimeSuggestionSummary", trimText(rolling.summary || rolling.risk_summary || "\u6eda\u52a8\u5efa\u8bae\u5c06\u968f\u7740\u5b9e\u65f6\u8f6c\u5f55\u9010\u6b65\u51fa\u73b0\u3002", 120));
+  const followupItems = rolling.follow_up_questions || [];
+  const leadItem = followupItems[0] || null;
+  const backlogItems = followupItems.slice(1);
+  const rollingSummaryParts = [
+    trimText(rolling.recommended_action, 88, ""),
+    trimText(rolling.summary, 108, ""),
+    rolling.mbti_type ? `MBTI 倾向：${safeText(rolling.mbti_type)}` : "",
+    trimText(rolling.risk_summary, 88, ""),
+  ].filter(Boolean);
+  setText("realtimePromptCount", followupItems.length, "0");
+  setText("realtimePromptSource", leadItem ? safeText(leadItem.source_label || leadItem.source || "建议") : "待生成");
+  setText(
+    "realtimePromptState",
+    leadItem
+      ? trimText(leadItem.purpose || rolling.recommended_action || "已生成主问句", 36)
+      : "等待候选人内容"
+  );
+  setHtml(
+    "realtimeSuggestionSummary",
+    rollingSummaryParts.length
+      ? rollingSummaryParts.map((item, index) => `<div class="realtime-summary-row ${index === 0 ? "primary" : ""}">${safeText(item)}</div>`).join("")
+      : `<div class="realtime-summary-row">滚动建议将随着实时转录逐步出现。</div>`
+  );
+  setHtml(
+    "realtimeSuggestionLead",
+    leadItem
+      ? (() => {
+          const sourceLabel = safeText(leadItem.source_label || leadItem.source || "建议");
+          const priority = String(leadItem.priority || "medium").toLowerCase();
+          const dimension = leadItem.dimension ? `<span class="realtime-followup-dimension">${trimText(leadItem.dimension, 20)}</span>` : "";
+          return `<div class="realtime-followup-lead ${priority}"><div class="realtime-followup-meta lead"><span class="realtime-followup-source">${sourceLabel}</span>${dimension}<span class="realtime-followup-priority ${priority}">${priority}</span></div><div class="realtime-followup-lead-question">${trimText(leadItem.question || leadItem, 120)}</div><p>${trimText(leadItem.purpose || "基于当前回答的下一步追问建议", 120)}</p></div>`;
+        })()
+      : `<div class="realtime-followup-empty">实时提问建议会随着更多候选人内容出现。</div>`
+  );
   setHtml(
     "realtimeSuggestionList",
     createList(
-      rolling.follow_up_questions || [],
-      (item, index) => `<div class="followup-item"><span class="followup-index">${index + 1}</span><div><strong>${trimText(item.question || item, 90)}</strong><p>${trimText(item.purpose || "\u57fa\u4e8e\u5f53\u524d\u56de\u7b54\u7684\u4e0b\u4e00\u6b65\u8ffd\u95ee\u5efa\u8bae", 90)}</p></div></div>`,
-      "\u6682\u65e0\u63a8\u8350\u63d0\u95ee"
+      backlogItems,
+      (item, index) => {
+        const sourceLabel = safeText(item.source_label || item.source || "建议");
+        const priority = String(item.priority || "medium").toLowerCase();
+        const dimension = item.dimension ? `<span class="realtime-followup-dimension">${trimText(item.dimension, 18)}</span>` : "";
+        return `<div class="realtime-followup-card ${priority}"><div class="realtime-followup-meta"><span class="followup-index">${index + 2}</span><span class="realtime-followup-source">${sourceLabel}</span>${dimension}<span class="realtime-followup-priority ${priority}">${priority}</span></div><strong>${trimText(item.question || item, 86)}</strong><p>${trimText(item.purpose || "基于当前回答的下一步追问建议", 90)}</p></div>`;
+      },
+      "暂无候补提问"
     )
   );
 }
