@@ -12,3 +12,11 @@ OPENAI_ANALYSIS_MODEL = "gpt-5.4"
 
 # 外部模型请求超时，单位秒。网络异常时建议保持较小，避免页面长时间卡住。
 OPENAI_REQUEST_TIMEOUT = 8
+
+OPENAI_REALTIME_TRANSCRIPTION_MODEL = "gpt-4o-transcribe"
+OPENAI_WEBSOCKET_BASE_URL = "wss://api.zhizengzeng.com/v1"
+
+# DashScope realtime ASR settings
+DASHSCOPE_API_KEY = ""
+DASHSCOPE_REALTIME_WS_URL = "wss://dashscope.aliyuncs.com/api-ws/v1/realtime"
+DASHSCOPE_REALTIME_ASR_MODEL = "qwen3-asr-flash-realtime"

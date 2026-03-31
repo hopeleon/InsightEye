@@ -49,7 +49,6 @@
                   </div>
                 </label>
               </div>
-            </div>
             <div class="input-grid">
               <div class="field-block field-inline">
                 <div class="field-item">
@@ -69,10 +68,33 @@
                 <label for="transcript">整段面试文本</label>
                 <textarea id="transcript"></textarea>
               </div>
+
+              <div class="field-block field-inline">
+                <div class="field-item">
+                  <label for="audioFile">Audio File</label>
+                  <input id="audioFile" type="file" accept="audio/*" />
+                </div>
+                <div class="field-item">
+                  <label for="audioLanguage">Audio Language</label>
+                  <input id="audioLanguage" type="text" value="zh" placeholder="zh / en" />
+                </div>
+              </div>
+
+              <div class="field-block field-inline audio-source-block">
+                <div class="field-item audio-source-option">
+                  <label class="source-check"><input id="captureMic" type="checkbox" checked /> Capture Mic</label>
+                </div>
+                <div class="field-item audio-source-option">
+                  <label class="source-check"><input id="captureSystem" type="checkbox" checked /> Capture System Audio</label>
+                </div>
+              </div>
             </div>
 
             <div class="input-actions">
               <button id="analyzeBtn" type="button" class="primary-btn">开始分析</button>
+              <button id="realtimeBtn" type="button" class="secondary-btn">Realtime Demo</button>
+              <button id="audioRealtimeBtn" type="button" class="secondary-btn">Audio Realtime Test</button>
+              <button id="liveWsBtn" type="button" class="secondary-btn">Live Audio Realtime</button>
             </div>
           </article>
 
@@ -95,6 +117,7 @@
             </article>
           </aside>
         </section>
+        </div>
       </section>
 
       <section id="loadingView" class="view view-loading hidden">
@@ -120,10 +143,81 @@
             <h2>候选人评估与面试决策</h2>
           </div>
           <div class="result-actions">
+            <button id="realtimePauseBtn" type="button" class="secondary-btn hidden">Pause Stream</button>
+            <button id="realtimeEndBtn" type="button" class="primary-btn hidden">End Session</button>
+            <button id="viewFullReportBtn" type="button" class="secondary-btn hidden">&#x67E5;&#x770B;&#x5B8C;&#x6574;&#x5206;&#x6790;</button>
             <button id="editAgainBtn" type="button" class="secondary-btn">返回修改输入</button>
           </div>
         </header>
 
+        <section id="realtimeStage" class="dashboard-realtime hidden">
+          <article class="panel realtime-status-panel">
+            <div class="panel-head compact-head">
+              <div>
+                <p class="section-kicker">REALTIME SESSION</p>
+                <h3>&#x5B9E;&#x65F6;&#x4F1A;&#x8BDD;&#x72B6;&#x6001;</h3>
+              </div>
+            </div>
+            <div class="realtime-status-grid">
+              <div class="metric-chip"><span>&#x4F1A;&#x8BDD;&#x72B6;&#x6001;</span><strong id="realtimeSessionStatus">&#x672A;&#x5F00;&#x59CB;</strong></div>
+              <div class="metric-chip"><span>&#x89D2;&#x8272;&#x63A8;&#x65AD;</span><strong id="realtimeRoleConfidence">&#x5F85;&#x5224;&#x65AD;</strong></div>
+              <div class="metric-chip"><span>&#x5DF2;&#x63A8;&#x9001;&#x7247;&#x6BB5;</span><strong id="realtimeSegmentCount">0</strong></div>
+            </div>
+            <div id="realtimeRoleMap" class="bullet-list"></div>
+            <div class="audio-monitor-head">
+              <div>
+                <p class="section-kicker">AUDIO MONITOR</p>
+                <h4>&#x97F3;&#x9891;&#x8F93;&#x5165;&#x76D1;&#x89C6;&#x5668;</h4>
+              </div>
+              <div id="audioSourceState" class="audio-source-state">&#x5F85;&#x8FDE;&#x63A5;</div>
+            </div>
+            <div class="audio-route-controls">
+              <button id="toggleMicRouteBtn" type="button" class="audio-route-btn active">&#x9EA6;&#x514B;&#x98CE;&#x5DF2;&#x5F00;&#x542F;</button>
+              <button id="toggleSystemRouteBtn" type="button" class="audio-route-btn active">&#x7CFB;&#x7EDF;&#x97F3;&#x9891;&#x5DF2;&#x5F00;&#x542F;</button>
+            </div>
+            <div class="audio-meter-grid">
+              <div class="audio-meter-card">
+                <span>&#x9EA6;&#x514B;&#x98CE;</span>
+                <div class="audio-meter-track"><div id="micLevelBar" class="audio-meter-fill"></div></div>
+                <strong id="micLevelText">0%</strong>
+              </div>
+              <div class="audio-meter-card">
+                <span>&#x7CFB;&#x7EDF;&#x97F3;&#x9891;</span>
+                <div class="audio-meter-track"><div id="systemLevelBar" class="audio-meter-fill system"></div></div>
+                <strong id="systemLevelText">0%</strong>
+              </div>
+              <div class="audio-meter-card">
+                <span>&#x6DF7;&#x97F3;&#x540E;</span>
+                <div class="audio-meter-track"><div id="mixedLevelBar" class="audio-meter-fill mixed"></div></div>
+                <strong id="mixedLevelText">0%</strong>
+              </div>
+            </div>
+            <div id="audioDebugHint" class="audio-monitor-note">&#x7B49;&#x5F85;&#x97F3;&#x9891;&#x8F93;&#x5165;</div>
+          </article>
+
+          <article class="panel realtime-transcript-panel">
+            <div class="panel-head compact-head">
+              <div>
+                <p class="section-kicker">LIVE TRANSCRIPT</p>
+                <h3>&#x6D41;&#x5F0F;&#x5B57;&#x5E55;</h3>
+              </div>
+            </div>
+            <div id="realtimeLiveTranscript" class="live-transcript-list"></div>
+          </article>
+
+          <article class="panel realtime-followup-panel">
+            <div class="panel-head compact-head">
+              <div>
+                <p class="section-kicker">FOLLOW-UP</p>
+                <h3>&#x63A8;&#x8350;&#x63D0;&#x95EE;</h3>
+              </div>
+            </div>
+            <div id="realtimeSuggestionSummary" class="realtime-suggestion-summary">&#x6682;&#x65E0;&#x6EDA;&#x52A8;&#x5EFA;&#x8BAE;</div>
+            <div id="realtimeSuggestionList" class="numbered-followups realtime-followups-list"></div>
+          </article>
+        </section>
+
+        <div id="fullReportSections">
         <section class="dashboard-overview-lite">
           <article class="overview-hero-card">
             <div class="panel-head panel-head-space">
@@ -487,6 +581,7 @@
             </div>
           </details>
         </section>
+        </div>
       </section>
     </main>
     <script src="/static/app.js"></script>

@@ -1,7 +1,16 @@
 ﻿const transcriptEl = document.getElementById("transcript");
 const jobHintEl = document.getElementById("jobHint");
 const sampleSelectEl = document.getElementById("sampleSelect");
+const audioFileEl = document.getElementById("audioFile");
+const audioLanguageEl = document.getElementById("audioLanguage");
+const captureMicEl = document.getElementById("captureMic");
+const captureSystemEl = document.getElementById("captureSystem");
 const analyzeBtn = document.getElementById("analyzeBtn");
+const realtimeBtn = document.getElementById("realtimeBtn");
+const audioRealtimeBtn = document.getElementById("audioRealtimeBtn");
+const liveWsBtn = document.getElementById("liveWsBtn");
+const toggleMicRouteBtn = document.getElementById("toggleMicRouteBtn");
+const toggleSystemRouteBtn = document.getElementById("toggleSystemRouteBtn");
 const sampleBtn = document.getElementById("sampleBtn");
 const statusEl = document.getElementById("status");
 const inputView = document.getElementById("inputView");
@@ -14,6 +23,9 @@ const errorTextEl = document.getElementById("errorText");
 const retryBtn = document.getElementById("retryBtn");
 const backBtn = document.getElementById("backBtn");
 const editAgainBtn = document.getElementById("editAgainBtn");
+const realtimePauseBtn = document.getElementById("realtimePauseBtn");
+const realtimeEndBtn = document.getElementById("realtimeEndBtn");
+const viewFullReportBtn = document.getElementById("viewFullReportBtn");
 const quickCard = document.getElementById("modeQuickCard");
 const fullCard = document.getElementById("modeFullCard");
 const modeQuickEl = document.getElementById("modeQuick");
@@ -59,6 +71,32 @@ let lastPayload = null;
 let currentTaskId = null;
 let pollTimer = null;
 let loadingTimer = null;
+let realtimeSessionId = null;
+let realtimeSegments = [];
+let realtimeSegmentIndex = 0;
+let realtimeTimer = null;
+let realtimeRunning = false;
+let realtimeDemoMode = false;
+let liveStreamingMode = false;
+let micSocket = null;
+let micStream = null;
+let systemStream = null;
+let micAudioContext = null;
+let audioSourceNodes = [];
+let audioAnalyserNodes = {};
+let micProcessorNode = null;
+let micSilentGain = null;
+let levelMeterTimer = null;
+let liveMediaRecorders = [];
+let liveChunkDurationMs = 5000;
+let liveSourceEnabled = { mic: true, system: true };
+const LIVE_MIN_CHUNK_BYTES = { mic: 4000, system: 16000 };
+let liveChunkCursorMs = { mic: 0, system: 0 };
+let liveUploadInflight = { mic: Promise.resolve(), system: Promise.resolve() };
+let realtimePartialBySpeaker = {};
+let lastRenderedSegmentCount = 0;
+let pendingFinalRealtimeReport = null;
+let latestRealtimeSession = null;
 
 function byId(id) {
   return document.getElementById(id);
@@ -72,6 +110,33 @@ function setText(id, value, fallback = TEXT.na) {
 function setHtml(id, html) {
   const el = byId(id);
   if (el) el.innerHTML = html;
+}
+
+function setRouteButtonState(name) {
+  const btn = name === "mic" ? toggleMicRouteBtn : toggleSystemRouteBtn;
+  if (!btn) return;
+  const enabled = Boolean(liveSourceEnabled[name]);
+  btn.classList.toggle("active", enabled);
+  btn.classList.toggle("inactive", !enabled);
+  btn.textContent = name === "mic"
+    ? (enabled ? "\u9ea6\u514b\u98ce\u5df2\u5f00\u542f" : "\u9ea6\u514b\u98ce\u5df2\u5173\u95ed")
+    : (enabled ? "\u7cfb\u7edf\u97f3\u9891\u5df2\u5f00\u542f" : "\u7cfb\u7edf\u97f3\u9891\u5df2\u5173\u95ed");
+}
+
+function refreshRouteButtons() {
+  setRouteButtonState("mic");
+  setRouteButtonState("system");
+}
+
+function toggleLiveRoute(name) {
+  liveSourceEnabled[name] = !liveSourceEnabled[name];
+  refreshRouteButtons();
+  const hint = byId("audioDebugHint");
+  if (hint) {
+    hint.textContent = name === "mic"
+      ? (liveSourceEnabled[name] ? "\u5df2\u6062\u590d\u63a5\u6536\u9ea6\u514b\u98ce\u5206\u7247\u3002" : "\u5df2\u6682\u505c\u63a5\u6536\u9ea6\u514b\u98ce\u5206\u7247\u3002")
+      : (liveSourceEnabled[name] ? "\u5df2\u6062\u590d\u63a5\u6536\u7cfb\u7edf\u97f3\u9891\u5206\u7247\u3002" : "\u5df2\u6682\u505c\u63a5\u6536\u7cfb\u7edf\u97f3\u9891\u5206\u7247\u3002");
+  }
 }
 
 function safeText(value, fallback = TEXT.na) {
@@ -107,6 +172,21 @@ function showView(name) {
   inputView.classList.toggle("hidden", name !== "input");
   loadingView.classList.toggle("hidden", name !== "loading");
   resultView.classList.toggle("hidden", name !== "result");
+}
+
+function setFullReportVisible(visible) {
+  byId("fullReportSections")?.classList.toggle("hidden", !visible);
+}
+
+function setRealtimeWorkspaceMode(active) {
+  byId("realtimeStage")?.classList.toggle("hidden", !active);
+  if (active) setFullReportVisible(false);
+}
+
+function scrollRealtimeTranscriptToLatest() {
+  const transcriptList = byId("realtimeLiveTranscript");
+  if (!transcriptList) return;
+  transcriptList.scrollTop = transcriptList.scrollHeight;
 }
 
 function renderLoading(stepIndex = 0) {
@@ -406,6 +486,8 @@ function renderPersonalitySection(report, show) {
 }
 
 function renderReport(report, sourceHint = null) {
+  setRealtimeWorkspaceMode(false);
+  setFullReportVisible(true);
   const primary = getPrimaryAnalysis(report);
   const showFull = getCurrentMode() === "full" || Boolean(report.bigfive_analysis && Object.keys(report.bigfive_analysis).length);
   const source = sourceHint || primary.source;
@@ -418,6 +500,846 @@ function renderReport(report, sourceHint = null) {
   renderConflictSection(report, showFull);
   renderPersonalitySection(report, showFull);
   statusEl.textContent = source;
+}
+
+function setAudioLevel(name, value) {
+  const pct = Math.max(0, Math.min(100, Math.round(value * 100)));
+  const barId = name === "mic" ? "micLevelBar" : name === "system" ? "systemLevelBar" : "mixedLevelBar";
+  const textId = name === "mic" ? "micLevelText" : name === "system" ? "systemLevelText" : "mixedLevelText";
+  const bar = byId(barId);
+  const text = byId(textId);
+  if (bar) {
+    bar.style.width = `${pct}%`;
+    bar.closest(".audio-meter-card")?.classList.toggle("active", pct >= 8);
+  }
+  if (text) text.textContent = `${pct}%`;
+}
+
+function computeAnalyserLevel(analyser) {
+  if (!analyser) return 0;
+  const buffer = new Float32Array(analyser.fftSize);
+  analyser.getFloatTimeDomainData(buffer);
+  let sumSquares = 0;
+  for (let i = 0; i < buffer.length; i += 1) {
+    sumSquares += buffer[i] * buffer[i];
+  }
+  return Math.min(1, Math.sqrt(sumSquares / buffer.length) * 2.5);
+}
+
+function startLevelMeter() {
+  if (levelMeterTimer) cancelAnimationFrame(levelMeterTimer);
+  const tick = () => {
+    setAudioLevel("mic", computeAnalyserLevel(audioAnalyserNodes.mic));
+    setAudioLevel("system", computeAnalyserLevel(audioAnalyserNodes.system));
+    setAudioLevel("mixed", computeAnalyserLevel(audioAnalyserNodes.mixed));
+    levelMeterTimer = requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+function stopLevelMeter() {
+  if (levelMeterTimer) {
+    cancelAnimationFrame(levelMeterTimer);
+    levelMeterTimer = null;
+  }
+  audioAnalyserNodes = {};
+  setAudioLevel("mic", 0);
+  setAudioLevel("system", 0);
+  setAudioLevel("mixed", 0);
+}
+
+function bytesToBase64(bytes) {
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
+function downsampleBuffer(buffer, inputRate, outputRate = 24000) {
+  if (inputRate === outputRate) return buffer;
+  const ratio = inputRate / outputRate;
+  const outputLength = Math.round(buffer.length / ratio);
+  const output = new Float32Array(outputLength);
+  let offsetResult = 0;
+  let offsetBuffer = 0;
+  while (offsetResult < output.length) {
+    const nextOffsetBuffer = Math.round((offsetResult + 1) * ratio);
+    let accum = 0;
+    let count = 0;
+    for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i += 1) {
+      accum += buffer[i];
+      count += 1;
+    }
+    output[offsetResult] = count ? accum / count : 0;
+    offsetResult += 1;
+    offsetBuffer = nextOffsetBuffer;
+  }
+  return output;
+}
+
+function floatTo16BitPCM(floatBuffer) {
+  const pcm = new Int16Array(floatBuffer.length);
+  for (let i = 0; i < floatBuffer.length; i += 1) {
+    const sample = Math.max(-1, Math.min(1, floatBuffer[i]));
+    pcm[i] = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
+  }
+  return new Uint8Array(pcm.buffer);
+}
+
+async function flushLiveAudioCapture() {
+  if (micSocket && micSocket.readyState === WebSocket.OPEN) {
+    if (micStream && liveSourceEnabled.mic) sendSocketMessage({ type: "commit", source: "mic" });
+    if (systemStream && liveSourceEnabled.system) sendSocketMessage({ type: "commit", source: "system" });
+    await new Promise((resolve) => window.setTimeout(resolve, 450));
+  }
+
+  const recorders = [...liveMediaRecorders];
+  if (!recorders.length) return;
+
+  recorders.forEach((item) => {
+    try {
+      if (item.recorder.state === "recording") {
+        item.recorder.requestData();
+      }
+    } catch (error) {
+      console.warn(error);
+    }
+  });
+
+  await Promise.allSettled(Object.values(liveUploadInflight));
+  await new Promise((resolve) => window.setTimeout(resolve, 400));
+}
+
+function stopLiveAudioCapture() {
+  if (liveMediaRecorders.length) {
+    liveMediaRecorders.forEach((item) => {
+      try {
+        if (item.recorder.state !== "inactive") {
+          item.recorder.stop();
+        }
+      } catch (error) {
+        console.warn(error);
+      }
+    });
+    liveMediaRecorders = [];
+  }
+  if (micProcessorNode) {
+    micProcessorNode.disconnect();
+    micProcessorNode.onaudioprocess = null;
+    micProcessorNode = null;
+  }
+  stopLevelMeter();
+  if (audioSourceNodes.length) {
+    audioSourceNodes.forEach((node) => {
+      try {
+        node.disconnect();
+      } catch (error) {
+        console.warn(error);
+      }
+    });
+    audioSourceNodes = [];
+  }
+  if (micSilentGain) {
+    micSilentGain.disconnect();
+    micSilentGain = null;
+  }
+  if (micStream) {
+    micStream.getTracks().forEach((track) => track.stop());
+    micStream = null;
+  }
+  if (systemStream) {
+    systemStream.getTracks().forEach((track) => track.stop());
+    systemStream = null;
+  }
+  if (micAudioContext) {
+    micAudioContext.close();
+    micAudioContext = null;
+  }
+  liveStreamingMode = false;
+  if (micSocket) {
+    try {
+      if (micSocket.readyState === WebSocket.OPEN) {
+        micSocket.send(JSON.stringify({ type: "close" }));
+      }
+      micSocket.close();
+    } catch (error) {
+      console.warn(error);
+    }
+    micSocket = null;
+  }
+  liveChunkCursorMs = { mic: 0, system: 0 };
+  liveUploadInflight = { mic: Promise.resolve(), system: Promise.resolve() };
+}
+
+async function getRequestedAudioStreams() {
+  const wantMic = Boolean(captureMicEl?.checked);
+  const wantSystem = Boolean(captureSystemEl?.checked);
+
+  if (!wantMic && !wantSystem) {
+    throw new Error("Please select at least one audio source.");
+  }
+
+  let nextMicStream = null;
+  let nextSystemStream = null;
+
+  if (wantMic) {
+    nextMicStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+    });
+  }
+
+  if (wantSystem) {
+    try {
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: true,
+      });
+      const audioTracks = displayStream.getAudioTracks();
+      const videoTracks = displayStream.getVideoTracks();
+      videoTracks.forEach((track) => track.stop());
+      if (!audioTracks.length) {
+        throw new Error("No system audio track was shared. Re-run and enable audio sharing.");
+      }
+      nextSystemStream = new MediaStream(audioTracks);
+    } catch (error) {
+      if (nextMicStream) {
+        nextMicStream.getTracks().forEach((track) => track.stop());
+      }
+      throw error;
+    }
+  }
+
+  return { nextMicStream, nextSystemStream };
+}
+
+function connectStreamToProcessor(stream, name) {
+  if (!stream || !micAudioContext) return;
+  const sourceNode = micAudioContext.createMediaStreamSource(stream);
+  const analyser = micAudioContext.createAnalyser();
+  analyser.fftSize = 2048;
+  sourceNode.connect(analyser);
+  if (micProcessorNode) sourceNode.connect(micProcessorNode);
+
+  const processor = micAudioContext.createScriptProcessor(2048, 1, 1);
+  processor.onaudioprocess = (event) => {
+    if (!liveStreamingMode || !realtimeRunning || !liveSourceEnabled[name]) return;
+    if (!micSocket || micSocket.readyState !== WebSocket.OPEN) return;
+    const input = event.inputBuffer.getChannelData(0);
+    const downsampled = downsampleBuffer(input, micAudioContext.sampleRate, 16000);
+    if (!downsampled.length) return;
+    const pcmBytes = floatTo16BitPCM(downsampled);
+    sendSocketMessage({
+      type: "audio_chunk",
+      source: name,
+      audio: bytesToBase64(pcmBytes),
+    });
+  };
+  sourceNode.connect(processor);
+  if (micSilentGain) processor.connect(micSilentGain);
+
+  audioAnalyserNodes[name] = analyser;
+  audioSourceNodes.push(sourceNode, analyser, processor);
+}
+
+function speakerDisplayLabel(speakerId, roleMap = {}) {
+  const role = roleMap[speakerId];
+  if (role === "interviewer") return "\u9762\u8bd5\u5b98\uff08\u63a8\u65ad\uff09";
+  if (role === "candidate") return "\u5019\u9009\u4eba\uff08\u63a8\u65ad\uff09";
+  if (speakerId === "speaker_a") return "\u8bf4\u8bdd\u4ebaA";
+  if (speakerId === "speaker_b") return "\u8bf4\u8bdd\u4ebaB";
+  return speakerId || TEXT.na;
+}
+
+function looksLikeQuestion(text) {
+  const raw = safeText(text, "").trim();
+  if (!raw) return false;
+  if (/[\uFF1F?]$/.test(raw)) return true;
+  return /(\u8bf7\u95ee|\u80fd\u4e0d\u80fd|\u80fd\u5426|\u53ef\u4e0d\u53ef\u4ee5|\u65b9\u4fbf\u8bb2\u8bb2|\u8bb2\u8bb2|\u4ecb\u7ecd\u4e00\u4e0b|\u8bf4\u4e00\u4e0b|\u4e3a\u4ec0\u4e48|\u600e\u4e48|\u5982\u4f55|\u6709\u6ca1\u6709|\u662f\u5426|\u54ea\u4e00\u4e2a|\u4ec0\u4e48\u662f|\u4f60\u80fd)/.test(raw);
+}
+
+function looksLikeAnswer(text) {
+  const raw = safeText(text, "").trim();
+  if (!raw) return false;
+  const answerTokens = /(\u6211|\u6211\u4eec|\u5f53\u65f6|\u540e\u6765|\u6700\u540e|\u8d1f\u8d23|\u505a\u4e86|\u9879\u76ee|\u5ba2\u6237|\u63a8\u8fdb|\u5904\u7406|\u89e3\u51b3|\u590d\u76d8|\u7ed3\u679c|\u63d0\u5347|\u843d\u5730|\u6c9f\u901a|\u56e2\u961f)/;
+  return raw.length >= 18 || answerTokens.test(raw);
+}
+
+function inferSingleSourceSegmentRoles(segments) {
+  const inferred = {};
+  let lastRole = "interviewer";
+  for (const item of segments || []) {
+    const text = safeText(item.text, "").trim();
+    if (!text) continue;
+    let role = null;
+    if (looksLikeQuestion(text)) {
+      role = "interviewer";
+    } else if (looksLikeAnswer(text)) {
+      role = "candidate";
+    } else {
+      role = lastRole === "interviewer" ? "candidate" : "interviewer";
+    }
+    inferred[item.id] = role;
+    lastRole = role;
+  }
+  return inferred;
+}
+
+function buildRealtimeTranscriptRows(session, roleMap = {}) {
+  const stableSegments = session.segments || [];
+  const singleSpeakerMode = !Object.keys(roleMap || {}).length && new Set(stableSegments.map((item) => item.speaker_id)).size <= 1;
+  const inferredRoles = singleSpeakerMode ? inferSingleSourceSegmentRoles(stableSegments) : {};
+  return stableSegments.map((item) => {
+    const label = singleSpeakerMode
+      ? (inferredRoles[item.id] === "interviewer" ? "\u9762\u8bd5\u5b98\uff08\u6587\u672c\u63a8\u65ad\uff09" : "\u5019\u9009\u4eba\uff08\u6587\u672c\u63a8\u65ad\uff09")
+      : speakerDisplayLabel(item.speaker_id, roleMap);
+    return `<div class="live-transcript-item"><strong>${label}</strong><p>${safeText(item.text)}</p></div>`;
+  });
+}
+
+function handleLiveSocketMessage(message) {
+  if (!message || typeof message !== "object") return;
+  const hint = byId("audioDebugHint");
+  const sourceLabel = message.source === "mic" ? "麦克风" : message.source === "system" ? "系统音频" : "实时链路";
+
+  if (message.type === "session.ready") {
+    setText("audioSourceState", "已连接阿里实时 ASR");
+    if (hint) hint.textContent = "实时音频链路已连通。";
+    return;
+  }
+
+  if (message.type === "source.ready") {
+    if (hint) hint.textContent = `${sourceLabel} 输入正常。`;
+    return;
+  }
+
+  if (message.type === "transcript.delta") {
+    const speakerId = message.speaker_id || (message.source === "mic" ? "speaker_a" : "speaker_b");
+    realtimePartialBySpeaker[speakerId] = `${realtimePartialBySpeaker[speakerId] || ""}${message.delta || ""}`.trim();
+    setText("audioSourceState", `${sourceLabel} \u6b63\u5728\u8bc6\u522b`);
+    if (hint) hint.textContent = `${sourceLabel} \u6b63\u5728\u8bc6\u522b\u3002`;
+    return;
+  }
+
+  if (message.type === "session.update" && message.session) {
+    latestRealtimeSession = message.session;
+    const segments = message.session.segments || [];
+    if (segments.length > lastRenderedSegmentCount) {
+      const lastSegment = segments[segments.length - 1] || {};
+      if (lastSegment.speaker_id) {
+        delete realtimePartialBySpeaker[lastSegment.speaker_id];
+      }
+      lastRenderedSegmentCount = segments.length;
+    }
+    renderRealtimeResponse(message.session);
+    setText("audioSourceState", "阿里实时 ASR 转写中");
+    return;
+  }
+
+  if (message.type === "speech.started") {
+    setText("audioSourceState", `${sourceLabel} 检测到语音`);
+    return;
+  }
+
+  if (message.type === "speech.stopped") {
+    setText("audioSourceState", `${sourceLabel} 等待后续语音`);
+    return;
+  }
+
+  if (message.type === "error") {
+    const detail = [safeText(message.message, "实时链路错误"), safeText(message.hint, "")].filter(Boolean).join(" ");
+    showError(detail);
+    if (hint) hint.textContent = detail;
+    setText("audioSourceState", "连接异常");
+  }
+}
+
+function openLiveSocket(wsUrl) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const socket = new WebSocket(wsUrl);
+    socket.onopen = () => {
+      settled = true;
+      micSocket = socket;
+      resolve(socket);
+    };
+    socket.onmessage = (event) => {
+      try {
+        handleLiveSocketMessage(JSON.parse(event.data));
+      } catch (error) {
+        console.warn(error);
+      }
+    };
+    socket.onerror = () => {
+      if (!settled) {
+        settled = true;
+        reject(new Error("Local realtime websocket connection failed."));
+      }
+    };
+    socket.onclose = () => {
+      if (micSocket === socket) micSocket = null;
+      if (!liveStreamingMode) return;
+      setText("audioSourceState", "\u8fde\u63a5\u5df2\u65ad\u5f00");
+      const hint = byId("audioDebugHint");
+      if (hint) hint.textContent = "\u672c\u5730\u5b9e\u65f6\u94fe\u8def\u5df2\u65ad\u5f00\uff0c\u8bf7\u68c0\u67e5 DASHSCOPE_API_KEY \u548c\u963f\u91cc realtime \u914d\u7f6e\u3002";
+    };
+  });
+}
+
+function sendSocketMessage(payload) {
+  if (!micSocket || micSocket.readyState !== WebSocket.OPEN) return;
+  micSocket.send(JSON.stringify(payload));
+}
+
+function pickRecorderMimeType() {
+  const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
+  for (const mimeType of candidates) {
+    if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(mimeType)) {
+      return mimeType;
+    }
+  }
+  return "";
+}
+
+async function uploadLiveAudioChunk(blob, sourceName) {
+  if (!realtimeSessionId || !blob || !blob.size) return;
+  if (!liveSourceEnabled[sourceName]) return;
+
+  const minBytes = LIVE_MIN_CHUNK_BYTES[sourceName] || 0;
+  if (blob.size < minBytes) {
+    const hint = byId("audioDebugHint");
+    if (hint) {
+      hint.textContent = `${sourceName === "mic" ? "\u9ea6\u514b\u98ce" : "\u7cfb\u7edf\u97f3\u9891"} \u5206\u7247\u8fc7\u5c0f\uff0c\u5df2\u8df3\u8fc7\u4e0a\u4f20\u3002`;
+    }
+    return;
+  }
+
+  const speakerId = sourceName === "mic" ? "speaker_a" : "speaker_b";
+  const startMs = liveChunkCursorMs[sourceName] || 0;
+  const endMs = startMs + liveChunkDurationMs;
+  liveChunkCursorMs[sourceName] = endMs;
+
+  const formData = new FormData();
+  const filename = `${sourceName}_${Date.now()}.${(blob.type || "audio/webm").includes("mp4") ? "m4a" : "webm"}`;
+  formData.append("audio", blob, filename);
+  formData.append("language", (audioLanguageEl?.value || "zh").trim() || "zh");
+  formData.append("speaker_id", speakerId);
+  formData.append("start_ms", String(startMs));
+  formData.append("end_ms", String(endMs));
+
+  const response = await fetch(`/api/realtime/session/${realtimeSessionId}/transcribe_chunk`, {
+    method: "POST",
+    body: formData,
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || TEXT.requestFailed);
+  }
+
+  if (data.session) {
+    renderRealtimeResponse(data.session);
+  }
+  const hint = byId("audioDebugHint");
+  if (hint) {
+    hint.textContent = data.transcribed
+      ? `\u5df2\u8f6c\u5199 ${sourceName === "mic" ? "\u9ea6\u514b\u98ce" : "\u7cfb\u7edf\u97f3\u9891"} \u5206\u7247: ${safeText(data.text, "")}`
+      : `${sourceName === "mic" ? "\u9ea6\u514b\u98ce" : "\u7cfb\u7edf\u97f3\u9891"} \u5206\u7247\u4e0a\u4f20\u6210\u529f\uff0c\u4f46\u672a\u8bc6\u522b\u5230\u6587\u672c\u3002`;
+  }
+  setText("audioSourceState", data.transcribed ? "HTTP \u5206\u7247\u8f6c\u5199\u4e2d" : "\u7b49\u5f85\u53ef\u8bc6\u522b\u8bed\u97f3");
+}
+
+function startSourceRecorder(stream, sourceName) {
+  if (!stream) return;
+  const mimeType = pickRecorderMimeType();
+  const options = mimeType ? { mimeType } : undefined;
+  const recorder = options ? new MediaRecorder(stream, options) : new MediaRecorder(stream);
+
+  recorder.ondataavailable = (event) => {
+    if (!event.data || !event.data.size) return;
+    const task = liveUploadInflight[sourceName].then(() => uploadLiveAudioChunk(event.data, sourceName));
+    liveUploadInflight[sourceName] = task.catch((error) => {
+      showError(error.message || TEXT.requestFailed);
+      const hint = byId("audioDebugHint");
+      if (hint) hint.textContent = error.message || TEXT.requestFailed;
+      setText("audioSourceState", "HTTP \u5206\u7247\u4e0a\u4f20\u5931\u8d25");
+    });
+  };
+  recorder.onerror = (event) => {
+    const message = event?.error?.message || "MediaRecorder failed";
+    showError(message);
+    setText("audioSourceState", "\u5f55\u97f3\u5206\u7247\u5931\u8d25");
+  };
+  recorder.start(liveChunkDurationMs);
+  liveMediaRecorders.push({ name: sourceName, recorder });
+}
+
+async function startLiveAudioWs() {
+  resetRealtimeState();
+  hideError();
+
+  const response = await fetch("/api/realtime/session/start", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ job_hint_optional: jobHintEl.value.trim() }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || TEXT.requestFailed);
+
+  realtimeSessionId = data.session_id;
+  realtimeDemoMode = true;
+  liveStreamingMode = true;
+  realtimeRunning = true;
+  showView("result");
+  setRealtimeWorkspaceMode(true);
+  setRealtimeControls(true, true);
+  statusEl.textContent = "\u6b63\u5728\u8fde\u63a5\u963f\u91cc\u5b9e\u65f6 ASR";
+  renderRealtimeSessionPanel({ status: data.status, segment_count: 0, segments: [], role_inference: {} });
+
+  const streams = await getRequestedAudioStreams();
+  micStream = streams.nextMicStream;
+  systemStream = streams.nextSystemStream;
+
+  const AudioCtor = window.AudioContext || window.webkitAudioContext;
+  micAudioContext = new AudioCtor();
+  if (micAudioContext.state === "suspended") {
+    await micAudioContext.resume();
+  }
+
+  const mixedAnalyser = micAudioContext.createAnalyser();
+  mixedAnalyser.fftSize = 2048;
+  audioAnalyserNodes.mixed = mixedAnalyser;
+  micProcessorNode = micAudioContext.createGain();
+  micProcessorNode.connect(mixedAnalyser);
+  micSilentGain = micAudioContext.createGain();
+  micSilentGain.gain.value = 0;
+  mixedAnalyser.connect(micSilentGain);
+  micSilentGain.connect(micAudioContext.destination);
+
+  const wsUrl = `${data.ws_url}&language=${encodeURIComponent((audioLanguageEl?.value || "zh").trim() || "zh")}`;
+  await openLiveSocket(wsUrl);
+  connectStreamToProcessor(micStream, "mic");
+  connectStreamToProcessor(systemStream, "system");
+  startLevelMeter();
+
+  liveSourceEnabled = { mic: Boolean(micStream), system: Boolean(systemStream) };
+  refreshRouteButtons();
+
+  const sourceLabel = [micStream ? "\u9ea6\u514b\u98ce" : null, systemStream ? "\u7cfb\u7edf\u97f3\u9891" : null].filter(Boolean).join(" + ");
+  setText("audioSourceState", sourceLabel || "\u672a\u9009\u62e9\u97f3\u6e90");
+  statusEl.textContent = `\u963f\u91cc\u5b9e\u65f6 ASR \u91c7\u96c6\u4e2d: ${sourceLabel}`;
+  const hint = byId("audioDebugHint");
+  if (hint) hint.textContent = "\u5b9e\u65f6\u6a21\u5f0f\u5df2\u542f\u52a8\uff0c\u4ec5\u663e\u793a\u76d1\u63a7\u3001\u8f6c\u5f55\u548c\u63a8\u8350\u63d0\u95ee\u3002";
+}
+
+function stopRealtimePlayback() {
+  if (realtimeTimer) {
+    clearInterval(realtimeTimer);
+    realtimeTimer = null;
+  }
+  realtimeRunning = false;
+}
+
+function setRealtimeControls(active, running = false) {
+  byId("realtimeStage")?.classList.toggle("hidden", !active);
+  realtimePauseBtn?.classList.toggle("hidden", !active);
+  realtimeEndBtn?.classList.toggle("hidden", !active);
+  if (active) {
+    viewFullReportBtn?.classList.add("hidden");
+  }
+  if (realtimePauseBtn) {
+    realtimePauseBtn.textContent = running ? "\u6682\u505c\u63a8\u9001" : "\u7ee7\u7eed\u63a8\u9001";
+  }
+}
+
+function resetRealtimeState() {
+  stopRealtimePlayback();
+  stopLiveAudioCapture();
+  realtimeSessionId = null;
+  realtimeSegments = [];
+  realtimeSegmentIndex = 0;
+  realtimeDemoMode = false;
+  liveStreamingMode = false;
+  realtimePartialBySpeaker = {};
+  lastRenderedSegmentCount = 0;
+  pendingFinalRealtimeReport = null;
+  latestRealtimeSession = null;
+  setRealtimeWorkspaceMode(false);
+  setRealtimeControls(false, false);
+  setText("realtimeSessionStatus", "\u672a\u5f00\u59cb");
+  setText("realtimeRoleConfidence", "\u5f85\u5224\u65ad");
+  setText("realtimeSegmentCount", 0, "0");
+  setText("audioSourceState", "\u5f85\u8fde\u63a5");
+  liveSourceEnabled = { mic: true, system: true };
+  refreshRouteButtons();
+  setHtml("realtimeRoleMap", `<div class="bullet-item"><span class="bullet-dot"></span><span>\u6682\u65e0\u89d2\u8272\u63a8\u65ad</span></div>`);
+  setText("realtimeSuggestionSummary", "\u6682\u65e0\u6eda\u52a8\u5efa\u8bae");
+  setHtml("realtimeSuggestionList", `<div class="panel-empty-note">\u6682\u65e0\u63a8\u8350\u63d0\u95ee</div>`);
+  setHtml("realtimeLiveTranscript", `<div class="panel-empty-note">\u7b49\u5f85\u5b9e\u65f6\u7247\u6bb5</div>`);
+}
+
+function parseRealtimeSegments(rawText) {
+  const lines = rawText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const labelMap = new Map();
+  let nextSpeakerIndex = 0;
+  let cursor = 0;
+
+  return lines.map((line) => {
+    const match = line.match(/^([^:\uff1a]{1,20})[:\uff1a]\s*(.+)$/);
+    const label = match ? match[1].trim() : `speaker_${nextSpeakerIndex}`;
+    const text = (match ? match[2] : line).trim();
+    if (!labelMap.has(label)) {
+      labelMap.set(label, nextSpeakerIndex === 0 ? "speaker_a" : "speaker_b");
+      nextSpeakerIndex += 1;
+    }
+    const speakerId = labelMap.get(label) || "speaker_b";
+    const duration = Math.max(1200, Math.min(4800, text.length * 120));
+    const segment = {
+      speaker_id: speakerId,
+      text,
+      start_ms: cursor,
+      end_ms: cursor + duration,
+      final: true,
+    };
+    cursor += duration;
+    return segment;
+  }).filter((item) => item.text);
+}
+
+function renderRealtimeSessionPanel(session) {
+  latestRealtimeSession = session;
+  setText("realtimeSessionStatus", session.status || "\u672a\u77e5");
+  setText("realtimeSegmentCount", session.segment_count || 0, "0");
+
+  const roleState = session.role_inference || {};
+  const roleMapping = roleState.mapping || {};
+  const roleStateName = roleState.state || "insufficient";
+  const stableSegments = session.segments || [];
+  const singleSpeakerMode = !Object.keys(roleMapping).length && new Set(stableSegments.map((item) => item.speaker_id)).size <= 1 && stableSegments.length > 0;
+  if (roleState.ready) {
+    setText("realtimeRoleConfidence", `${Math.round(Number(roleState.confidence || 0) * 100)}%`);
+  } else if (singleSpeakerMode) {
+    setText("realtimeRoleConfidence", "\u6587\u672c\u63a8\u65ad\uff08\u5355\u8def\u97f3\u9891\uff09");
+  } else if (roleStateName === "single_speaker") {
+    setText("realtimeRoleConfidence", "\u672a\u542f\u7528\uff08\u5355\u8def\u97f3\u9891\uff09");
+  } else if (roleStateName === "warming_up") {
+    setText("realtimeRoleConfidence", "\u79ef\u7d2f\u4e2d");
+  } else {
+    setText("realtimeRoleConfidence", "\u8bc1\u636e\u4e0d\u8db3");
+  }
+
+  const roleLines = [];
+  if (singleSpeakerMode) {
+    roleLines.push(`<div class="bullet-item"><span class="bullet-dot"></span><span>当前为单路音频，按句子内容临时推断面试官 / 候选人。</span></div>`);
+  }
+  if (Object.keys(roleMapping).length) {
+    Object.keys(roleMapping).forEach((speakerId) => {
+      roleLines.push(`<div class="bullet-item"><span class="bullet-dot"></span><span>${speakerDisplayLabel(speakerId, roleMapping)}</span></div>`);
+    });
+  }
+  (roleState.reasons || []).forEach((item) => {
+    roleLines.push(`<div class="bullet-item"><span class="bullet-dot"></span><span>${trimText(item, 90)}</span></div>`);
+  });
+  setHtml("realtimeRoleMap", roleLines.join("") || `<div class="bullet-item"><span class="bullet-dot"></span><span>\u6682\u65e0\u89d2\u8272\u63a8\u65ad</span></div>`);
+
+  const transcriptRows = buildRealtimeTranscriptRows(session, roleMapping);
+  setHtml("realtimeLiveTranscript", transcriptRows.join("") || `<div class="panel-empty-note">\u7b49\u5f85\u5b9e\u65f6\u7247\u6bb5</div>`);
+  scrollRealtimeTranscriptToLatest();
+
+  const rolling = session.rolling_analysis || {};
+  setText("realtimeSuggestionSummary", trimText(rolling.summary || rolling.risk_summary || "\u6eda\u52a8\u5efa\u8bae\u5c06\u968f\u7740\u5b9e\u65f6\u8f6c\u5f55\u9010\u6b65\u51fa\u73b0\u3002", 120));
+  setHtml(
+    "realtimeSuggestionList",
+    createList(
+      rolling.follow_up_questions || [],
+      (item, index) => `<div class="followup-item"><span class="followup-index">${index + 1}</span><div><strong>${trimText(item.question || item, 90)}</strong><p>${trimText(item.purpose || "\u57fa\u4e8e\u5f53\u524d\u56de\u7b54\u7684\u4e0b\u4e00\u6b65\u8ffd\u95ee\u5efa\u8bae", 90)}</p></div></div>`,
+      "\u6682\u65e0\u63a8\u8350\u63d0\u95ee"
+    )
+  );
+}
+
+function renderRealtimeResponse(session, finalSource = null) {
+  realtimeDemoMode = true;
+  setRealtimeWorkspaceMode(true);
+  setRealtimeControls(true, realtimeRunning);
+  renderRealtimeSessionPanel(session);
+
+  if (session.final_report) {
+    pendingFinalRealtimeReport = { report: session.final_report, source: finalSource || "\u5b9e\u65f6\u4f1a\u8bdd\u603b\u7ed3" };
+    statusEl.textContent = "\u5b9e\u65f6\u4f1a\u8bdd\u5df2\u7ed3\u675f";
+    setRealtimeControls(false, false);
+    viewFullReportBtn?.classList.remove("hidden");
+  } else {
+    statusEl.textContent = "\u5b9e\u65f6\u4f1a\u8bdd\u4e2d";
+  }
+}
+
+async function appendRealtimeSegment() {
+  if (!realtimeSessionId || realtimeSegmentIndex >= realtimeSegments.length) {
+    stopRealtimePlayback();
+    setRealtimeControls(true, false);
+    return;
+  }
+
+  const segment = realtimeSegments[realtimeSegmentIndex];
+  const response = await fetch(`/api/realtime/session/${realtimeSessionId}/append`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(segment),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || TEXT.requestFailed);
+
+  realtimeSegmentIndex += 1;
+  renderRealtimeResponse(data);
+
+  if (realtimeSegmentIndex >= realtimeSegments.length) {
+    stopRealtimePlayback();
+    setRealtimeControls(true, false);
+  }
+}
+
+function startRealtimePlayback() {
+  if (!realtimeSessionId || realtimeRunning) return;
+  realtimeRunning = true;
+  setRealtimeControls(true, true);
+  realtimeTimer = setInterval(async () => {
+    try {
+      await appendRealtimeSegment();
+    } catch (error) {
+      stopRealtimePlayback();
+      setRealtimeControls(true, false);
+      showError(error.message || TEXT.requestFailed);
+    }
+  }, 1100);
+}
+
+async function toggleRealtimePlayback() {
+  if (!realtimeSessionId) return;
+  if (liveStreamingMode) {
+    realtimeRunning = !realtimeRunning;
+    setRealtimeControls(true, realtimeRunning);
+    statusEl.textContent = realtimeRunning ? "\u963f\u91cc\u5b9e\u65f6 ASR \u91c7\u96c6\u4e2d" : "\u963f\u91cc\u5b9e\u65f6 ASR \u5df2\u6682\u505c";
+    if (!realtimeRunning) {
+      await flushLiveAudioCapture();
+    }
+    return;
+  }
+  if (realtimeRunning) {
+    stopRealtimePlayback();
+    setRealtimeControls(true, false);
+    return;
+  }
+  if (realtimeSegmentIndex >= realtimeSegments.length) return;
+  startRealtimePlayback();
+}
+
+async function endRealtimeSession() {
+  if (!realtimeSessionId) return;
+  stopRealtimePlayback();
+  await flushLiveAudioCapture();
+  const response = await fetch(`/api/realtime/session/${realtimeSessionId}/end`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({}),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || TEXT.requestFailed);
+  renderRealtimeResponse(data, "\u5b9e\u65f6\u4f1a\u8bdd\u603b\u7ed3");
+  realtimeSessionId = null;
+  liveStreamingMode = false;
+  stopLiveAudioCapture();
+}
+
+async function transcribeAudioToSegments() {
+  const file = audioFileEl?.files?.[0];
+  if (!file) {
+    window.alert("\u8bf7\u5148\u9009\u62e9\u97f3\u9891\u6587\u4ef6\u3002");
+    return null;
+  }
+
+  const formData = new FormData();
+  formData.append("audio", file);
+  formData.append("language", (audioLanguageEl?.value || "zh").trim() || "zh");
+
+  const response = await fetch("/api/audio/transcribe", {
+    method: "POST",
+    body: formData,
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || TEXT.requestFailed);
+  return data;
+}
+
+async function runRealtimeAudioDemo() {
+  resetRealtimeState();
+  hideError();
+
+  const transcription = await transcribeAudioToSegments();
+  if (!transcription || !(transcription.segments || []).length) {
+    throw new Error("\u97f3\u9891\u8f6c\u5199\u6ca1\u6709\u8fd4\u56de\u53ef\u7528\u7247\u6bb5");
+  }
+
+  transcriptEl.value = transcription.transcript_preview || transcriptEl.value;
+  const response = await fetch("/api/realtime/session/start", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ job_hint_optional: jobHintEl.value.trim() }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || TEXT.requestFailed);
+
+  realtimeSessionId = data.session_id;
+  realtimeSegments = transcription.segments;
+  realtimeSegmentIndex = 0;
+  realtimeDemoMode = true;
+  showView("result");
+  statusEl.textContent = "\u771f\u5b9e\u97f3\u9891\u8f6c\u5199\u4e2d";
+  setRealtimeControls(true, true);
+  renderRealtimeSessionPanel({ status: data.status, segment_count: 0, segments: [], role_inference: {} });
+
+  await appendRealtimeSegment();
+  startRealtimePlayback();
+}
+
+async function runRealtimeDemo() {
+  const transcript = transcriptEl.value.trim();
+  if (!transcript) {
+    window.alert("\u8bf7\u5148\u586b\u5165\u5e26\u89d2\u8272\u524d\u7f00\u7684\u5bf9\u8bdd\u6587\u672c\u3002\n\u4f8b\u5982\uff1a\u9762\u8bd5\u5b98\uff1a...\n\u5019\u9009\u4eba\uff1a...");
+    return;
+  }
+
+  const segments = parseRealtimeSegments(transcript);
+  if (segments.length < 2) {
+    window.alert("\u5b9e\u65f6\u6f14\u793a\u81f3\u5c11\u9700\u8981\u4e24\u6bb5\u5bf9\u8bdd\u6587\u672c\u3002\n\u5efa\u8bae\u4f7f\u7528\u5e26\u89d2\u8272\u524d\u7f00\u7684\u591a\u884c\u5bf9\u8bdd\u3002");
+    return;
+  }
+
+  resetRealtimeState();
+  hideError();
+  const response = await fetch("/api/realtime/session/start", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ job_hint_optional: jobHintEl.value.trim() }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || TEXT.requestFailed);
+
+  realtimeSessionId = data.session_id;
+  realtimeSegments = segments;
+  realtimeSegmentIndex = 0;
+  realtimeDemoMode = true;
+  showView("result");
+  statusEl.textContent = "\u5b9e\u65f6\u4f1a\u8bdd\u4e2d";
+  setRealtimeControls(true, true);
+  renderRealtimeSessionPanel({ status: data.status, segment_count: 0, segments: [], role_inference: {} });
+
+  await appendRealtimeSegment();
+  startRealtimePlayback();
 }
 
 async function loadSampleLibrary() {
@@ -543,6 +1465,29 @@ async function runAnalysis() {
 
 sampleBtn.addEventListener("click", fillSelectedSample);
 analyzeBtn.addEventListener("click", runAnalysis);
+realtimeBtn?.addEventListener("click", async () => {
+  try {
+    await runRealtimeDemo();
+  } catch (error) {
+    showError(error.message || TEXT.requestFailed);
+  }
+});
+audioRealtimeBtn?.addEventListener("click", async () => {
+  try {
+    await runRealtimeAudioDemo();
+  } catch (error) {
+    showError(error.message || TEXT.requestFailed);
+  }
+});
+liveWsBtn?.addEventListener("click", async () => {
+  try {
+    await startLiveAudioWs();
+  } catch (error) {
+    showError(error.message || TEXT.requestFailed);
+  }
+});
+toggleMicRouteBtn?.addEventListener("click", () => toggleLiveRoute("mic"));
+toggleSystemRouteBtn?.addEventListener("click", () => toggleLiveRoute("system"));
 retryBtn.addEventListener("click", () => {
   hideError();
   if (lastPayload) runAnalysis();
@@ -551,15 +1496,39 @@ backBtn.addEventListener("click", () => {
   hideError();
   stopLoadingSequence();
   stopPolling();
+  resetRealtimeState();
   showView("input");
 });
-editAgainBtn.addEventListener("click", () => showView("input"));
+editAgainBtn.addEventListener("click", () => {
+  resetRealtimeState();
+  showView("input");
+});
+realtimePauseBtn?.addEventListener("click", async () => {
+  try {
+    await toggleRealtimePlayback();
+  } catch (error) {
+    showError(error.message || TEXT.requestFailed);
+  }
+});
+realtimeEndBtn?.addEventListener("click", async () => {
+  try {
+    await endRealtimeSession();
+  } catch (error) {
+    showError(error.message || TEXT.requestFailed);
+  }
+});
+viewFullReportBtn?.addEventListener("click", () => {
+  if (!pendingFinalRealtimeReport) return;
+  renderReport(pendingFinalRealtimeReport.report, pendingFinalRealtimeReport.source);
+  viewFullReportBtn.classList.add("hidden");
+});
 modeQuickEl?.addEventListener("change", applyModeCards);
 modeFullEl?.addEventListener("change", applyModeCards);
 
 transcriptEl.value = DEFAULT_TRANSCRIPT;
 jobHintEl.value = "\u540e\u7aef\u5de5\u7a0b\u5e08";
 renderLoading(0);
+resetRealtimeState();
 showView("input");
 applyModeCards();
 loadSampleLibrary();
