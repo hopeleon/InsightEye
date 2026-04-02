@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import app.config as config
 import json
+import logging
 import re
+import time
 from urllib import request
 
 from app.transcript import classify_question_type
+
+logger = logging.getLogger("insighteye.llm_call")
 
 
 JOB_HINTS = {
@@ -101,7 +105,14 @@ def build_disc_messages(prompt: str, transcript: str, turns: list[dict], feature
 
 def call_openai_compatible(model: str, messages: list[dict]) -> dict | None:
     if not config.OPENAI_API_KEY:
+        logger.warning(f"[LLM调用] API Key 未配置，跳过 LLM 调用")
         return None
+
+    _call_start = time.perf_counter()
+    _msg_count = len(messages)
+    _input_tokens_est = sum(len(str(m.get("content", ""))) // 4 for m in messages)
+    logger.info(f"[LLM调用] 开始调用模型: {model}, 消息数: {_msg_count}, 预估输入token: {_input_tokens_est}")
+
     body = {
         "model": model,
         "messages": messages,
@@ -117,10 +128,28 @@ def call_openai_compatible(model: str, messages: list[dict]) -> dict | None:
         },
         method="POST",
     )
-    with request.urlopen(req, timeout=120) as resp:
-        response_json = json.loads(resp.read().decode("utf-8"))
-    content = response_json["choices"][0]["message"]["content"]
-    return json.loads(content)
+    try:
+        with request.urlopen(req, timeout=120) as resp:
+            _http_elapsed = (time.perf_counter() - _call_start) * 1000
+            response_json = json.loads(resp.read().decode("utf-8"))
+        content = response_json["choices"][0]["message"]["content"]
+
+        usage = response_json.get("usage", {})
+        prompt_tokens = usage.get("prompt_tokens", 0)
+        completion_tokens = usage.get("completion_tokens", 0)
+        total_tokens = usage.get("total_tokens", 0)
+
+        _total_elapsed = (time.perf_counter() - _call_start) * 1000
+        logger.info(
+            f"[LLM调用] 调用完成 | 模型: {model} | "
+            f"耗时: {_total_elapsed:.0f}ms (HTTP: {_http_elapsed:.0f}ms) | "
+            f"Token: 输入≈{prompt_tokens}, 生成≈{completion_tokens}, 总计≈{total_tokens}"
+        )
+        return json.loads(content)
+    except Exception as exc:
+        _error_elapsed = (time.perf_counter() - _call_start) * 1000
+        logger.error(f"[LLM调用] 调用失败 | 模型: {model} | 耗时: {_error_elapsed:.0f}ms | 错误: {exc}")
+        raise
 
 
 # Personality analysis prompt builders.
@@ -173,4 +202,107 @@ def build_enneagram_messages(
     return [
         {"role": "system", "content": prompt},
         {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
+    ]
+
+
+LLM_FOLLOWUP_SYSTEM_PROMPT = """You are an expert behavioral interviewer. Based on the interview transcript and local analysis results, generate 3-5 high-quality follow-up questions to probe unresolved evidence gaps.
+
+## Your task
+Given:
+1. An interview transcript
+2. Local rule-based analysis (DISC, MBTI, STAR) with existing follow-up questions
+3. Evidence gaps and risk signals identified by the local engine
+
+Generate follow-up questions that:
+- Target specific evidence gaps the local engine flagged as uncertain
+- Probe ambiguous personality dimensions that need deeper verification
+- Challenge any authenticity risk signals (rehearsed answers, vague actions, missing outcomes)
+- Are specific to this candidate's actual answers, NOT generic templates
+- Help the interviewer verify or refute the current local hypotheses
+
+## Output rules
+Return valid JSON only. Do not include reasoning or chain-of-thought.
+Each question must be a direct follow-up to something the candidate actually said.
+Prioritize questions that would be most diagnostic given the local engine's uncertainty."""
+
+LLM_FOLLOWUP_USER_TEMPLATE = """## Interview Transcript
+{transcript}
+
+## Local DISC Analysis
+- Ranking: {disc_ranking}
+- Scores: {disc_scores}
+- Existing follow-ups: {disc_fuq}
+- Evidence gaps: {disc_gaps}
+- Risk: {disc_risk}
+
+## Local MBTI Analysis
+- Type: {mbti_type}
+- Ambiguous dimensions: {mbti_ambiguous}
+- Existing follow-ups: {mbti_fuq}
+
+## Local STAR Analysis
+- Defects: {star_defects}
+- Existing follow-ups: {star_fuq}
+
+## Job Context
+{job_hint}
+
+Generate follow-up questions targeting the most critical unresolved gaps."""
+
+
+def build_llm_followup_messages(
+    transcript: str,
+    disc_result: dict,
+    mbti_result: dict,
+    star_result: dict,
+    job_hint: str,
+) -> list[dict]:
+    disc_scores = disc_result.get("scores") or {}
+    disc_ranking = " / ".join(disc_result.get("ranking") or [])
+    disc_gaps = (disc_result.get("evidence_gaps") or [])[:4]
+    disc_risk = (disc_result.get("meta") or {}).get("impression_management_risk", "N/A")
+
+    disc_fuq = [
+        {"dimension": q.get("target_dimension", ""), "question": q.get("question", "")}
+        for q in (disc_result.get("follow_up_questions") or [])[:4]
+    ]
+    mbti_fuq = [
+        {"dimension": q.get("dimension", ""), "question": q.get("question", "")}
+        for q in (mbti_result.get("follow_up_questions") or [])[:4]
+    ]
+    star_fuq = [
+        {"defect": q.get("defect_id", ""), "question": q.get("question", "")}
+        for q in (star_result.get("followup_questions") or [])[:4]
+    ]
+
+    mbti_dims = mbti_result.get("dimensions") or {}
+    mbti_ambiguous = [
+        dim for dim, val in mbti_dims.items()
+        if isinstance(val, dict) and val.get("preference") in {"neutral", "unclear"}
+    ]
+
+    star_defects = [
+        {"severity": d.get("severity"), "defect": d.get("defect_id"), "description": d.get("description", "")}
+        for d in (star_result.get("defects") or [])
+        if isinstance(d, dict) and d.get("severity") == "high"
+    ]
+
+    user_content = LLM_FOLLOWUP_USER_TEMPLATE.format(
+        transcript=transcript,
+        disc_ranking=disc_ranking,
+        disc_scores=json.dumps(disc_scores, ensure_ascii=False),
+        disc_fuq=json.dumps(disc_fuq, ensure_ascii=False),
+        disc_gaps=json.dumps(disc_gaps, ensure_ascii=False),
+        disc_risk=disc_risk,
+        mbti_type=mbti_result.get("type", "unknown"),
+        mbti_ambiguous=json.dumps(mbti_ambiguous, ensure_ascii=False),
+        mbti_fuq=json.dumps(mbti_fuq, ensure_ascii=False),
+        star_defects=json.dumps(star_defects, ensure_ascii=False),
+        star_fuq=json.dumps(star_fuq, ensure_ascii=False),
+        job_hint=job_hint or "未提供岗位信息",
+    )
+
+    return [
+        {"role": "system", "content": LLM_FOLLOWUP_SYSTEM_PROMPT},
+        {"role": "user", "content": user_content},
     ]

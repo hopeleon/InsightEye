@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 
 from .features import feature_highlights
+
+logger = logging.getLogger("insighteye.disc_engine")
 
 
 DIMENSIONS = ("D", "I", "S", "C")
@@ -366,22 +369,25 @@ def analyze_disc(
 
     follow_up_questions = []
     for dim in top_dimensions:
+        probe = _dimension_probe(knowledge, dim, "confirm")[0]
         follow_up_questions.append(
             {
                 "target_dimension": dim,
-                "question": _dimension_probe(knowledge, dim, "confirm")[0],
+                "question": probe,
                 "purpose": f"验证当前对 {dim} 维度的初步判断是否成立。",
             }
         )
     for dim in ranking[-2:]:
+        probe = _dimension_probe(knowledge, dim, "challenge")[0]
         follow_up_questions.append(
             {
                 "target_dimension": dim,
-                "question": _dimension_probe(knowledge, dim, "challenge")[0],
+                "question": probe,
                 "purpose": f"Test the candidate's lower-bound behavior on {dim}.",
             }
         )
 
+    logger.info(f"[DISC] 开始构建关键发现和风险评估...")
     critical_findings, hire_risks, evidence_gaps = _build_critical_findings(
         features, scores, word_count, star_result
     )

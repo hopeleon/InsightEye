@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 
 
 DIMENSIONS = ["E_I", "N_S", "T_F", "J_P"]
 LETTERS = ["E", "I", "N", "S", "T", "F", "J", "P"]
+
+logger = logging.getLogger("insighteye.mbti_agent")
 
 
 def _keyword_hits(text: str, words: list[str]) -> int:
@@ -497,19 +500,19 @@ def _generate_follow_up_questions(dimension_results: dict, mbti_type: str, knowl
                     "purpose": f"当前在该维度证据不足，需要进一步确认真实偏好",
                     "priority": "high"
                 })
-    
+
     # 2. 对高置信度维度验证（测反向能力）
     for dimension, result in dimension_results.items():
         if result["confidence"] == "clear":
             pref = result["preference"]
             if pref in ["neutral", "unclear"]:
                 continue
-            
+
             dim_info = DIMENSION_LABELS.get(dimension, {})
             dim_name = dim_info.get("name", dimension)
             pref_label = dim_info.get(pref, pref)
             question_text = QUESTION_TEMPLATES.get(dimension, {}).get(pref, "")
-            
+
             if question_text:
                 questions.append({
                     "dimension": f"{dim_name}",
@@ -517,10 +520,10 @@ def _generate_follow_up_questions(dimension_results: dict, mbti_type: str, knowl
                     "purpose": f"验证 {pref_label} 的边界和反向适应能力",
                     "priority": "medium"
                 })
-    
+
     # 按优先级排序，high 优先
     questions.sort(key=lambda x: 0 if x.get("priority") == "high" else 1)
-    
+
     return questions[:4]  # 最多返回4个
 
 

@@ -1,4 +1,4 @@
-﻿const transcriptEl = document.getElementById("transcript");
+const transcriptEl = document.getElementById("transcript");
 const jobHintEl = document.getElementById("jobHint");
 const sampleSelectEl = document.getElementById("sampleSelect");
 const audioFileEl = document.getElementById("audioFile");
@@ -284,9 +284,9 @@ function renderDecisionLayer(report, analysis, source) {
   setText("riskLevelTop", safeText(analysis.meta?.impression_management_risk, "\u672a\u77e5"));
   setHtml("heroScore", renderHeroScore(analysis));
   setHtml("riskBulletList", createList((analysis.critical_findings || []).slice(0, 3), (item) => `<div class="bullet-item"><span class="bullet-dot"></span><span>${trimText(item.finding, 80)}</span></div>`, "\u6682\u65e0\u98ce\u9669\u63d0\u793a"));
-  setHtml("actionBulletList", createList((analysis.follow_up_questions || []).slice(0, 3), (item) => `<div class="bullet-item"><span class="bullet-dot"></span><span>${trimText(item.question, 80)}</span></div>`, "\u6682\u65e0\u5efa\u8bae\u52a8\u4f5c"));
+  setHtml("actionBulletList", createList((analysis.follow_up_questions || []).slice(0, 3), (item) => `<div class="bullet-item"><span class="bullet-dot"></span><span>${safeText(item.question)}</span></div>`, "\u6682\u65e0\u5efa\u8bae\u52a8\u4f5c"));
   setHtml("evidenceBulletList", createList((analysis.meta?.notes || []).slice(0, 3), (item) => `<div class="bullet-item"><span class="bullet-dot"></span><span>${trimText(item, 80)}</span></div>`, "\u6682\u65e0\u5224\u65ad\u4f9d\u636e"));
-  setHtml("topFollowups", createList((analysis.follow_up_questions || []).slice(0, 3), (item, index) => `<div class="followup-item"><span class="followup-index">${index + 1}</span><div><strong>${trimText(item.question, 90)}</strong><p>${trimText(item.purpose, 100)}</p></div></div>`, TEXT.noFollowup));
+  setHtml("topFollowups", createList((analysis.follow_up_questions || []).slice(0, 3), (item, index) => `<div class="followup-item"><span class="followup-index">${index + 1}</span><div><strong>${safeText(item.question)}</strong><p>${safeText(item.purpose)}</p></div></div>`, TEXT.noFollowup));
   setHtml("strengthList", createList(topRank.slice(0, 2), ([key, value]) => `<div class="micro-item bare"><span class="micro-dot"></span><span>${DISC_META[key]?.label || key}: ${value}</span></div>`, "\u6682\u65e0\u660e\u663e\u4f18\u52bf"));
   setHtml("riskList", createList((analysis.evidence_gaps || []).slice(0, 3), (item) => `<div class="micro-item bare"><span class="micro-dot negative"></span><span>${trimText(item, 70)}</span></div>`, "\u6682\u65e0\u660e\u663e\u98ce\u9669\u7f3a\u53e3"));
   setHtml("riskTags", createList((analysis.evidence_gaps || []).slice(0, 4), (item) => `<div class="tag summary-tag">${trimText(item, 22)}</div>`, "\u6682\u65e0\u6807\u7b7e"));
@@ -357,7 +357,7 @@ function renderDetailedLayer(report, analysis, source) {
     .map(([key, value]) => `<div class="feature-item"><strong>${key}</strong><div>${typeof value === "number" ? (value.toFixed ? value.toFixed(4) : value) : safeText(value)}</div></div>`)
     .join("");
   setHtml("features", featureRows || `<div class="feature-item"><strong>\u6682\u65e0\u7279\u5f81\u6570\u636e</strong></div>`);
-  setHtml("followups", createList(analysis.follow_up_questions || [], (item) => `<div class="list-item"><div class="type">${safeText(item.target_dimension || item.dimension, "-")}</div><p>${trimText(item.question, 110)}</p><p>${trimText(item.purpose, 120)}</p></div>`, TEXT.noFollowup));
+  setHtml("followups", createList(analysis.follow_up_questions || [], (item) => `<div class="list-item"><div class="type">${safeText(item.target_dimension || item.dimension, "-")}</div><p>${safeText(item.question)}</p><p>${safeText(item.purpose)}</p></div>`, TEXT.noFollowup));
   setHtml("llmStatus", [
     `\u5206\u6790\u6765\u6e90\uff1a${source}`,
     `\u89e3\u6790\u6a21\u578b\uff1a${safeText(report.llm_status?.parser_model)}`,
@@ -388,7 +388,7 @@ function renderMBTILayer(report) {
   renderMBTIDimension("NS", mbti.dimensions?.N_S || {}, "N", "S");
   renderMBTIDimension("TF", mbti.dimensions?.T_F || {}, "T", "F");
   renderMBTIDimension("JP", mbti.dimensions?.J_P || {}, "J", "P");
-  setHtml("mbtiFollowups", createList(mbti.follow_up_questions || [], (item) => `<div class="question-item"><strong>${trimText(item.question, 100)}</strong><div>${trimText(item.purpose, 120)}</div></div>`, TEXT.noFollowup));
+  setHtml("mbtiFollowups", createList(mbti.follow_up_questions || [], (item) => `<div class="question-item"><strong>${safeText(item.question)}</strong><div>${safeText(item.purpose)}</div></div>`, TEXT.noFollowup));
 }
 
 function collectConflictItems(report) {
@@ -1180,8 +1180,8 @@ function renderRealtimeSessionPanel(session) {
       ? (() => {
           const sourceLabel = safeText(leadItem.source_label || leadItem.source || "建议");
           const priority = String(leadItem.priority || "medium").toLowerCase();
-          const dimension = leadItem.dimension ? `<span class="realtime-followup-dimension">${trimText(leadItem.dimension, 20)}</span>` : "";
-          return `<div class="realtime-followup-lead ${priority}"><div class="realtime-followup-meta lead"><span class="realtime-followup-source">${sourceLabel}</span>${dimension}<span class="realtime-followup-priority ${priority}">${priority}</span></div><div class="realtime-followup-lead-question">${trimText(leadItem.question || leadItem, 120)}</div><p>${trimText(leadItem.purpose || "基于当前回答的下一步追问建议", 120)}</p></div>`;
+          const dimension = leadItem.dimension ? `<span class="realtime-followup-dimension">${safeText(leadItem.dimension)}</span>` : "";
+          return `<div class="realtime-followup-lead ${priority}"><div class="realtime-followup-meta lead"><span class="realtime-followup-source">${sourceLabel}</span>${dimension}<span class="realtime-followup-priority ${priority}">${priority}</span></div><div class="realtime-followup-lead-question">${safeText(leadItem.question || leadItem)}</div><p>${safeText(leadItem.purpose || "基于当前回答的下一步追问建议")}</p></div>`;
         })()
       : `<div class="realtime-followup-empty">实时提问建议会随着更多候选人内容出现。</div>`
   );
@@ -1192,8 +1192,8 @@ function renderRealtimeSessionPanel(session) {
       (item, index) => {
         const sourceLabel = safeText(item.source_label || item.source || "建议");
         const priority = String(item.priority || "medium").toLowerCase();
-        const dimension = item.dimension ? `<span class="realtime-followup-dimension">${trimText(item.dimension, 18)}</span>` : "";
-        return `<div class="realtime-followup-card ${priority}"><div class="realtime-followup-meta"><span class="followup-index">${index + 2}</span><span class="realtime-followup-source">${sourceLabel}</span>${dimension}<span class="realtime-followup-priority ${priority}">${priority}</span></div><strong>${trimText(item.question || item, 86)}</strong><p>${trimText(item.purpose || "基于当前回答的下一步追问建议", 90)}</p></div>`;
+        const dimension = item.dimension ? `<span class="realtime-followup-dimension">${safeText(item.dimension)}</span>` : "";
+        return `<div class="realtime-followup-card ${priority}"><div class="realtime-followup-meta"><span class="followup-index">${index + 2}</span><span class="realtime-followup-source">${sourceLabel}</span>${dimension}<span class="realtime-followup-priority ${priority}">${priority}</span></div><strong>${safeText(item.question || item)}</strong><p>${safeText(item.purpose || "基于当前回答的下一步追问建议")}</p></div>`;
       },
       "暂无候补提问"
     )

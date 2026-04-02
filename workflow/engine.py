@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import logging
+import time
+
 import app.config as config
 
 from app.knowledge import (
@@ -27,12 +30,19 @@ from .stages.parse_stage import run_parse_stage
 from .stages.personality_mapping_stage import run_personality_mapping_stage
 from .stages.star_stage import run_star_stage
 
+logger = logging.getLogger("insighteye.workflow")
+
 
 def _current_mbti(context: WorkflowContext) -> dict:
     return context.mbti_result or context.mbti_analysis or {}
 
 
+def _print_followups(context: WorkflowContext) -> None:
+    pass  # 实时追问已迁移至 LLM 生成，此处不再打印本地规则追问
+
+
 def build_response(context: WorkflowContext, *, mode: str) -> dict:
+    _print_followups(context)
     return {
         "input_overview": {
             "segment_count": len(context.segments),
@@ -126,12 +136,18 @@ def run_disc_workflow(transcript: str, job_hint: str = "", *, apply_knowledge_gr
 
 
 def _run_llm_personality_stage(context: WorkflowContext) -> WorkflowContext:
+    logger.info("[人格LLM阶段] ===== 开始 LLM 人格分析 (BigFive + Enneagram) =====")
+    _personality_start = time.perf_counter()
+
     if not config.OPENAI_API_KEY:
+        logger.warning("[人格LLM阶段] OPENAI_API_KEY 未配置，跳过人格 LLM 分析")
         context.mark_stage("llm_personality_stage", "skipped", "OPENAI_API_KEY not configured")
         return context
 
     context.mark_stage("llm_personality_stage", "started", "Run optional LLM Big Five and Enneagram analysis")
+
     try:
+        _bf_start = time.perf_counter()
         context.llm_bigfive_output = call_openai_compatible(
             config.OPENAI_PERSONALITY_MODEL,
             build_bigfive_messages(
@@ -143,11 +159,16 @@ def _run_llm_personality_stage(context: WorkflowContext) -> WorkflowContext:
                 local_bigfive=context.bigfive_result,
             ),
         ) or {}
+        _bf_elapsed = (time.perf_counter() - _bf_start) * 1000
         context.llm_called = True
+        logger.info(f"[人格LLM阶段] BigFive LLM 调用完成 | 耗时: {_bf_elapsed:.0f}ms")
     except Exception as exc:
+        _bf_elapsed = (time.perf_counter() - _bf_start) * 1000
         context.mark_stage("llm_personality_stage", "failed", f"BigFive LLM failed: {exc}")
+        logger.error(f"[人格LLM阶段] BigFive LLM 调用失败 | 耗时: {_bf_elapsed:.0f}ms | 错误: {exc}")
 
     try:
+        _en_start = time.perf_counter()
         context.llm_enneagram_output = call_openai_compatible(
             config.OPENAI_PERSONALITY_MODEL,
             build_enneagram_messages(
@@ -159,12 +180,18 @@ def _run_llm_personality_stage(context: WorkflowContext) -> WorkflowContext:
                 local_enneagram=context.enneagram_result,
             ),
         ) or {}
+        _en_elapsed = (time.perf_counter() - _en_start) * 1000
         context.llm_called = True
+        logger.info(f"[人格LLM阶段] Enneagram LLM 调用完成 | 耗时: {_en_elapsed:.0f}ms")
     except Exception as exc:
+        _en_elapsed = (time.perf_counter() - _en_start) * 1000
         context.mark_stage("llm_personality_stage", "failed", f"Enneagram LLM failed: {exc}")
+        logger.error(f"[人格LLM阶段] Enneagram LLM 调用失败 | 耗时: {_en_elapsed:.0f}ms | 错误: {exc}")
 
+    _personality_total = (time.perf_counter() - _personality_start) * 1000
     if context.llm_bigfive_output or context.llm_enneagram_output:
         context.mark_stage("llm_personality_stage", "completed", "LLM personality analysis ready")
+        logger.info(f"[人格LLM阶段] ===== LLM 人格分析完成 ===== 总耗时: {_personality_total:.0f}ms")
     return context
 
 
@@ -185,22 +212,33 @@ def run_personality_workflow(transcript: str, job_hint: str = "", *, apply_knowl
 
 
 def should_trigger_llm(local_result: dict) -> tuple[bool, str]:
+    logger.info("[LLM触发决策] ===== 开始判断是否触发 LLM =====")
     if not local_result:
+        logger.info("[LLM触发决策] 本地分析结果为空，决定触发 LLM")
         return True, "Local analysis result is empty"
 
     reasons: list[str] = []
     input_overview = local_result.get("input_overview") or {}
-    if input_overview.get("candidate_char_count", 0) < 300:
+    candidate_chars = input_overview.get("candidate_char_count", 0)
+    turn_count = input_overview.get("turn_count", 0)
+    logger.info(f"[LLM触发决策] 候选字符数: {candidate_chars}, 轮次数: {turn_count}")
+
+    if candidate_chars < 300:
         reasons.append("Candidate sample is too short")
-    if input_overview.get("turn_count", 0) < 3:
+        logger.info(f"[LLM触发决策] 样本过短: {candidate_chars} < 300")
+    if turn_count < 3:
         reasons.append("Too few interview turns")
+        logger.info(f"[LLM触发决策] 轮次过少: {turn_count} < 3")
 
     disc_analysis = local_result.get("disc_analysis") or {}
     disc_scores = disc_analysis.get("scores") or {}
     if disc_scores:
         try:
-            if max(disc_scores.values()) < 60:
+            max_disc = max(disc_scores.values())
+            logger.info(f"[LLM触发决策] DISC 最高分: {max_disc}")
+            if max_disc < 60:
                 reasons.append("DISC dominant style is not clear enough")
+                logger.info(f"[LLM触发决策] DISC 主风格不清晰: 最高分 {max_disc} < 60")
         except (TypeError, ValueError):
             reasons.append("DISC scores are malformed")
 
@@ -213,8 +251,10 @@ def should_trigger_llm(local_result: dict) -> tuple[bool, str]:
     ) if isinstance(dimensions, dict) else 0
     if neutral_count >= 2:
         reasons.append("MBTI evidence is still ambiguous")
+        logger.info(f"[LLM触发决策] MBTI 不确定维度数: {neutral_count} >= 2")
     if any(isinstance(item, dict) and item.get("severity") == "high" for item in (mbti_analysis.get("conflicts") or [])):
         reasons.append("High-severity personality conflict detected")
+        logger.info(f"[LLM触发决策] 检测到高严重度人格冲突")
 
     star_analysis = local_result.get("star_analysis") or {}
     high_star_defects = [
@@ -224,13 +264,18 @@ def should_trigger_llm(local_result: dict) -> tuple[bool, str]:
     ]
     if high_star_defects:
         reasons.append("STAR authenticity has high-severity defects")
+        logger.info(f"[LLM触发决策] STAR 高严重度缺陷数: {len(high_star_defects)}")
 
     risk = str((disc_analysis.get("meta") or {}).get("impression_management_risk", "")).lower()
     if any(token in risk for token in ("high", "?")):
         reasons.append("Impression-management risk is high")
+        logger.info(f"[LLM触发决策] 印象管理风险: {risk}")
 
     if reasons:
-        return True, " | ".join(reasons)
+        reason_str = " | ".join(reasons)
+        logger.info(f"[LLM触发决策] 决定触发 LLM | 原因: {reason_str}")
+        return True, reason_str
+    logger.info(f"[LLM触发决策] 本地证据已足够稳定，跳过 LLM")
     return False, "Local evidence is already stable enough"
 
 
