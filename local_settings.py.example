@@ -1,4 +1,4 @@
-﻿# 在这里填写你的模型配置。
+# 在这里填写你的模型配置。
 # 程序会优先读取本文件；如果留空，则回退到环境变量。
 
 OPENAI_API_KEY = ""
@@ -16,7 +16,34 @@ OPENAI_REQUEST_TIMEOUT = 8
 OPENAI_REALTIME_TRANSCRIPTION_MODEL = "gpt-4o-transcribe"
 OPENAI_WEBSOCKET_BASE_URL = "wss://api.zhizengzeng.com/v1"
 
-# DashScope realtime ASR settings
+# DashScope realtime ASR settings (可选，如果使用本地模型则不需要)
 DASHSCOPE_API_KEY = ""
 DASHSCOPE_REALTIME_WS_URL = "wss://dashscope.aliyuncs.com/api-ws/v1/realtime"
 DASHSCOPE_REALTIME_ASR_MODEL = "qwen3-asr-flash-realtime"
+
+# ===== 本地模型配置 (FunASR + CAM++) =====
+# 是否使用本地模型替代 DashScope（设为 true 时无需 DashScope API Key）
+USE_LOCAL_ASR = True
+
+# 本地模型根目录（默认使用项目内置的 models/ 目录）
+# 如果为空或不配置，将使用项目内置的 models/ 目录
+# 示例: LOCAL_MODEL_DIR = "D:/my_custom_models"
+LOCAL_MODEL_DIR = ""
+
+# FunASR 模型路径（支持绝对路径或相对于项目根目录的路径）
+# 默认使用项目内置模型: models/funasr/
+# 示例: FUNASR_MODEL_DIR = "D:/my_models/funasr"
+FUNASR_MODEL_DIR = ""
+
+# CAM++ 中文声纹模型路径
+# 默认使用项目内置模型: models/campplus/zh-cn/
+# 示例: CAMPPLUS_MODEL_DIR = "D:/my_models/campplus/zh-cn"
+CAMPPLUS_MODEL_DIR = ""
+
+# CAM++ 英文声纹模型路径（VoxCeleb）
+# 默认使用项目内置模型: models/campplus/en/
+# 示例: CAMPPLUS_EN_MODEL_DIR = "D:/my_models/campplus/en"
+CAMPPLUS_EN_MODEL_DIR = ""
+
+# 运行设备："cuda" 或 "cpu"（有 NVIDIA 显卡建议用 cuda）
+LOCAL_DEVICE = "cuda"

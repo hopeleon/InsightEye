@@ -6,22 +6,41 @@ from typing import Any
 
 import app.config as config
 from .analysis import analyze_interview_full
-from .role_inference import infer_roles
 from workflow.engine import run_local_workflow
 from workflow.helpers import build_llm_followup_messages, call_openai_compatible
 
 logger = logging.getLogger("insighteye.realtime_analyzer")
 
 
-def build_realtime_transcript(segments: list[dict], role_state: dict | None = None) -> str:
-    mapping = (role_state or {}).get("mapping") or {}
+def build_realtime_transcript(segments: list[dict], voice_mapping: dict | None = None) -> str:
+    """
+    构建实时转录文本
+
+    Args:
+        segments: 片段列表
+        voice_mapping: 声纹映射 {"interviewer": "speaker_a", "candidate": "speaker_b"}
+
+    Returns:
+        格式化后的转录文本
+    """
+    # voice_mapping: {"interviewer": "speaker_a", "candidate": "speaker_b"}
+    # 需要反向映射: {"speaker_a": "interviewer", "speaker_b": "candidate"}
+    reverse_voice: dict[str, str] = {}
+    if voice_mapping:
+        reverse_voice = {v: k for k, v in voice_mapping.items()}
+
     lines: list[str] = []
     for segment in segments:
         text = str(segment.get("text") or "").strip()
         if not text:
             continue
         speaker_id = str(segment.get("speaker_id") or "").strip() or "speaker_a"
-        role = mapping.get(speaker_id)
+
+        # 角色分配优先级：recognized_role > voice_mapping > speaker_a/speaker_b
+        role = segment.get("recognized_role")
+        if not role:
+            role = reverse_voice.get(speaker_id)
+
         if role == "interviewer":
             label = "面试官"
         elif role == "candidate":
@@ -42,11 +61,13 @@ def should_refresh_analysis(session: dict, *, min_new_segments: int = 2, min_new
     if len(current_segments) - last_count >= min_new_segments:
         return True
 
-    role_map = ((session.get("role_inference") or {}).get("mapping") or {})
+    # 从声纹映射推导 candidate speaker_id
+    voice_mapping = session.get("voice_mapping") or {}
+    reverse_map = {v: k for k, v in voice_mapping.items()}  # {"speaker_a": "interviewer", "speaker_b": "candidate"}
     last_chars = int(session.get("last_analysis_candidate_chars", 0))
     current_chars = 0
     for segment in current_segments:
-        if role_map.get(segment.get("speaker_id")) == "candidate":
+        if reverse_map.get(segment.get("speaker_id")) == "candidate":
             current_chars += len(str(segment.get("text") or ""))
     return current_chars - last_chars >= min_new_candidate_chars
 
@@ -158,11 +179,9 @@ def run_rolling_analysis(session: dict) -> dict:
     _seg_count = len(segments)
     logger.info(f"[实时分析] 当前片段数量: {_seg_count}")
 
-    _role_start = time.perf_counter()
-    role_state = infer_roles(segments)
-    logger.info(f"[实时分析] 角色推断完成，耗时 {(time.perf_counter() - _role_start) * 1000:.2f}ms")
-
-    transcript = build_realtime_transcript(segments, role_state)
+    # 获取声纹映射和发言顺序角色推断
+    voice_mapping = session.get("voice_mapping", {})
+    transcript = build_realtime_transcript(segments, voice_mapping)
     logger.info(f"[实时分析] 转录文本构建完成，长度: {len(transcript)} 字符")
 
     _local_start = time.perf_counter()
@@ -195,14 +214,15 @@ def run_rolling_analysis(session: dict) -> dict:
         f"[实时分析] LLM 追问生成完成: {len(followups)} 条, 耗时 {_llm_fuq_elapsed:.2f}ms"
     )
 
+    # 从声纹映射推导 candidate 字符数
+    reverse_map = {v: k for k, v in voice_mapping.items()}
     candidate_chars = sum(
         len(str(segment.get("text") or ""))
         for segment in segments
-        if (role_state.get("mapping") or {}).get(segment.get("speaker_id")) == "candidate"
+        if reverse_map.get(segment.get("speaker_id")) == "candidate"
     )
 
     snapshot = {
-        "role_inference": role_state,
         "transcript": transcript,
         "summary": disc_analysis.get("decision_summary", ""),
         "risk_summary": disc_analysis.get("risk_summary", ""),
@@ -215,7 +235,6 @@ def run_rolling_analysis(session: dict) -> dict:
         "segment_count": len(segments),
         "candidate_char_count": candidate_chars,
     }
-    session["role_inference"] = role_state
     session["rolling_analysis"] = snapshot
     session["last_analysis_segment_count"] = len(segments)
     session["last_analysis_candidate_chars"] = candidate_chars
@@ -228,8 +247,14 @@ def run_rolling_analysis(session: dict) -> dict:
 def run_final_analysis(session: dict) -> dict:
     logger.info("[实时分析] ===== 开始最终分析 =====")
     _final_start = time.perf_counter()
-    transcript = build_realtime_transcript(session.get("segments") or [], session.get("role_inference") or {})
+    
+    voice_mapping = session.get("voice_mapping", {})
+
+    transcript = build_realtime_transcript(
+        session.get("segments") or [],
+        voice_mapping
+    )
     result = analyze_interview_full(transcript, session.get("job_hint", ""))
-    _final_elapsed = (time.perf_counter() - _final_start) * 1000
-    logger.info(f"[实时分析] ===== 最终分析完成 ===== 耗时 {_final_elapsed:.2f}ms")
+    _final_elapsed = time.perf_counter() - _final_start
+    logger.info(f"[实时分析] ===== 最终分析完成 ===== 耗时 {_final_elapsed * 1000:.2f}ms")
     return result

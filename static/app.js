@@ -747,13 +747,55 @@ function connectStreamToProcessor(stream, name) {
   audioSourceNodes.push(sourceNode, analyser, processor);
 }
 
-function speakerDisplayLabel(speakerId, roleMap = {}) {
-  const role = roleMap[speakerId];
-  if (role === "interviewer") return "\u9762\u8bd5\u5b98\uff08\u63a8\u65ad\uff09";
-  if (role === "candidate") return "\u5019\u9009\u4eba\uff08\u63a8\u65ad\uff09";
-  if (speakerId === "speaker_a") return "\u8bf4\u8bdd\u4ebaA";
-  if (speakerId === "speaker_b") return "\u8bf4\u8bdd\u4ebaB";
-  return speakerId || TEXT.na;
+/**
+ * 获取说话人显示标签（带双相似度）
+ * @param {string} speakerId - 说话人ID
+ * @param {string|null} recognizedRole - 角色（interviewer/candidate/null）
+ * @param {number} interviewerSim - 与面试官的相似度 [0, 1]
+ * @param {number} candidateSim - 与候选人的相似度 [0, 1]
+ * @returns {string} 显示标签，如 "面试官(面试官:0.92 候选人:0.31)"
+ */
+function speakerDisplayLabel(speakerId, recognizedRole, interviewerSim = 0, candidateSim = 0) {
+  // 【DEBUG】日志：入参详情
+  console.log(`[Label] speaker_id="${speakerId}", recognized_role="${recognizedRole}", interviewer_sim=${interviewerSim}, candidate_sim=${candidateSim}`);
+
+  const role = recognizedRole
+    || (speakerId === "interviewer" ? "interviewer"
+      : speakerId === "candidate" ? "candidate" : null);
+
+  let label;
+  if (role === "interviewer") label = "\u9762\u8bd5\u5b98";
+  else if (role === "candidate") label = "\u5019\u9009\u4eba";
+  else if (role === "enrollment_source") label = "\u58f0\u7eb9\u6ce8\u518c\u97f3\u9891";
+  else if (speakerId === "speaker_unk") label = "\u672a\u77e5\u8bf4\u8bdd\u4eba";
+  else label = speakerId || TEXT.na;
+
+  // 【DEBUG】日志：标签选择原因
+  const reason = recognizedRole
+    ? `recognized_role="${recognizedRole}" → "${label}"`
+    : speakerId === "interviewer" || speakerId === "candidate"
+      ? `speaker_id="${speakerId}" → "${label}"`
+      : `兜底 speaker_id="${speakerId}" → "${label}"`;
+  console.log(`[Label] 原因: ${reason}`);
+
+  // 双相似度：CAM++ 已识别时显示与两位角色的相似度
+  if (interviewerSim > 0 || candidateSim > 0) {
+    const simLabel = `${label}(\u9762\u8bd5\u5b98=${interviewerSim.toFixed(2)} \u5019\u9009\u4eba=${candidateSim.toFixed(2)})`;
+    console.log(`[Label] 命中分支: 双相似度(>0) → "${simLabel}"`);
+    return simLabel;
+  }
+  console.log(`[Label] 命中分支: 兜底 → "${label}"`);
+  return label;
+}
+
+/**
+ * 推断发言片段的说话人角色（基于上下文）
+ * @param {Array} segments - 所有片段
+ * @param {number} index - 当前片段索引
+ * @returns {string|null} 推断的角色
+ */
+function inferRoleFromContext(segments, index) {
+  return null;
 }
 
 function looksLikeQuestion(text) {
@@ -790,14 +832,18 @@ function inferSingleSourceSegmentRoles(segments) {
   return inferred;
 }
 
-function buildRealtimeTranscriptRows(session, roleMap = {}) {
+function buildRealtimeTranscriptRows(session) {
   const stableSegments = session.segments || [];
-  const singleSpeakerMode = !Object.keys(roleMap || {}).length && new Set(stableSegments.map((item) => item.speaker_id)).size <= 1;
-  const inferredRoles = singleSpeakerMode ? inferSingleSourceSegmentRoles(stableSegments) : {};
-  return stableSegments.map((item) => {
-    const label = singleSpeakerMode
-      ? (inferredRoles[item.id] === "interviewer" ? "\u9762\u8bd5\u5b98\uff08\u6587\u672c\u63a8\u65ad\uff09" : "\u5019\u9009\u4eba\uff08\u6587\u672c\u63a8\u65ad\uff09")
-      : speakerDisplayLabel(item.speaker_id, roleMap);
+  console.log(`[Transcript] buildRealtimeTranscriptRows: 共 ${stableSegments.length} 个片段, voice_registered=${session.voice_registered}, voice_mapping=${JSON.stringify(session.voice_mapping)}`);
+  return stableSegments.map((item, index) => {
+    console.log(`[Transcript] 片段[${index}] speaker_id="${item.speaker_id}", recognized_role="${item.recognized_role}", interviewer_sim=${item.interviewer_sim}, candidate_sim=${item.candidate_sim}, text="${(item.text || "").slice(0, 20)}"`);
+    const label = speakerDisplayLabel(
+      item.speaker_id,
+      item.recognized_role || null,
+      item.interviewer_sim || 0,
+      item.candidate_sim || 0
+    );
+    console.log(`[Transcript] 片段[${index}] → 标签="${label}"`);
     return `<div class="live-transcript-item"><strong>${label}</strong><p>${safeText(item.text)}</p></div>`;
   });
 }
@@ -808,7 +854,7 @@ function handleLiveSocketMessage(message) {
   const sourceLabel = message.source === "mic" ? "麦克风" : message.source === "system" ? "系统音频" : "实时链路";
 
   if (message.type === "session.ready") {
-    setText("audioSourceState", "已连接阿里实时 ASR");
+    setText("audioSourceState", "已连接本地 FunASR");
     if (hint) hint.textContent = "实时音频链路已连通。";
     return;
   }
@@ -820,13 +866,68 @@ function handleLiveSocketMessage(message) {
 
   if (message.type === "transcript.delta") {
     const speakerId = message.speaker_id || (message.source === "mic" ? "speaker_a" : "speaker_b");
+    console.log(`[WS] transcript.delta: speaker_id="${speakerId}", recognized_role="${message.recognized_role}", interviewer_sim=${message.interviewer_sim}, candidate_sim=${message.candidate_sim}, is_final=${message.is_final}`);
     realtimePartialBySpeaker[speakerId] = `${realtimePartialBySpeaker[speakerId] || ""}${message.delta || ""}`.trim();
     setText("audioSourceState", `${sourceLabel} \u6b63\u5728\u8bc6\u522b`);
     if (hint) hint.textContent = `${sourceLabel} \u6b63\u5728\u8bc6\u522b\u3002`;
     return;
   }
 
+  if (message.type === "segment.corrected") {
+    // 收到后端修正的片段角色，更新本地 segments 并重新渲染转录
+    console.log(`[WS] segment.corrected: index=${message.index}, old_role="${message.old_role}", new_role="${message.new_role}", text="${(message.text || "").slice(0, 20)}"`);
+    if (latestRealtimeSession && latestRealtimeSession.segments) {
+      const idx = message.index;
+      if (idx >= 0 && idx < latestRealtimeSession.segments.length) {
+        latestRealtimeSession.segments[idx].recognized_role = message.new_role;
+        latestRealtimeSession.segments[idx].interviewer_sim = message.interviewer_sim || 0;
+        latestRealtimeSession.segments[idx].candidate_sim = message.candidate_sim || 0;
+        console.log(`[WS] 已更新 latestRealtimeSession.segments[${idx}]: recognized_role="${message.new_role}"`);
+        renderRealtimeResponse(latestRealtimeSession);
+      } else {
+        console.log(`[WS] segment.corrected 失败: idx=${idx} 超出范围 [0, ${latestRealtimeSession.segments.length})`);
+      }
+    }
+    return;
+  }
+
+  if (message.type === "auto_registration.completed") {
+    // 声纹自动注册完成，更新本地 session 状态并刷新 UI
+    console.log(`[WS] auto_registration.completed: voice_registered=${message.voice_registered}, voice_mapping=${JSON.stringify(message.voice_mapping)}, success=${message.success}`);
+    if (latestRealtimeSession) {
+      latestRealtimeSession.voice_registered = true;
+      latestRealtimeSession.voice_mapping = message.voice_mapping || {
+        interviewer: "interviewer",
+        candidate: "candidate"
+      };
+      console.log(`[WS] 已更新 latestRealtimeSession: voice_registered=${latestRealtimeSession.voice_registered}, voice_mapping=${JSON.stringify(latestRealtimeSession.voice_mapping)}`);
+    }
+    renderRealtimeSessionPanel(latestRealtimeSession || {
+      voice_registered: true,
+      voice_mapping: message.voice_mapping || {}
+    });
+    const hint = byId("audioDebugHint");
+    if (hint) hint.textContent = message.message || "声纹注册完成";
+    return;
+  }
+
+  if (message.type === "registration.finished") {
+    // 手动注册完成，同样更新状态
+    console.log(`[WS] registration.finished: success=${message.success}, voice_registered=${message.voice_registered}, voice_mapping=${JSON.stringify(message.voice_mapping)}`);
+    if (latestRealtimeSession && message.success) {
+      latestRealtimeSession.voice_registered = true;
+      latestRealtimeSession.voice_mapping = message.voice_mapping || {
+        interviewer: "interviewer",
+        candidate: "candidate"
+      };
+      console.log(`[WS] 已更新 latestRealtimeSession: voice_registered=${latestRealtimeSession.voice_registered}, voice_mapping=${JSON.stringify(latestRealtimeSession.voice_mapping)}`);
+      renderRealtimeSessionPanel(latestRealtimeSession);
+    }
+    return;
+  }
+
   if (message.type === "session.update" && message.session) {
+    console.log(`[WS] session.update: voice_registered=${message.session.voice_registered}, voice_mapping=${JSON.stringify(message.session.voice_mapping)}, segment_count=${message.session.segments ? message.session.segments.length : 0}`);
     latestRealtimeSession = message.session;
     const segments = message.session.segments || [];
     if (segments.length > lastRenderedSegmentCount) {
@@ -837,7 +938,7 @@ function handleLiveSocketMessage(message) {
       lastRenderedSegmentCount = segments.length;
     }
     renderRealtimeResponse(message.session);
-    setText("audioSourceState", "阿里实时 ASR 转写中");
+    setText("audioSourceState", "本地 FunASR 转写中");
     return;
   }
 
@@ -856,32 +957,42 @@ function handleLiveSocketMessage(message) {
     showError(detail);
     if (hint) hint.textContent = detail;
     setText("audioSourceState", "连接异常");
+    return;
   }
+
+  // 【兜底】未处理的未知消息类型也要打印
+  console.warn(`[WS] ⚠️ 未处理的消息类型: type="${message.type}", raw=${JSON.stringify(message).slice(0, 300)}`);
 }
 
 function openLiveSocket(wsUrl) {
   return new Promise((resolve, reject) => {
     let settled = false;
+    console.log(`[WS] openLiveSocket: 正在连接 ${wsUrl}`);
     const socket = new WebSocket(wsUrl);
     socket.onopen = () => {
       settled = true;
       micSocket = socket;
+      console.log(`[WS] ✅ WebSocket 连接成功! url=${wsUrl}`);
       resolve(socket);
     };
     socket.onmessage = (event) => {
       try {
-        handleLiveSocketMessage(JSON.parse(event.data));
+        const msg = JSON.parse(event.data);
+        console.log(`[WS] ⬅️ 收到消息 type="${msg.type}", raw=${JSON.stringify(msg).slice(0, 200)}`);
+        handleLiveSocketMessage(msg);
       } catch (error) {
-        console.warn(error);
+        console.warn(`[WS] ❌ 消息解析失败:`, error, event.data);
       }
     };
-    socket.onerror = () => {
+    socket.onerror = (err) => {
+      console.error(`[WS] ❌ WebSocket 错误! url=${wsUrl}`, err);
       if (!settled) {
         settled = true;
         reject(new Error("Local realtime websocket connection failed."));
       }
     };
-    socket.onclose = () => {
+    socket.onclose = (event) => {
+      console.warn(`[WS] 🔌 WebSocket 关闭! code=${event.code}, reason="${event.reason}", wasClean=${event.wasClean}`);
       if (micSocket === socket) micSocket = null;
       if (!liveStreamingMode) return;
       setText("audioSourceState", "\u8fde\u63a5\u5df2\u65ad\u5f00");
@@ -988,6 +1099,7 @@ async function startLiveAudioWs() {
     body: JSON.stringify({ job_hint_optional: jobHintEl.value.trim() }),
   });
   const data = await response.json();
+  console.log(`[Live] /api/realtime/session/start 返回: session_id=${data.session_id}, ws_url=${data.ws_url}`);
   if (!response.ok) throw new Error(data.error || TEXT.requestFailed);
 
   realtimeSessionId = data.session_id;
@@ -998,7 +1110,7 @@ async function startLiveAudioWs() {
   setRealtimeWorkspaceMode(true);
   setRealtimeControls(true, true);
   statusEl.textContent = "\u6b63\u5728\u8fde\u63a5\u963f\u91cc\u5b9e\u65f6 ASR";
-  renderRealtimeSessionPanel({ status: data.status, segment_count: 0, segments: [], role_inference: {} });
+  renderRealtimeSessionPanel({ status: data.status, segment_count: 0, segments: [], voice_registered: false, voice_mapping: {} });
 
   const streams = await getRequestedAudioStreams();
   micStream = streams.nextMicStream;
@@ -1112,41 +1224,65 @@ function parseRealtimeSegments(rawText) {
 
 function renderRealtimeSessionPanel(session) {
   latestRealtimeSession = session;
+  console.log(`[Panel] renderRealtimeSessionPanel called: voice_registered=${session.voice_registered}, voice_mapping=${JSON.stringify(session.voice_mapping)}, sequential_roles=${JSON.stringify(session.sequential_roles)}, segment_count=${session.segment_count || 0}`);
   setText("realtimeSessionStatus", session.status || "\u672a\u77e5");
   setText("realtimeSegmentCount", session.segment_count || 0, "0");
 
-  const roleState = session.role_inference || {};
-  const roleMapping = roleState.mapping || {};
-  const roleStateName = roleState.state || "insufficient";
-  const stableSegments = session.segments || [];
-  const singleSpeakerMode = !Object.keys(roleMapping).length && new Set(stableSegments.map((item) => item.speaker_id)).size <= 1 && stableSegments.length > 0;
-  if (roleState.ready) {
-    setText("realtimeRoleConfidence", `${Math.round(Number(roleState.confidence || 0) * 100)}%`);
-  } else if (singleSpeakerMode) {
-    setText("realtimeRoleConfidence", "\u6587\u672c\u63a8\u65ad\uff08\u5355\u8def\u97f3\u9891\uff09");
-  } else if (roleStateName === "single_speaker") {
-    setText("realtimeRoleConfidence", "\u672a\u542f\u7528\uff08\u5355\u8def\u97f3\u9891\uff09");
-  } else if (roleStateName === "warming_up") {
-    setText("realtimeRoleConfidence", "\u79ef\u7d2f\u4e2d");
+  const voiceMapping = session.voice_mapping || {};
+  const sequentialRoles = session.sequential_roles || {first_speaker: null, second_speaker: null};
+  const voiceRegistered = session.voice_registered || false;
+  const segments = session.segments || [];
+
+  // 计算各角色的平均相似度（用于显示）
+  const roleAvgSims = {};
+  if (voiceRegistered && segments.length > 0) {
+    const roleSims = { interviewer: [], candidate: [] };
+    for (const seg of segments) {
+      if (seg.interviewer_sim > 0) roleSims.interviewer.push(seg.interviewer_sim);
+      if (seg.candidate_sim > 0) roleSims.candidate.push(seg.candidate_sim);
+    }
+    for (const role of Object.keys(roleSims)) {
+      const vals = roleSims[role];
+      if (vals.length > 0) {
+        roleAvgSims[role] = vals.reduce((a, b) => a + b, 0) / vals.length;
+      }
+    }
+  }
+
+  // 显示声纹注册状态
+  if (voiceRegistered) {
+    setText("realtimeRoleConfidence", "\u5df2\u6ce8\u518c");
+    const seenRoles = new Set();
+    const roleLines = [];
+    // 顶部提示：候选人已记录
+    roleLines.push(`<div class="bullet-item" style="color:#4caf50;font-weight:600;"><span class="bullet-dot" style="background:#4caf50;"></span><span>\u5019\u9009\u4eba\u5df2\u8bb0\u5f55\uff0c\u58f0\u7eb9\u6ce8\u518c\u6210\u529f</span></div>`);
+    for (const seg of segments) {
+      if (seg.recognized_role && !seenRoles.has(seg.recognized_role)) {
+        seenRoles.add(seg.recognized_role);
+        const label = seg.recognized_role === "interviewer" ? "\u9762\u8bd5\u5b98" : "\u5019\u9009\u4eba";
+        const intSim = roleAvgSims.interviewer ? roleAvgSims.interviewer.toFixed(2) : "-";
+        const candSim = roleAvgSims.candidate ? roleAvgSims.candidate.toFixed(2) : "-";
+        roleLines.push(`<div class="bullet-item"><span class="bullet-dot"></span><span>${label}(\u9762\u8bd5\u5b98=${intSim} \u5019\u9009\u4eba=${candSim})</span></div>`);
+      }
+    }
+    setHtml("realtimeRoleMap", roleLines.join(""));
   } else {
-    setText("realtimeRoleConfidence", "\u8bc1\u636e\u4e0d\u8db3");
+    // 声纹未注册时，显示声纹注册来源片段
+    setText("realtimeRoleConfidence", "\u6ce8\u518c\u4e2d");
+    const seenRoles = new Set();
+    const roleLines = [];
+    for (const seg of segments) {
+      const role = seg.recognized_role;
+      if (role && !seenRoles.has(role)) {
+        seenRoles.add(role);
+        const label = role === "enrollment_source" ? "\u58f0\u7eb9\u6ce8\u518c\u97f3\u9891" : role;
+        roleLines.push(`<div class="bullet-item"><span class="bullet-dot"></span><span>${label}</span></div>`);
+      }
+    }
+    setHtml("realtimeRoleMap", roleLines.join("") || `<div class="bullet-item"><span class="bullet-dot"></span><span>\u8fdb\u884c\u4e2d\u58f0\u7eb9\u6ce8\u518c...</span></div>`);
   }
 
-  const roleLines = [];
-  if (singleSpeakerMode) {
-    roleLines.push(`<div class="bullet-item"><span class="bullet-dot"></span><span>当前为单路音频，按句子内容临时推断面试官 / 候选人。</span></div>`);
-  }
-  if (Object.keys(roleMapping).length) {
-    Object.keys(roleMapping).forEach((speakerId) => {
-      roleLines.push(`<div class="bullet-item"><span class="bullet-dot"></span><span>${speakerDisplayLabel(speakerId, roleMapping)}</span></div>`);
-    });
-  }
-  (roleState.reasons || []).forEach((item) => {
-    roleLines.push(`<div class="bullet-item"><span class="bullet-dot"></span><span>${trimText(item, 90)}</span></div>`);
-  });
-  setHtml("realtimeRoleMap", roleLines.join("") || `<div class="bullet-item"><span class="bullet-dot"></span><span>\u6682\u65e0\u89d2\u8272\u63a8\u65ad</span></div>`);
-
-  const transcriptRows = buildRealtimeTranscriptRows(session, roleMapping);
+  const transcriptRows = buildRealtimeTranscriptRows(session);
   setHtml("realtimeLiveTranscript", transcriptRows.join("") || `<div class="panel-empty-note">\u7b49\u5f85\u5b9e\u65f6\u7247\u6bb5</div>`);
   scrollRealtimeTranscriptToLatest();
 
@@ -1338,7 +1474,7 @@ async function runRealtimeAudioDemo() {
   showView("result");
   statusEl.textContent = "\u771f\u5b9e\u97f3\u9891\u8f6c\u5199\u4e2d";
   setRealtimeControls(true, true);
-  renderRealtimeSessionPanel({ status: data.status, segment_count: 0, segments: [], role_inference: {} });
+  renderRealtimeSessionPanel({ status: data.status, segment_count: 0, segments: [], voice_registered: false, voice_mapping: {} });
 
   await appendRealtimeSegment();
   startRealtimePlayback();
@@ -1374,7 +1510,7 @@ async function runRealtimeDemo() {
   showView("result");
   statusEl.textContent = "\u5b9e\u65f6\u4f1a\u8bdd\u4e2d";
   setRealtimeControls(true, true);
-  renderRealtimeSessionPanel({ status: data.status, segment_count: 0, segments: [], role_inference: {} });
+  renderRealtimeSessionPanel({ status: data.status, segment_count: 0, segments: [], voice_registered: false, voice_mapping: {} });
 
   await appendRealtimeSegment();
   startRealtimePlayback();

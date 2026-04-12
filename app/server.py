@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from email.parser import BytesParser
 import contextlib
@@ -154,7 +154,7 @@ def _run_audio_transcription(handler: BaseHTTPRequestHandler, fields: dict[str, 
             "language": result["language"],
             "segment_count": len(result["segments"]),
             "segments": result["segments"],
-            "transcript_preview": build_realtime_transcript(result["segments"], {}),
+            "transcript_preview": build_realtime_transcript(result["segments"]),
         },
     )
 
@@ -218,15 +218,19 @@ def _run_full_mode_analysis(handler: BaseHTTPRequestHandler, payload: dict) -> N
 
 def _realtime_session_response(session: dict[str, Any]) -> dict[str, Any]:
     rolling = session.get("rolling_analysis") or {}
-    role_state = session.get("role_inference") or {}
+    voice_mapping = session.get("voice_mapping", {})
     return {
         "session_id": session["session_id"],
         "status": session["status"],
         "job_hint_optional": session.get("job_hint", ""),
         "segment_count": len(session.get("segments") or []),
         "segments": session.get("segments") or [],
-        "role_inference": role_state,
-        "display_transcript": build_realtime_transcript(session.get("segments") or [], role_state),
+        "voice_registered": session.get("voice_registered", False),
+        "voice_mapping": voice_mapping,
+        "display_transcript": build_realtime_transcript(
+            session.get("segments") or [],
+            voice_mapping
+        ),
         "rolling_analysis": {
             "summary": rolling.get("summary", ""),
             "risk_summary": rolling.get("risk_summary", ""),

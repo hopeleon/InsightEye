@@ -1,0 +1,1363 @@
+# InsightEye 代码改动详细对比报告
+
+## 📋 文档概述
+
+本文档详细记录了将 InsightEye 项目从**阿里云 DashScope 云端 ASR**改造为**本地 FunASR + CAM++ 声纹识别**的全部代码改动。
+
+### 改动动机
+
+| 问题 | 原版方案 | 本地化方案 |
+|------|----------|------------|
+| **成本** | 按调用计费（实时 ASR 费用较高） | 一次性模型加载，零边际成本 |
+| **隐私** | 面试音频上传阿里云服务器 | 音频完全保留在本地 |
+| **网络** | 必须联网，依赖云服务稳定性 | 完全离线可用 |
+| **延迟** | 需要网络传输（可能有延迟） | 本地推理，延迟更低 |
+| **声纹** | 无声纹识别，仅靠文本推断 | CAM++ 声纹模型，精准识别 |
+
+---
+
+## 📁 一、文件变更总览
+
+### 1.1 完全重写的文件（4个）
+
+| 文件路径 | 改动类型 | 改动原因 |
+|----------|----------|----------|
+| `app/realtime_ws_server.py` | 完全重写 | 从"DashScope WebSocket 桥接"改为"本地 FunASR 流式处理" |
+| `app/config.py` | 重大修改 | 新增 FunASR/CAM++ 模型路径配置，移除 DashScope 配置 |
+| `app/realtime_session.py` | 重大修改 | 新增声纹注册、voice_mapping、sequential_roles 支持 |
+| `app/realtime_ws_state.py` | 重大修改 | 新增 `consume_local_transcript_event()` 函数处理本地转录 |
+| `app/realtime_analyzer.py` | 重大修改 | 新增声纹映射参数，移除 role_inference 依赖 |
+
+### 1.2 新增的文件（5个）
+
+| 文件路径 | 功能描述 |
+|----------|----------|
+| `app/model_manager.py` | 统一管理 FunASR、CAM++、Silero VAD 模型的加载 |
+| `app/streaming_pipeline.py` | 流式 VAD + ASR + 声纹识别管道 |
+| `app/speaker_recognition.py` | 说话人声纹识别模块（CAM++） |
+| `app/vad_asr_pipeline.py` | VAD + ASR 异步处理管道（备选实现） |
+| `local_settings.py` | 本地配置文件（替代硬编码配置） |
+
+### 1.3 移除的文件（1个）
+
+| 文件路径 | 移除原因 |
+|----------|----------|
+| `app/role_inference.py` | 角色推断功能已整合到 `realtime_ws_state.py` 和 `realtime_analyzer.py` 中 |
+
+### 1.4 配置文件变更
+
+| 文件路径 | 改动 |
+|----------|------|
+| `local_settings.py.example` | 新增 DashScope/FunASR 双模式配置示例 |
+| `local_settings.py` | 新增，简化配置（仅本地模式） |
+| `.gitignore` | 新增忽略本地模型目录 |
+
+---
+
+## 🔧 二、核心文件详细对比
+
+### 2.1 `app/config.py` - 配置文件
+
+#### 原版代码（第20-53行）
+
+```python
+DEFAULT_OPENAI_BASE_URL = "https://api.zhizengzeng.com/v1"
+DEFAULT_OPENAI_PARSER_MODEL = "gpt-5-mini"
+DEFAULT_OPENAI_ANALYSIS_MODEL = "gpt-5.4"
+DEFAULT_OPENAI_PERSONALITY_MODEL = "gpt-5-mini"
+DEFAULT_OPENAI_AUDIO_MODEL = "gpt-4o-transcribe-diarize"
+DEFAULT_OPENAI_REALTIME_TRANSCRIPTION_MODEL = "gpt-4o-transcribe"
+DEFAULT_REALTIME_WS_PORT = 8765
+DEFAULT_DASHSCOPE_REALTIME_WS_URL = "wss://dashscope.aliyuncs.com/api-ws/v1/realtime"
+DEFAULT_DASHSCOPE_REALTIME_ASR_MODEL = "qwen3-asr-flash-realtime"
+
+# ... 读取配置 ...
+
+DASHSCOPE_API_KEY = str(local_settings.get("DASHSCOPE_API_KEY", os.getenv("DASHSCOPE_API_KEY", ""))).strip()
+DASHSCOPE_REALTIME_WS_URL = str(
+    local_settings.get("DASHSCOPE_REALTIME_WS_URL", os.getenv("DASHSCOPE_REALTIME_WS_URL", DEFAULT_DASHSCOPE_REALTIME_WS_URL))
+).strip().rstrip("/")
+DASHSCOPE_REALTIME_ASR_MODEL = str(
+    local_settings.get("DASHSCOPE_REALTIME_ASR_MODEL", os.getenv("DASHSCOPE_REALTIME_ASR_MODEL", DEFAULT_DASHSCOPE_REALTIME_ASR_MODEL))
+).strip()
+```
+
+#### 本地化版本新增配置
+
+```python
+# 本地模型配置（FunASR + CAM++）
+# 使用相对于项目根目录的路径
+DEFAULT_LOCAL_MODEL_DIR = str(BASE_DIR / "models")
+DEFAULT_FUNASR_MODEL = str(BASE_DIR / "models" / "funasr")
+DEFAULT_CAMPPLUS_MODEL = str(BASE_DIR / "models" / "campplus" / "zh-cn")
+DEFAULT_CAMPPLUS_EN_MODEL = str(BASE_DIR / "models" / "campplus" / "en")
+DEFAULT_LOCAL_DEVICE = "cuda"  # "cuda" 或 "cpu"
+
+# 配置读取函数
+def _get_config_path(local_val, env_var, default):
+    val = local_val if local_val else os.getenv(env_var, default)
+    return str(val).strip()
+
+LOCAL_MODEL_DIR = _get_config_path(local_settings.get("LOCAL_MODEL_DIR"), "LOCAL_MODEL_DIR", DEFAULT_LOCAL_MODEL_DIR)
+FUNASR_MODEL_DIR = _get_config_path(local_settings.get("FUNASR_MODEL_DIR"), "FUNASR_MODEL_DIR", DEFAULT_FUNASR_MODEL)
+CAMPPLUS_MODEL_DIR = _get_config_path(local_settings.get("CAMPPLUS_MODEL_DIR"), "CAMPPLUS_MODEL_DIR", DEFAULT_CAMPPLUS_MODEL)
+CAMPPLUS_EN_MODEL_DIR = _get_config_path(local_settings.get("CAMPPLUS_EN_MODEL_DIR"), "CAMPPLUS_EN_MODEL_DIR", DEFAULT_CAMPPLUS_EN_MODEL)
+LOCAL_DEVICE = _get_config_path(local_settings.get("LOCAL_DEVICE"), "LOCAL_DEVICE", DEFAULT_LOCAL_DEVICE)
+```
+
+#### 改动说明
+
+| 改动项 | 原版 | 本地化版 |
+|--------|------|----------|
+| ASR 模式 | DashScope 云端 WebSocket | FunASR 本地模型 |
+| 声纹识别 | 无 | CAM++ 本地模型 |
+| 模型路径 | 无 | `models/funasr`, `models/campplus` |
+| 设备配置 | 无 | `LOCAL_DEVICE` (cuda/cpu) |
+| API Key | `DASHSCOPE_API_KEY` 必需 | 可选（本地模式不需要） |
+
+---
+
+### 2.2 `app/realtime_ws_server.py` - WebSocket 服务
+
+这是**改动最大**的文件，从"DashScope 桥接服务"完全重写为"本地流式处理服务"。
+
+#### 原版架构（第35-46行）
+
+```python
+async def ensure_connected(self) -> None:
+    if self.upstream_websocket is not None:
+        return
+    model = quote(config.DASHSCOPE_REALTIME_ASR_MODEL, safe="")
+    url = f"{config.DASHSCOPE_REALTIME_WS_URL}?model={model}"
+    headers = {
+        "Authorization": f"Bearer {config.DASHSCOPE_API_KEY}",
+        "OpenAI-Beta": "realtime=v1",
+    }
+    print(f"[DashScopeRealtime] connect source={self.source_name} url={config.DASHSCOPE_REALTIME_WS_URL} model={config.DASHSCOPE_REALTIME_ASR_MODEL}")
+    self.upstream_websocket = await connect(url, additional_headers=headers, max_size=2**22)
+```
+
+#### 原版架构流程
+
+```
+浏览器 → WebSocket → 本地桥接服务 → 阿里云 DashScope WebSocket → ASR 结果返回
+```
+
+#### 本地化版本架构
+
+```python
+class LocalRealtimeServer:
+    """
+    本地实时语音识别服务器
+    使用流式 VAD + ASR + CAM++ 处理音频，无需外部 API
+    """
+    
+    def __init__(self):
+        self._model_manager: Optional[ModelManager] = None
+        self._initialized = False
+        self._active_sources: Dict[str, AudioSource] = {}
+    
+    async def _initialize_models(self) -> None:
+        """初始化模型"""
+        if self._initialized:
+            return
+        
+        print("[LocalRealtimeServer] 正在初始化模型...")
+        self._model_manager = get_model_manager()
+        await self._model_manager.initialize()
+        self._initialized = True
+        print("[LocalRealtimeServer] 模型初始化完成")
+```
+
+#### 本地化架构流程
+
+```
+浏览器音频 → WebSocket → 本地流式管道
+                               ↓
+                    ┌──────────┼──────────┐
+                    ↓          ↓          ↓
+              Silero VAD  FunASR ASR  CAM++ 声纹
+              (语音检测)  (转文字)    (说话人识别)
+                    ↓          ↓          ↓
+                    └──────────┴──────────┘
+                               ↓
+                         组合结果返回
+```
+
+#### 关键代码对比
+
+| 功能 | 原版 | 本地化版 |
+|------|------|----------|
+| 连接建立 | 连接阿里云 WebSocket | 初始化本地模型 |
+| 音频处理 | 直接转发到阿里云 | 先 VAD 检测语音边界 |
+| ASR | 阿里云 qwen3-asr | FunASR Paraformer |
+| 声纹识别 | 无 | CAM++ 模型 |
+| 语音分段 | 阿里云 server_vad | 本地 Silero VAD + 能量检测 |
+| 说话人识别 | 仅靠文本推断（role_inference.py） | 声纹比对 + 发言顺序推断 |
+
+#### 本地化版本新增功能
+
+```python
+# 1. 自动声纹注册
+class AutoRegistrationState:
+    """自动声纹注册状态"""
+    enabled: bool = True
+    interviewer_embedding: Optional[np.ndarray] = None
+    candidate_embedding: Optional[np.ndarray] = None
+    speaker_recognizer: Optional[SpeakerRecognizer] = None
+    auto_register_done: bool = False
+
+# 2. 手动声纹注册
+elif message_type == "start_registration":
+    # 开始手动注册（先面试官，后候选人）
+    auto_reg.enabled = False
+    auto_reg.interviewer_samples = []
+    auto_reg.candidate_samples = []
+
+# 3. 声纹相似度计算
+similarity_to_interviewer = extractor.compute_similarity(
+    new_embedding, auto_reg.interviewer_embedding
+) if auto_reg.interviewer_embedding is not None else 1.0
+
+if similarity_to_interviewer < 0.75:
+    # 第二位说话人（候选人）
+    auto_reg.candidate_embedding = new_embedding
+```
+
+---
+
+### 2.3 `app/realtime_session.py` - 会话状态管理
+
+#### 原版代码（第16-38行）
+
+```python
+def create(self, job_hint: str = "") -> dict[str, Any]:
+    session_id = f"rt_{uuid.uuid4().hex[:12]}"
+    session = {
+        "session_id": session_id,
+        "job_hint": job_hint,
+        "status": "active",
+        "created_at": time.time(),
+        "segments": [],
+        "role_inference": {"ready": False, "mapping": {}, "confidence": 0.0, "reasons": []},
+        "rolling_analysis": None,
+        "last_analysis_segment_count": 0,
+        "last_analysis_candidate_chars": 0,
+        "final_report": None,
+    }
+    return session
+```
+
+#### 本地化版本新增字段
+
+```python
+def create(self, job_hint: str = "") -> dict[str, Any]:
+    session_id = f"rt_{uuid.uuid4().hex[:12]}"
+    session = {
+        "session_id": session_id,
+        "job_hint": job_hint,
+        "status": "active",
+        "created_at": time.time(),
+        "segments": [],
+        # ========== 新增：声纹相关字段 ==========
+        "speaker_recognizer": None,       # CAM++ 说话人识别器
+        "voice_registered": False,        # 声纹是否已注册
+        "voice_mapping": {},              # 声纹映射 {"interviewer": "speaker_a", "candidate": "speaker_b"}
+        # 发言顺序角色推断（声纹注册前的降级方案）
+        "sequential_roles": {"first_speaker": None, "second_speaker": None},
+        # ========================================
+        "rolling_analysis": None,
+        "last_analysis_segment_count": 0,
+        "last_analysis_candidate_chars": 0,
+        "final_report": None,
+    }
+    return session
+```
+
+#### 新增方法
+
+```python
+def update_voice_mapping(self, session_id: str, voice_mapping: dict[str, str]) -> None:
+    """更新声纹映射"""
+    with self._lock:
+        session = self._sessions.get(session_id)
+        if session:
+            session["voice_mapping"] = voice_mapping
+            session["voice_registered"] = True
+
+def set_speaker_recognizer(self, session_id: str, recognizer) -> None:
+    """设置说话人识别器"""
+    with self._lock:
+        session = self._sessions.get(session_id)
+        if session:
+            session["speaker_recognizer"] = recognizer
+```
+
+#### Segment 数据结构变更
+
+```python
+# 原版 segment
+segment = {
+    "id": len(segments) + 1,
+    "speaker_id": str(payload.get("speaker_id") or "speaker_a").strip() or "speaker_a",
+    "text": str(payload.get("text") or "").strip(),
+    "start_ms": int(payload.get("start_ms") or 0),
+    "end_ms": int(payload.get("end_ms") or 0),
+    "final": bool(payload.get("final", True)),
+}
+
+# 本地化版新增字段
+segment = {
+    "id": len(segments) + 1,
+    "speaker_id": str(payload.get("speaker_id") or "speaker_a").strip() or "speaker_a",
+    "text": str(payload.get("text") or "").strip(),
+    "start_ms": int(payload.get("start_ms") or 0),
+    "end_ms": int(payload.get("end_ms") or 0),
+    "final": bool(payload.get("final", True)),
+    # ========== 新增：声纹识别相关字段 ==========
+    "recognized_role": payload.get("recognized_role"),      # 声纹识别的角色
+    "speaker_confidence": float(payload.get("speaker_confidence") or 0.0),  # 最佳相似度
+    "interviewer_sim": float(payload.get("interviewer_sim") or 0.0),       # 与面试官的相似度
+    "candidate_sim": float(payload.get("candidate_sim") or 0.0),           # 与候选人的相似度
+    # ===========================================
+}
+```
+
+---
+
+### 2.4 `app/realtime_ws_state.py` - 事件状态处理
+
+#### 原版函数（第38-111行）
+
+```python
+def consume_realtime_event(session_id: str, speaker_id: str, event: dict[str, Any]) -> dict[str, Any] | None:
+    """
+    处理 DashScope 实时事件（原有模式）
+    """
+    event_type = str(event.get("type") or "")
+    # ... 处理阿里云事件格式 ...
+```
+
+#### 本地化版本新增函数
+
+```python
+def consume_local_transcript_event(session_id: str, speaker_id: str, event: dict[str, Any]) -> dict[str, Any] | None:
+    """
+    处理本地 FunASR 转录完成事件
+    
+    事件格式:
+    {
+        "type": "transcript.completed",
+        "source": "mic/system",
+        "speaker_id": "speaker_a/speaker_b",
+        "text": "转录文本",
+        "start_ms": 0,
+        "end_ms": 5000,
+        "confidence": 0.95,
+        "recognized_role": "interviewer/candidate"  # 可选，声纹识别结果
+    }
+    """
+    # 发言顺序角色推断逻辑
+    recognized_role = event.get("recognized_role")
+    segment_reason = event.get("segment_reason")
+    
+    if recognized_role == "interviewer":
+        seq["first_speaker"] = speaker_id
+    elif recognized_role == "candidate":
+        seq["second_speaker"] = speaker_id
+        did_set_second_speaker = True
+    
+    # 回溯修正（必须在 append_segment 之前执行）
+    if did_set_second_speaker:
+        # 修正此前被误判的 segment
+        for i, seg in enumerate(segs):
+            if seg.get("speaker_id") == second_sid and seg.get("recognized_role") == "interviewer":
+                segs[i]["recognized_role"] = "candidate"
+                corrections.append(i)
+```
+
+#### 角色推断逻辑对比
+
+| 场景 | 原版方案 | 本地化方案 |
+|------|----------|------------|
+| 角色推断方式 | 文本特征分析（role_inference.py） | 声纹比对 + 发言顺序 |
+| 说话人切换检测 | 无 | VAD voice_change 事件 |
+| 误判修正 | 无 | 回溯修正已添加的 segments |
+| 多说话人支持 | 仅 2 人 | 支持 2+ 人（可扩展） |
+
+---
+
+### 2.5 `app/realtime_analyzer.py` - 实时分析器
+
+#### `build_realtime_transcript` 函数对比
+
+**原版（第16-36行）：**
+
+```python
+def build_realtime_transcript(segments: list[dict], role_state: dict | None = None) -> str:
+    mapping = (role_state or {}).get("mapping") or {}
+    lines: list[str] = []
+    for segment in segments:
+        # ...
+        role = mapping.get(speaker_id)
+        if role == "interviewer":
+            label = "面试官"
+```
+
+**本地化版本：**
+
+```python
+def build_realtime_transcript(
+    segments: list[dict], 
+    voice_mapping: dict | None = None, 
+    sequential_roles: dict | None = None
+) -> str:
+    """
+    构建实时转录文本
+    
+    Args:
+        segments: 片段列表
+        voice_mapping: 声纹映射 {"interviewer": "speaker_a", "candidate": "speaker_b"}
+        sequential_roles: 发言顺序角色推断（声纹未注册时的降级）
+                         {"first_speaker": "speaker_unk", "second_speaker": "speaker_a"}
+    """
+    # voice_mapping: {"interviewer": "speaker_a", "candidate": "speaker_b"}
+    # 需要反向映射: {"speaker_a": "interviewer", "speaker_b": "candidate"}
+    reverse_voice: dict[str, str] = {}
+    if voice_mapping:
+        reverse_voice = {v: k for k, v in voice_mapping.items()}
+
+    # sequential_roles 反向映射
+    reverse_seq: dict[str, str] = {}
+    if sequential_roles:
+        if sequential_roles.get("first_speaker"):
+            reverse_seq[sequential_roles["first_speaker"]] = "interviewer"
+        if sequential_roles.get("second_speaker"):
+            reverse_seq[sequential_roles["second_speaker"]] = "candidate"
+    
+    for segment in segments:
+        # 角色分配优先级：recognized_role > voice_mapping > sequential_roles > speaker_a/speaker_b
+        role = segment.get("recognized_role")
+        if not role:
+            role = reverse_voice.get(speaker_id)
+        if not role:
+            role = reverse_seq.get(speaker_id)
+```
+
+#### 角色分配优先级（新增）
+
+```python
+# 角色分配优先级：recognized_role > voice_mapping > sequential_roles > speaker_a/speaker_b
+role = segment.get("recognized_role")        # 1. 声纹识别的角色
+if not role:
+    role = reverse_voice.get(speaker_id)    # 2. 声纹映射
+if not role:
+    role = reverse_seq.get(speaker_id)       # 3. 发言顺序推断
+```
+
+---
+
+### 2.6 `app/role_inference.py` - 角色推断（已移除）
+
+此文件在本地化版本中被**完全移除**，其功能已整合到 `realtime_ws_state.py` 中。
+
+#### 原版功能（第49-127行）
+
+```python
+def infer_roles(segments: list[dict]) -> dict:
+    """基于文本特征推断说话人角色"""
+    # 1. 统计每个说话人的问题数量
+    # 2. 分析问题类型覆盖率
+    # 3. 检测追问语言使用
+    # 4. 比较平均回答长度
+```
+
+#### 本地化替代方案
+
+| 原版功能 | 本地化替代 |
+|----------|------------|
+| 文本特征分析 | 声纹比对（CAM++） |
+| 问题数量统计 | 发言顺序 |
+| 追问语言检测 | VAD voice_change 检测 |
+| 置信度计算 | 声纹相似度分数 |
+
+---
+
+## 🆕 三、新增文件详解
+
+### 3.1 `app/model_manager.py` - 模型管理器
+
+这是本地化版本的核心模块，负责统一管理所有本地模型。
+
+#### 核心功能
+
+```python
+class ModelManager:
+    """
+    模型管理器 - 单例模式，全局共享模型实例
+    
+    使用方式:
+        manager = ModelManager.get_instance()
+        await manager.initialize()
+        asr_model = manager.get_asr_model()
+        camp_model = manager.get_camp_model()
+    """
+    
+    def __init__(self):
+        self.funasr_model = None      # FunASR 模型（VAD + ASR）
+        self.camp_model = None        # CAM++ 中文声纹模型
+        self.camp_en_model = None     # CAM++ 英文声纹模型
+        self.vad_model = None         # Silero VAD
+        self._initialized = False
+```
+
+#### 模型加载流程
+
+```python
+async def initialize(self, paths: Optional[ModelPaths] = None) -> None:
+    """初始化所有模型（在后台线程中加载，避免阻塞）"""
+    
+    # 1. 加载 Silero VAD
+    await loop.run_in_executor(None, self._load_vad)
+    
+    # 2. 加载 FunASR
+    await loop.run_in_executor(None, self._load_funasr)
+    
+    # 3. 加载 CAM++ 中文
+    await loop.run_in_executor(None, self._load_campplus)
+    
+    # 4. 加载 CAM++ 英文
+    await loop.run_in_executor(None, self._load_campplus_en)
+```
+
+#### FunASR 加载
+
+```python
+def _load_funasr(self) -> None:
+    """加载 FunASR 模型（使用本地路径）"""
+    model_path = self._paths.funasr_model
+    
+    from funasr import AutoModel
+    
+    # 方式1: 直接使用本地模型路径
+    self.funasr_model = AutoModel(
+        model=model_path,
+        device=self._paths.device,
+        disable_update=True,
+        ncpu=4,
+    )
+```
+
+#### CAM++ 加载
+
+```python
+def _load_campplus(self) -> None:
+    """加载 CAM++ 中文声纹模型"""
+    model_dir = self._paths.campplus_model
+    
+    # 直接加载 CAM++ 模型
+    from funasr.models.campplus.model import CAMPPlus
+    
+    # 读取配置
+    config_path = os.path.join(model_dir, "config.yaml")
+    with open(config_path, 'r', encoding='utf-8') as f:
+        model_conf = yaml.safe_load(f)
+    
+    # 创建模型实例
+    camp_config = model_conf.get("model_conf", {})
+    self.camp_model = CAMPPlus(
+        feat_dim=camp_config.get("feat_dim", 80),
+        embedding_size=camp_config.get("embedding_size", 192),
+        # ...
+    )
+    
+    # 加载权重
+    model_file = os.path.join(model_dir, model_conf.get("model_file") or "campplus_cn_common.bin")
+    state_dict = torch.load(model_file, map_location=self._paths.device)
+    self.camp_model.load_state_dict(state_dict, strict=False)
+    self.camp_model.to(self._paths.device)
+    self.camp_model.eval()
+```
+
+#### 声纹特征提取器
+
+```python
+class SpeakerEmbeddingExtractor:
+    """
+    说话人声纹特征提取器
+    使用 CAM++ 模型提取音频的声纹向量
+    """
+    
+    def extract(self, audio_data: np.ndarray) -> np.ndarray:
+        """
+        从音频数据中提取声纹特征向量
+        
+        Returns:
+            192 维声纹向量（CAM++ 输出维度）
+        """
+        audio_tensor = torch.from_numpy(audio_data).float()
+        audio_list = [audio_tensor]
+        
+        # 提取 fbank 特征
+        features_padded, feature_lengths, feature_times = extract_feature(audio_list)
+        features_padded = features_padded.to(device=self.device)
+        
+        # 使用 CAM++ 模型提取 embedding
+        embedding = self.camp_model.forward(features_padded)
+        
+        return embedding_np  # 192 维向量
+    
+    def compute_similarity(self, emb1: np.ndarray, emb2: np.ndarray) -> float:
+        """计算两个声纹向量的余弦相似度"""
+        emb1_norm = emb1 / (np.linalg.norm(emb1) + 1e-8)
+        emb2_norm = emb2 / (np.linalg.norm(emb2) + 1e-8)
+        similarity = np.dot(emb1_norm, emb2_norm)
+        return (similarity + 1.0) / 2.0  # 归一化到 [0, 1]
+```
+
+---
+
+### 3.2 `app/streaming_pipeline.py` - 流式处理管道
+
+#### 核心数据结构
+
+```python
+@dataclass
+class TranscriptDelta:
+    """流式转录增量结果"""
+    text: str              # 转录文本
+    is_final: bool         # 是否是最终结果
+    start_ms: int         # 开始时间
+    end_ms: int           # 结束时间
+    speaker_id: Optional[str] = None  # 说话人ID
+    speaker_confidence: float = 0.0    # 说话人置信度
+    segment_reason: Optional[str] = None  # 分段原因
+    interviewer_sim: float = 0.0      # 与面试官的相似度 [0, 1]
+    candidate_sim: float = 0.0        # 与候选人的相似度 [0, 1]
+    recognized_role: Optional[str] = None  # 推断的角色
+
+@dataclass
+class SpeechSegment:
+    """语音片段"""
+    audio_data: np.ndarray   # float32, 16kHz
+    start_ms: int          # 开始时间
+    end_ms: int           # 结束时间
+    segment_reason: str = "unknown"  # silence_timeout / voice_change
+```
+
+#### 流式 VAD 处理器
+
+```python
+class StreamingVAD:
+    """
+    流式 VAD 检测器
+    实时检测语音活动，支持变长片段
+    """
+    
+    def feed(self, audio_chunk: np.ndarray) -> Optional[SpeechSegment]:
+        """
+        实时处理音频块
+        
+        Returns:
+            SpeechSegment 如果检测到完整语音片段，否则 None
+        """
+        # 1. 累积到缓冲
+        self._buffer = np.concatenate([self._buffer, audio_chunk])
+        
+        # 2. 处理满 512 samples 的块
+        while len(self._buffer) >= VAD_WINDOW_SIZE:
+            chunk = self._buffer[:VAD_WINDOW_SIZE]
+            self._buffer = self._buffer[VAD_WINDOW_SIZE:]
+            
+            # 3. VAD 检测
+            is_speech = self._detect_speech(chunk)
+            
+            # 4. 状态机更新
+            result = self._update_state(is_speech, chunk)
+            if result:
+                return result
+```
+
+#### 说话人变化检测
+
+```python
+def _detect_voice_change(self, new_features: np.ndarray) -> bool:
+    """
+    检测语音特征是否发生显著变化（说话人切换）
+    """
+    # 提取简化的语音特征
+    # - 短时能量
+    # - 频谱质心
+    # - 基频估计
+    
+    # 与最近的特征比较
+    last_features = self._recent_features[-1]
+    diff = np.abs(new_features - last_features)
+    max_diff = np.max(diff)
+    
+    # 检测明显变化
+    if max_diff > VOICE_CHANGE_THRESHOLD or energy_change > 0.5:
+        return True
+    
+    return False
+```
+
+#### 流式 ASR 处理器
+
+```python
+class StreamingASR:
+    """
+    流式 ASR 处理器
+    使用 FunASR 推理，支持实时输出
+    """
+    
+    def recognize(self, audio_data: np.ndarray, on_delta: Callable, language: str = "zh"):
+        """识别音频数据"""
+        # FunASR 推理
+        result = self.asr_model.generate(
+            input=audio_data,
+            batch_size_s=300,
+            return_raw_text=True,
+            language=language,
+        )
+        
+        # 处理结果
+        if result:
+            for item in result:
+                text = item.get("text", "")
+                on_delta(TranscriptDelta(
+                    text=text,
+                    is_final=True,
+                    start_ms=0,
+                    end_ms=0
+                ))
+```
+
+#### 流式声纹识别器
+
+```python
+class StreamingSpeakerRecognition:
+    """
+    流式声纹识别
+    实时比对说话人身份
+    """
+    
+    def extract_and_compare(
+        self,
+        audio_data: np.ndarray,
+        registered_embeddings: dict,
+        threshold: float = 0.75
+    ) -> Optional[Tuple[str, float, float, float]]:
+        """
+        提取声纹并比对
+        
+        Returns:
+            (speaker_id, best_score, interviewer_sim, candidate_sim)
+        """
+        # 1. 提取声纹
+        embedding = self.extractor.extract(audio_data)
+        
+        # 2. 比对所有已注册说话人
+        for speaker_id, registered_emb in registered_embeddings.items():
+            cos_sim = np.dot(embedding, registered_emb) / (
+                np.linalg.norm(embedding) * np.linalg.norm(registered_emb)
+            )
+            score = (cos_sim + 1.0) / 2.0  # 归一化到 [0, 1]
+            
+            if score > threshold:
+                return (speaker_id, score, interviewer_sim, candidate_sim)
+        
+        return None
+```
+
+#### 完整管道
+
+```python
+class StreamingPipeline:
+    """
+    流式 VAD + ASR + 声纹识别管道
+    
+    特性：
+    - 实时流式处理，无需等待完整音频
+    - ASR 支持实时输出中间结果
+    - 声纹识别异步比对
+    - 异步回调，不会阻塞音频接收
+    """
+    
+    async def feed_audio(self, audio_data: np.ndarray):
+        """异步接收音频数据"""
+        # 1. VAD 检测（同步）
+        segment = self.vad.feed(audio_data)
+        
+        if segment:
+            # 2. 同步执行声纹识别
+            speaker_result = await loop.run_in_executor(
+                None,
+                self.speaker.extract_and_compare,
+                segment.audio_data,
+                self._registered_speakers
+            )
+            
+            # 3. 触发语音片段回调（用于声纹注册）
+            if self.on_speech_segment:
+                await self.on_speech_segment(segment)
+            
+            # 4. 提交 ASR 任务（带锁，避免并行调用）
+            await self._run_streaming_asr_locked(
+                segment.audio_data, 
+                segment.segment_reason, 
+                speaker_info
+            )
+```
+
+---
+
+### 3.3 `app/speaker_recognition.py` - 说话人识别模块
+
+#### 核心数据结构
+
+```python
+class SpeakerState(Enum):
+    """说话人状态"""
+    UNKNOWN = "unknown"       # 未知
+    REGISTERED = "registered"  # 已注册
+    IDENTIFIED = "identified"  # 已识别
+
+@dataclass
+class SpeakerProfile:
+    """说话人档案"""
+    speaker_id: str
+    name: Optional[str] = None  # 可选的友好名称
+    role: Optional[str] = None  # 角色：interviewer / candidate
+    embedding: Optional[np.ndarray] = None  # 声纹向量
+    sample_count: int = 0       # 样本数量
+
+@dataclass
+class RegistrationResult:
+    """注册结果"""
+    success: bool
+    speaker_id: str
+    sample_count: int
+    embedding_quality: float  # 嵌入质量评估
+    message: str
+```
+
+#### 说话人识别器
+
+```python
+class SpeakerRecognizer:
+    """
+    说话人识别器
+    使用 CAM++ 声纹模型进行说话人注册和识别
+    """
+    
+    def register_speaker(
+        self,
+        speaker_id: str,
+        audio_samples: List[np.ndarray],
+        name: Optional[str] = None,
+        role: Optional[str] = None
+    ) -> RegistrationResult:
+        """注册说话人声纹"""
+        embeddings = []
+        
+        for sample in audio_samples:
+            emb = self.extractor.extract(sample)
+            embeddings.append(emb)
+        
+        # 平均多个样本得到最终声纹
+        avg_embedding = np.mean(embeddings, axis=0)
+        
+        # 归一化
+        avg_embedding = avg_embedding / (np.linalg.norm(avg_embedding) + 1e-8)
+        
+        # 创建说话人档案
+        profile = SpeakerProfile(
+            speaker_id=speaker_id,
+            name=name,
+            role=role,
+            embedding=avg_embedding,
+            sample_count=len(embeddings),
+        )
+        
+        self.speakers[speaker_id] = profile
+        return RegistrationResult(success=True, ...)
+    
+    def register_embedding(
+        self,
+        speaker_id: str,
+        embedding: np.ndarray,
+        name: Optional[str] = None,
+        role: Optional[str] = None
+    ) -> RegistrationResult:
+        """
+        直接用已提取的声纹 embedding 注册说话人（快速模式）
+        用于自动声纹注册场景
+        """
+        # 直接使用已提取的 embedding
+        profile = SpeakerProfile(
+            speaker_id=speaker_id,
+            embedding=embedding,
+            sample_count=1,
+        )
+        self.speakers[speaker_id] = profile
+    
+    def identify_speaker(self, audio_sample: np.ndarray) -> Optional[SpeakerMatch]:
+        """识别音频片段属于哪个已注册的说话人"""
+        embedding = self.extractor.extract(audio_sample)
+        
+        best_match = None
+        best_similarity = 0.0
+        
+        for speaker_id, profile in self.speakers.items():
+            similarity = self.extractor.compute_similarity(
+                embedding, profile.embedding
+            )
+            
+            if similarity > best_similarity:
+                best_similarity = similarity
+                best_match = SpeakerMatch(
+                    speaker_id=speaker_id,
+                    role=profile.role,
+                    similarity=similarity,
+                    confidence=similarity
+                )
+        
+        if best_match and best_match.similarity >= self.threshold:
+            return best_match
+        
+        return None
+```
+
+#### 增量更新
+
+```python
+def update_speaker_embedding(
+    self,
+    speaker_id: str,
+    new_audio_sample: np.ndarray,
+    weight: float = 0.2
+) -> bool:
+    """
+    用新的音频样本更新说话人的声纹（增量学习）
+    
+    Args:
+        speaker_id: 说话人 ID
+        new_audio_sample: 新音频样本
+        weight: 新样本的权重（0-1），越大表示新样本影响越大
+    """
+    new_embedding = self.extractor.extract(new_audio_sample)
+    new_embedding = new_embedding / (np.linalg.norm(new_embedding) + 1e-8)
+    
+    # 指数移动平均更新
+    profile.embedding = (
+        (1 - weight) * profile.embedding + 
+        weight * new_embedding
+    )
+    profile.embedding = profile.embedding / (
+        np.linalg.norm(profile.embedding) + 1e-8
+    )
+```
+
+#### 面试说话人管理器
+
+```python
+class InterviewSpeakerManager:
+    """
+    面试场景的说话人管理器
+    封装面试开始的声纹注册流程
+    """
+    
+    def start_registration(self) -> str:
+        """开始注册流程"""
+        self._interviewer_samples = []
+        self._candidate_samples = []
+        self._current_phase = "interviewer"
+        return self._current_phase
+    
+    def add_sample(self, speaker_type: str, audio_sample: np.ndarray) -> None:
+        """添加一个音频样本"""
+        if speaker_type == "interviewer":
+            self._interviewer_samples.append(audio_sample)
+        elif speaker_type == "candidate":
+            self._candidate_samples.append(audio_sample)
+    
+    def finish_registration(self) -> Tuple[bool, str]:
+        """完成注册"""
+        int_result, cand_result = self.recognizer.register_interview_participants(
+            interviewer_samples=self._interviewer_samples,
+            candidate_samples=self._candidate_samples
+        )
+        return int_result.success and cand_result.success, "声纹注册成功"
+```
+
+---
+
+### 3.4 `app/vad_asr_pipeline.py` - VAD + ASR 异步管道
+
+这是 `streaming_pipeline.py` 的备选实现，采用不同的异步架构。
+
+#### VAD 处理器
+
+```python
+class VADProcessor:
+    """
+    Silero VAD 语音活动检测处理器
+    检测音频流中的语音边界
+    """
+    
+    def process_chunk(self, audio_chunk: np.ndarray) -> Optional[SpeechSegment]:
+        """处理一个音频块，返回检测到的语音片段"""
+        # 使用 Silero VAD 检测
+        audio_tensor = torch.from_numpy(audio_chunk).float()
+        vad_prob = self.vad_model(audio_tensor, VAD_SAMPLE_RATE).item()
+        
+        is_speech = vad_prob > VAD_THRESHOLD
+        
+        # 状态机处理
+        if self.state == VADState.IDLE:
+            if is_speech:
+                self.state = VADState.SPEECH
+                # ...
+        elif self.state == VADState.SPEECH:
+            # ...
+```
+
+#### 异步处理管道
+
+```python
+class VADASRPipeline:
+    """
+    VAD + ASR 异步处理管道
+    接收音频流，检测语音边界，转录为文字
+    """
+    
+    async def _process_loop(self) -> None:
+        """异步处理循环"""
+        while self._running:
+            # 1. 异步获取音频数据
+            audio_chunk = await self.audio_queue.get()
+            
+            # 2. 在线程池中执行 VAD 处理
+            segment = await loop.run_in_executor(
+                None,
+                self.vad.process_chunk,
+                audio_chunk
+            )
+            
+            # 3. 如果检测到完整语音片段
+            if segment is not None:
+                # 回调音频片段（用于声纹识别）
+                if self._pending_audio_callback:
+                    await self._pending_audio_callback(segment)
+                
+                # 在线程池中执行 ASR 转录
+                result = await loop.run_in_executor(
+                    None,
+                    self.asr.transcribe,
+                    segment.audio_data
+                )
+                
+                # 回调转录结果
+                if self._pending_result_callback and result.text.strip():
+                    await self._pending_result_callback(result)
+```
+
+---
+
+### 3.5 `local_settings.py` - 本地配置文件
+
+#### 配置项对比
+
+| 配置项 | 原版 | 本地化版 |
+|--------|------|----------|
+| OPENAI_API_KEY | 必需 | 可选 |
+| OPENAI_BASE_URL | ✅ | ✅ |
+| OPENAI_PARSER_MODEL | ✅ | ✅ |
+| OPENAI_ANALYSIS_MODEL | ✅ | ✅ |
+| DASHSCOPE_API_KEY | **必需** | ❌ 移除 |
+| DASHSCOPE_REALTIME_WS_URL | ✅ | ❌ 移除 |
+| DASHSCOPE_REALTIME_ASR_MODEL | ✅ | ❌ 移除 |
+| **USE_LOCAL_ASR** | ❌ | ✅ 新增 |
+| **LOCAL_MODEL_DIR** | ❌ | ✅ 新增 |
+| **FUNASR_MODEL_DIR** | ❌ | ✅ 新增 |
+| **CAMPPLUS_MODEL_DIR** | ❌ | ✅ 新增 |
+| **CAMPPLUS_EN_MODEL_DIR** | ❌ | ✅ 新增 |
+| **LOCAL_DEVICE** | ❌ | ✅ 新增 |
+
+#### 本地化配置示例
+
+```python
+# InsightEye 本地设置
+
+# OpenAI 兼容 API 配置
+OPENAI_API_KEY = ""
+OPENAI_BASE_URL = "https://api.zhizengzeng.com/v1"
+OPENAI_PARSER_MODEL = "gpt-5-mini"
+OPENAI_ANALYSIS_MODEL = "gpt-5.4"
+
+# ===== 本地模型配置 (FunASR + CAM++) =====
+# 使用本地模型替代云端服务（无需 API Key）
+USE_LOCAL_ASR = True
+
+# 模型根目录（默认使用项目内置的 models/ 目录）
+LOCAL_MODEL_DIR = ""
+
+# FunASR 模型 - 使用项目内置模型
+FUNASR_MODEL_DIR = ""
+
+# CAM++ 中文声纹模型 - 使用项目内置模型
+CAMPPLUS_MODEL_DIR = ""
+
+# CAM++ 英文声纹模型 - 使用项目内置模型
+CAMPPLUS_EN_MODEL_DIR = ""
+
+# 运行设备：有 NVIDIA 显卡用 "cuda"，否则用 "cpu"
+LOCAL_DEVICE = "cuda"
+```
+
+---
+
+## 📊 四、架构变化总结
+
+### 4.1 整体架构对比
+
+#### 原版架构（阿里云）
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         浏览器                                    │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  麦克风采集 → MediaRecorder → AudioContext → WebSocket    │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │ PCM 音频流 (Base64)
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   本地 WebSocket 桥接服务                         │
+│                   (realtime_ws_server.py)                        │
+│  ┌──────────────────────────────────────────────────────────┐    │
+│  │  SourceBridge: mic → DashScope 上游 WebSocket 桥接       │    │
+│  │  SourceBridge: system → DashScope 上游 WebSocket 桥接    │    │
+│  └──────────────────────────────────────────────────────────┘    │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │ WSS
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    阿里云 DashScope                               │
+│                    qwen3-asr-flash-realtime                       │
+│  ┌──────────────────────────────────────────────────────────┐    │
+│  │  - 实时 ASR                                               │    │
+│  │  - Server-side VAD                                        │    │
+│  │  - 输入语言检测                                            │    │
+│  └──────────────────────────────────────────────────────────┘    │
+│                            │                                     │
+│                            │ WebSocket                           │
+│                            ▼                                     │
+│  ┌──────────────────────────────────────────────────────────┐    │
+│  │  返回转录结果 (transcript.delta / transcript.completed)    │    │
+│  └──────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### 本地化架构
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         浏览器                                    │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  麦克风采集 → MediaRecorder → AudioContext → WebSocket    │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │ PCM 音频流 (Base64)
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│               本地实时语音识别服务 (LocalRealtimeServer)           │
+│                                                              │
+│  ┌────────────────────────────────────────────────────────┐    │
+│  │  AudioSource: system                                    │    │
+│  │  ├── StreamingPipeline (流式管道)                        │    │
+│  │  │   ├── StreamingVAD (Silero VAD)                      │    │
+│  │  │   │   └── 语音活动检测                               │    │
+│  │  │   │   └── 说话人变化检测                            │    │
+│  │  │   ├── StreamingASR (FunASR)                         │    │
+│  │  │   │   └── 语音转文字                                 │    │
+│  │  │   └── StreamingSpeakerRecognition (CAM++)            │    │
+│  │  │       └── 声纹识别                                   │    │
+│  │  │       └── 说话人比对                                  │    │
+│  │  └───────────────────────────────────────────────────── │    │
+│  │                                                          │    │
+│  │  AutoRegistrationState (自动声纹注册)                     │    │
+│  │  ├── interviewer_embedding                               │    │
+│  │  └── candidate_embedding                                 │    │
+│  └────────────────────────────────────────────────────────┘    │
+│                                                              │
+│  ┌────────────────────────────────────────────────────────┐    │
+│  │  ModelManager (模型管理器)                              │    │
+│  │  ├── FunASR 模型 (Paraformer-large)                    │    │
+│  │  ├── CAM++ 模型 (中文)                                  │    │
+│  │  ├── CAM++ 模型 (英文)                                  │    │
+│  │  └── Silero VAD 模型                                    │    │
+│  └────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 4.2 数据流对比
+
+#### 原版数据流
+
+```
+音频 → 桥接服务 → 阿里云 → 转录文本 → 角色推断(role_inference.py) → 会话存储
+```
+
+#### 本地化数据流
+
+```
+音频 → VAD检测 → 语音片段 → 声纹识别 → 转录文本 → 角色分配 → 会话存储
+                         ↓
+                   自动声纹注册
+                   ├── 第一人 → 面试官 embedding
+                   └── 第二人 → 候选人 embedding
+```
+
+### 4.3 角色识别流程对比
+
+#### 原版流程
+
+```
+1. 收集足够片段（至少 2 个说话人，各 2 个片段）
+2. 统计每个说话人的：
+   - 问题数量和比例
+   - 问题类型覆盖率
+   - 追问语言使用次数
+   - 平均回答长度
+3. 计算得分：
+   - 问题多 → 面试官
+   - 回答长 → 候选人
+4. 返回 mapping 和置信度
+```
+
+#### 本地化流程
+
+```
+1. 声纹已注册时：
+   - 直接用 CAM++ 比对相似度
+   - 相似度 > 阈值 → 确定角色
+   
+2. 声纹未注册时（降级方案）：
+   - 第一个段落 → 面试官
+   - VAD 检测到 voice_change → 第二个人 → 候选人
+   - 静默超时分段 → 保持上一个角色
+   
+3. 回溯修正：
+   - 当发现第二个说话人时
+   - 修正之前误判的片段
+```
+
+---
+
+## 🔄 五、配置变更总结
+
+### 5.1 环境依赖变更
+
+| 依赖 | 原版 | 本地化版 | 变更说明 |
+|------|------|----------|----------|
+| `dashscope` | ✅ 必需 | ❌ 移除 | 不再需要阿里云 SDK |
+| `websockets` | ✅ 必需 | ✅ 必需 | WebSocket 服务仍需要 |
+| `funasr` | ❌ | ✅ 新增 | 本地 ASR 依赖 |
+| `torch` | ❌ | ✅ 新增 | FunASR 和 CAM++ 依赖 |
+| `numpy` | ❌ | ✅ 新增 | 音频处理依赖 |
+| `addict` | ❌ | ✅ 新增 | CAM++ 配置解析 |
+| `pyyaml` | ❌ | ✅ 新增 | CAM++ 配置解析 |
+
+### 5.2 模型文件
+
+| 模型 | 原版 | 本地化版 | 说明 |
+|------|------|----------|------|
+| ASR | 阿里云 qwen3-asr | FunASR Paraformer | 本地部署 |
+| VAD | 阿里云 server_vad | Silero VAD | 本地部署 |
+| 声纹 | 无 | CAM++ | 新增 |
+| LLM | OpenAI 兼容 API | 保持不变 | 可选 |
+
+### 5.3 端口占用
+
+| 端口 | 原版 | 本地化版 | 说明 |
+|------|------|----------|------|
+| 8000 | HTTP 服务 | HTTP 服务 | 不变 |
+| 8765 | WebSocket 桥接 | WebSocket 本地 | 不变 |
+
+---
+
+## 📝 六、迁移指南
+
+### 6.1 从原版迁移到本地化版
+
+1. **安装新依赖**
+```bash
+pip install funasr torch numpy addict pyyaml
+```
+
+2. **下载模型文件**
+```
+models/
+├── funasr/           # FunASR 模型
+│   ├── config.yaml
+│   ├── model.pt
+│   └── tokens.json
+└── campplus/         # CAM++ 模型
+    ├── zh-cn/         # 中文模型
+    └── en/            # 英文模型
+```
+
+3. **更新配置**
+```python
+# local_settings.py
+USE_LOCAL_ASR = True
+LOCAL_DEVICE = "cuda"  # 或 "cpu"
+```
+
+4. **移除 DashScope 配置**
+```python
+# 不再需要
+# DASHSCOPE_API_KEY = ""
+# DASHSCOPE_REALTIME_WS_URL = ""
+# DASHSCOPE_REALTIME_ASR_MODEL = ""
+```
+
+### 6.2 硬件要求
+
+| 组件 | 最低要求 | 推荐配置 |
+|------|----------|----------|
+| GPU | NVIDIA GPU (4GB+) | NVIDIA GPU (8GB+) |
+| 内存 | 8GB | 16GB+ |
+| 存储 | 5GB | 10GB+ |
+| CPU | x86_64 | x86_64 |
+
+### 6.3 性能对比
+
+| 指标 | 原版 (阿里云) | 本地化版 (FunASR) |
+|------|---------------|-------------------|
+| ASR 延迟 | 200-500ms | 100-300ms |
+| 首包延迟 | 依赖网络 | 更低 |
+| 并发能力 | 依赖云服务配额 | 取决于硬件 |
+| 成本 | 按调用计费 | 一次性成本 |
+| 离线能力 | ❌ | ✅ |
+
+---
+
+## ✅ 七、总结
+
+本次改动将 InsightEye 从**云服务依赖**的演示系统，转变为**完全本地化部署**的生产级系统。主要改动包括：
+
+1. **ASR 引擎**：阿里云 DashScope → FunASR
+2. **VAD 检测**：阿里云 server_vad → Silero VAD
+3. **声纹识别**：无 → CAM++ 本地模型
+4. **架构**：桥接服务 → 本地流式处理
+5. **配置**：集中到 `local_settings.py`
+
+改动后的系统具有：
+- 零云服务成本
+- 完全隐私保护
+- 离线可用
+- 更低延迟
+- 精准的说话人识别

@@ -1,9 +1,9 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import time
 import uuid
 from threading import Lock
-from typing import Any
+from typing import Any, Optional
 
 from .realtime_analyzer import run_final_analysis, run_rolling_analysis, should_refresh_analysis
 
@@ -21,7 +21,9 @@ class RealtimeSessionStore:
             "status": "active",
             "created_at": time.time(),
             "segments": [],
-            "role_inference": {"ready": False, "mapping": {}, "confidence": 0.0, "reasons": []},
+            "speaker_recognizer": None,  # CAM++ 说话人识别器
+            "voice_registered": False,     # 声纹是否已注册
+            "voice_mapping": {},
             "rolling_analysis": None,
             "last_analysis_segment_count": 0,
             "last_analysis_candidate_chars": 0,
@@ -34,6 +36,21 @@ class RealtimeSessionStore:
     def get(self, session_id: str) -> dict[str, Any] | None:
         with self._lock:
             return self._sessions.get(session_id)
+
+    def update_voice_mapping(self, session_id: str, voice_mapping: dict[str, str]) -> None:
+        """更新声纹映射"""
+        with self._lock:
+            session = self._sessions.get(session_id)
+            if session:
+                session["voice_mapping"] = voice_mapping
+                session["voice_registered"] = True
+
+    def set_speaker_recognizer(self, session_id: str, recognizer) -> None:
+        """设置说话人识别器"""
+        with self._lock:
+            session = self._sessions.get(session_id)
+            if session:
+                session["speaker_recognizer"] = recognizer
 
     def append_segment(self, session_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         with self._lock:
@@ -51,6 +68,10 @@ class RealtimeSessionStore:
                 "start_ms": int(payload.get("start_ms") or 0),
                 "end_ms": int(payload.get("end_ms") or 0),
                 "final": bool(payload.get("final", True)),
+                "recognized_role": payload.get("recognized_role"),  # 声纹识别的角色
+                "speaker_confidence": float(payload.get("speaker_confidence") or 0.0),  # 最佳相似度
+                "interviewer_sim": float(payload.get("interviewer_sim") or 0.0),  # 与面试官的相似度
+                "candidate_sim": float(payload.get("candidate_sim") or 0.0),  # 与候选人的相似度
             }
             if not segment["text"]:
                 raise ValueError("Segment text cannot be empty")

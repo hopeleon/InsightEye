@@ -24,8 +24,14 @@ DEFAULT_OPENAI_PERSONALITY_MODEL = "gpt-5-mini"
 DEFAULT_OPENAI_AUDIO_MODEL = "gpt-4o-transcribe-diarize"
 DEFAULT_OPENAI_REALTIME_TRANSCRIPTION_MODEL = "gpt-4o-transcribe"
 DEFAULT_REALTIME_WS_PORT = 8765
-DEFAULT_DASHSCOPE_REALTIME_WS_URL = "wss://dashscope.aliyuncs.com/api-ws/v1/realtime"
-DEFAULT_DASHSCOPE_REALTIME_ASR_MODEL = "qwen3-asr-flash-realtime"
+
+# 本地模型配置（FunASR + CAM++）
+# 使用相对于项目根目录的路径
+DEFAULT_LOCAL_MODEL_DIR = str(BASE_DIR / "models")
+DEFAULT_FUNASR_MODEL = str(BASE_DIR / "models" / "funasr")
+DEFAULT_CAMPPLUS_MODEL = str(BASE_DIR / "models" / "campplus" / "zh-cn")
+DEFAULT_CAMPPLUS_EN_MODEL = str(BASE_DIR / "models" / "campplus" / "en")
+DEFAULT_LOCAL_DEVICE = "cuda"  # "cuda" 或 "cpu"
 
 local_settings = {}
 local_settings_path = BASE_DIR / "local_settings.py"
@@ -44,10 +50,19 @@ OPENAI_AUDIO_MODEL = str(local_settings.get("OPENAI_AUDIO_MODEL", os.getenv("OPE
 OPENAI_REALTIME_TRANSCRIPTION_MODEL = str(local_settings.get("OPENAI_REALTIME_TRANSCRIPTION_MODEL", os.getenv("OPENAI_REALTIME_TRANSCRIPTION_MODEL", DEFAULT_OPENAI_REALTIME_TRANSCRIPTION_MODEL))).strip()
 OPENAI_WEBSOCKET_BASE_URL = str(local_settings.get("OPENAI_WEBSOCKET_BASE_URL", os.getenv("OPENAI_WEBSOCKET_BASE_URL", ""))).strip() or None
 REALTIME_WS_PORT = int(local_settings.get("REALTIME_WS_PORT", os.getenv("REALTIME_WS_PORT", DEFAULT_REALTIME_WS_PORT)))
-DASHSCOPE_API_KEY = str(local_settings.get("DASHSCOPE_API_KEY", os.getenv("DASHSCOPE_API_KEY", ""))).strip()
-DASHSCOPE_REALTIME_WS_URL = str(
-    local_settings.get("DASHSCOPE_REALTIME_WS_URL", os.getenv("DASHSCOPE_REALTIME_WS_URL", DEFAULT_DASHSCOPE_REALTIME_WS_URL))
-).strip().rstrip("/")
-DASHSCOPE_REALTIME_ASR_MODEL = str(
-    local_settings.get("DASHSCOPE_REALTIME_ASR_MODEL", os.getenv("DASHSCOPE_REALTIME_ASR_MODEL", DEFAULT_DASHSCOPE_REALTIME_ASR_MODEL))
-).strip()
+
+# 本地模型配置（支持通过 local_settings.py 或环境变量覆盖）
+# 空字符串表示使用默认值
+def _get_config_path(local_val, env_var, default):
+    val = local_val if local_val else os.getenv(env_var, default)
+    return str(val).strip()
+
+LOCAL_MODEL_DIR = _get_config_path(local_settings.get("LOCAL_MODEL_DIR"), "LOCAL_MODEL_DIR", DEFAULT_LOCAL_MODEL_DIR)
+# FunASR 模型目录：支持从 local_settings.py 或环境变量覆盖，默认使用项目内置 models/funasr
+FUNASR_MODEL_DIR = _get_config_path(local_settings.get("FUNASR_MODEL_DIR"), "FUNASR_MODEL_DIR", DEFAULT_FUNASR_MODEL)
+# CAM++ 中文声纹模型目录
+CAMPPLUS_MODEL_DIR = _get_config_path(local_settings.get("CAMPPLUS_MODEL_DIR"), "CAMPPLUS_MODEL_DIR", DEFAULT_CAMPPLUS_MODEL)
+# CAM++ 英文声纹模型目录
+CAMPPLUS_EN_MODEL_DIR = _get_config_path(local_settings.get("CAMPPLUS_EN_MODEL_DIR"), "CAMPPLUS_EN_MODEL_DIR", DEFAULT_CAMPPLUS_EN_MODEL)
+# 推理设备
+LOCAL_DEVICE = _get_config_path(local_settings.get("LOCAL_DEVICE"), "LOCAL_DEVICE", DEFAULT_LOCAL_DEVICE)
