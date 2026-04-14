@@ -423,25 +423,24 @@ class StreamingSpeakerRecognition:
                     np.linalg.norm(embedding) * np.linalg.norm(registered_emb)
                 )
                 score = (cos_sim + 1.0) / 2.0  # 映射到 [0, 1]
-                
+
                 print(f"[声纹] 与 {speaker_id} 相似度: cos_sim={cos_sim:.3f}, score={score:.3f}, threshold={threshold}")
-                
+
                 # 记录两个角色的相似度
                 if speaker_id == "interviewer":
                     interviewer_sim = score
                 elif speaker_id == "candidate":
                     candidate_sim = score
-                
-                if score > threshold and score > best_score:
+
+                if score > best_score:
                     best_score = score
                     best_match = speaker_id
-            
+
+            # 始终返回最高相似度的说话人（不硬卡阈值）
             if best_match:
-                print(f"[声纹] ✅ 识别成功: {best_match} (score={best_score:.3f})")
+                print(f"[声纹] 识别结果: {best_match} (score={best_score:.3f})")
                 return (best_match, best_score, interviewer_sim, candidate_sim)
-            else:
-                print(f"[声纹] ❌ 未匹配到任何说话人 (最高score={best_score:.3f})")
-                return None
+            return None
         
         except Exception as e:
             print(f"[声纹] ❌ 声纹识别异常: {e}")
@@ -608,8 +607,6 @@ class StreamingPipeline:
                     # 存储：说话人ID, 最佳置信度, 面试官相似度, 候选人相似度
                     speaker_info = (sid, confidence, interviewer_sim, candidate_sim)
                     print(f"[管道] 声纹识别成功: {sid} (置信度={confidence:.3f}, 面试官={interviewer_sim:.3f}, 候选人={candidate_sim:.3f})")
-                else:
-                    print("[管道] 声纹未匹配任何已注册说话人，将保持上一次的说话人标签")
             
             # 触发语音段落回调（自动注册在回调中同步等待完成）
             # 关键：这里 await，确保自动注册完成后才执行 ASR，避免 ASR 先于注册完成

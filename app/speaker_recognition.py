@@ -244,10 +244,10 @@ class SpeakerRecognizer:
                         confidence=similarity  # 简化：置信度 = 相似度
                     )
             
-            # 检查是否超过阈值
-            if best_match and best_match.similarity >= self.threshold:
+            # 返回最高相似度的说话人（不设阈值硬卡，始终返回最接近的）
+            if best_match:
                 return best_match
-            
+
             return None
             
         except Exception as e:
