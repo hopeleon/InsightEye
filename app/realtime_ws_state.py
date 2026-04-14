@@ -1,10 +1,3 @@
-"""
-实时语音识别事件处理器
-支持两种模式：
-1. DashScope 模式（原有）
-2. 本地 FunASR + CAM++ 模式（新增）
-"""
-
 from __future__ import annotations
 
 from typing import Any, Optional
@@ -13,15 +6,15 @@ from .realtime_analyzer import build_realtime_transcript
 from .realtime_session import store as realtime_store
 
 
-def consume_local_transcript_event(session_id: str, vad_speaker_id: str, event: dict[str, Any]) -> dict[str, Any] | None:
-    """
-    处理本地 FunASR 转录完成事件，更新会话状态。
-    
-    策略：注册前用 enrollment_source 标签存储 segment；注册后用 CAM++ 识别结果。
-    注册完成后通过 _retroactive_identify 批量修正之前存储的 segment 角色。
-    """
-    event_type = str(event.get("type") or "")
+def build_session_update(session_id: str, corrections: list | None = None) -> dict[str, Any] | None:
+    session = realtime_store.get(session_id)
+    if not session:
+        return None
+    return _build_session_update(session_id, session.get("segments", []), corrections or [])
 
+
+def consume_local_transcript_event(session_id: str, vad_speaker_id: str, event: dict[str, Any]) -> dict[str, Any] | None:
+    event_type = str(event.get("type") or "")
     if event_type != "transcript.completed":
         return None
 
@@ -34,16 +27,13 @@ def consume_local_transcript_event(session_id: str, vad_speaker_id: str, event: 
         return None
 
     voice_registered = session.get("voice_registered", False)
-    recognized_role = event.get("recognized_role")  # CAM++ 声纹识别结果
-    campp_speaker_id = event.get("speaker_id")  # CAM++ 识别的 speaker_id
+    recognized_role = event.get("recognized_role")
+    campp_speaker_id = event.get("speaker_id")
     interviewer_sim = float(event.get("interviewer_sim") or 0.0)
     candidate_sim = float(event.get("candidate_sim") or 0.0)
 
-    # pending_audio 存在说明还在注册期间，用 enrollment_source 标签存储
     if not voice_registered or not recognized_role:
-        # 注册期间：存储为 enrollment_source，立即用对应音频做声纹比对修正
         pending_audio: list = session.get("pending_audio", [])
-
         try:
             session = realtime_store.append_segment(
                 session_id,
@@ -62,7 +52,6 @@ def consume_local_transcript_event(session_id: str, vad_speaker_id: str, event: 
         except ValueError:
             return None
 
-        # 用对应音频做声纹比对，修正刚存的 segment
         recognizer: Optional[Any] = session.get("speaker_recognizer")
         if recognizer and pending_audio:
             audio = pending_audio[0]["audio_samples"]
@@ -81,15 +70,15 @@ def consume_local_transcript_event(session_id: str, vad_speaker_id: str, event: 
                 seg = segments[-1]
                 seg["speaker_id"] = role
                 seg["recognized_role"] = role
-                seg["interviewer_sim"] = int_sim
-                seg["candidate_sim"] = cand_sim
-                print(f"[AutoReg] 修正 enrollment_source segment[{len(segments)-1}] → {role}")
+                seg["interviewer_sim"] = float(int_sim)
+                seg["candidate_sim"] = float(cand_sim)
+                print(f"[AutoReg] fixed enrollment_source segment[{len(segments)-1}] -> {role}")
             pending_audio.pop(0)
 
-        return _build_session_update(session_id, session.get("segments", []), [])
+        return build_session_update(session_id, [])
 
-    # 注册后：CAM++ 直接给角色，用识别结果存储
     try:
+        realtime_store.clear_partial_transcript(session_id, campp_speaker_id or recognized_role)
         session = realtime_store.append_segment(
             session_id,
             {
@@ -111,10 +100,9 @@ def consume_local_transcript_event(session_id: str, vad_speaker_id: str, event: 
 
 
 def _build_session_update(session_id: str, segments: list, corrections: list) -> dict[str, Any]:
-    """构建 session.update 响应"""
     session = realtime_store.get(session_id)
     rolling = (session or {}).get("rolling_analysis") or {}
-    
+    rolling_disc = (session or {}).get("rolling_disc_analysis") or {}
     return {
         "type": "session.update",
         "segment_corrections": corrections,
@@ -127,7 +115,7 @@ def _build_session_update(session_id: str, segments: list, corrections: list) ->
             "voice_mapping": (session or {}).get("voice_mapping", {}),
             "display_transcript": build_realtime_transcript(
                 segments,
-                (session or {}).get("voice_mapping", {})
+                (session or {}).get("voice_mapping", {}),
             ),
             "rolling_analysis": {
                 "summary": rolling.get("summary", ""),
@@ -139,6 +127,7 @@ def _build_session_update(session_id: str, segments: list, corrections: list) ->
                 "mbti_summary": rolling.get("mbti_summary", ""),
                 "local_result": rolling.get("local_result"),
             },
+            "rolling_disc_analysis": rolling_disc,
         },
     }
 
@@ -173,9 +162,6 @@ def _payload_ms(event: dict[str, Any], key: str) -> int:
 
 
 def consume_realtime_event(session_id: str, speaker_id: str, event: dict[str, Any]) -> dict[str, Any] | None:
-    """
-    处理 DashScope 实时事件（原有模式）
-    """
     event_type = str(event.get("type") or "")
     session = realtime_store.get(session_id)
     if not session:
@@ -188,6 +174,7 @@ def consume_realtime_event(session_id: str, speaker_id: str, event: dict[str, An
         delta = _payload_text(event)
         if not delta:
             return None
+        realtime_store.update_partial_transcript(session_id, speaker_id, delta)
         return {
             "type": "transcript.delta",
             "speaker_id": speaker_id,
@@ -201,6 +188,7 @@ def consume_realtime_event(session_id: str, speaker_id: str, event: dict[str, An
         text = _payload_text(event)
         if not text:
             return None
+        realtime_store.clear_partial_transcript(session_id, speaker_id)
         session = realtime_store.append_segment(
             session_id,
             {
@@ -211,32 +199,7 @@ def consume_realtime_event(session_id: str, speaker_id: str, event: dict[str, An
                 "final": True,
             },
         )
-        rolling = session.get("rolling_analysis") or {}
-        return {
-            "type": "session.update",
-            "session": {
-                "session_id": session_id,
-                "status": session.get("status", "active"),
-                "segment_count": len(session.get("segments") or []),
-                "segments": session.get("segments") or [],
-                "voice_registered": session.get("voice_registered", False),
-                "voice_mapping": session.get("voice_mapping", {}),
-                "display_transcript": build_realtime_transcript(
-                    session.get("segments") or [],
-                    session.get("voice_mapping") or {}
-                ),
-                "rolling_analysis": {
-                    "summary": rolling.get("summary", ""),
-                    "risk_summary": rolling.get("risk_summary", ""),
-                    "evidence_gaps": rolling.get("evidence_gaps", []),
-                    "follow_up_questions": rolling.get("follow_up_questions", []),
-                    "recommended_action": rolling.get("recommended_action", ""),
-                    "mbti_type": rolling.get("mbti_type", ""),
-                    "mbti_summary": rolling.get("mbti_summary", ""),
-                    "local_result": rolling.get("local_result"),
-                },
-            },
-        }
+        return _build_session_update(session_id, session.get("segments") or [], [])
 
     if event_type == "input_audio_buffer.speech_started":
         return {"type": "speech.started", "speaker_id": speaker_id}

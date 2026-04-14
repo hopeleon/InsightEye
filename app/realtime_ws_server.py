@@ -1,4 +1,4 @@
-"""
+﻿"""
 本地实时语音识别 WebSocket 服务
 使用 FunASR 流式推理 + Silero VAD + CAM++ 实现流式实时识别
 """
@@ -12,6 +12,7 @@ import json
 import sys
 import time
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from typing import Any, Optional, Dict
 from urllib.parse import parse_qs, urlparse
@@ -22,7 +23,9 @@ from websockets.asyncio.server import serve
 
 from . import config
 from .realtime_session import store as realtime_store
-from .realtime_ws_state import consume_local_transcript_event
+from .realtime_ws_state import build_session_update, consume_local_transcript_event
+from .realtime_disc_analyzer import run_realtime_disc_analysis, should_refresh_realtime_disc
+from .realtime_analyzer import run_rolling_analysis, should_refresh_analysis
 from .model_manager import ModelManager, get_model_manager
 from .streaming_pipeline import (
     StreamingPipeline, 
@@ -50,6 +53,7 @@ class AudioSource:
     pipeline: Optional[StreamingPipeline] = None
     recognizer: Optional[SpeakerRecognizer] = None
     is_ready: bool = False
+    _connection_closed: bool = False  # 连接断开标志，防止向死连接重复发送
 
 
 @dataclass
@@ -346,6 +350,7 @@ class LocalRealtimeServer:
         finally:
             for source in sources.values():
                 if source.pipeline:
+                    asyncio.create_task(source.pipeline.stop())
                     source.pipeline.reset()
             with contextlib.suppress(Exception):
                 await websocket.close()
@@ -562,6 +567,67 @@ class LocalRealtimeServer:
             import traceback
             traceback.print_exc()
     
+    async def _async_disc_refresh(
+        self,
+        session_id: str,
+        websocket,
+        source: AudioSource,
+        is_partial: bool,
+    ) -> None:
+        """在线程池中异步执行 rolling analysis + DISC 分析，完成后推送结果，不阻塞事件循环"""
+        if source._connection_closed:
+            return
+        session = realtime_store.get(session_id)
+        if not session:
+            return
+
+        loop = asyncio.get_event_loop()
+
+        try:
+            # 1. rolling analysis（含 LLM 追问，同步阻塞，放专用线程池）
+            if should_refresh_analysis(session):
+                await loop.run_in_executor(_ANALYSIS_EXECUTOR, run_rolling_analysis, session)
+                if source._connection_closed:
+                    return
+                rolling_update = build_session_update(session_id)
+                if rolling_update:
+                    await websocket.send(json.dumps(rolling_update, ensure_ascii=False))
+
+            # 2. DISC 分析（含 LLM，同步阻塞，放专用线程池）
+            if not should_refresh_realtime_disc(session):
+                return
+            disc_result = await loop.run_in_executor(
+                _ANALYSIS_EXECUTOR, run_realtime_disc_analysis, session
+            )
+            if source._connection_closed:
+                return
+            if not disc_result.get("ready"):
+                return
+
+            # 推送 session.update（含最新 DISC）
+            session_update = build_session_update(session_id)
+            if session_update:
+                rolling_disc = session_update.get("session", {}).get("rolling_disc_analysis", {})
+                print(
+                    f"[DISC] async refresh done, ready={rolling_disc.get('ready')}, "
+                    f"partial={is_partial}, source={rolling_disc.get('source')}"
+                )
+                await websocket.send(json.dumps(session_update, ensure_ascii=False))
+
+            # 推送独立 disc.update
+            disc_event = _build_disc_update_event(disc_result, is_partial=is_partial)
+            await websocket.send(json.dumps(disc_event, ensure_ascii=False))
+
+        except Exception as e:
+            exc_type = type(e).__name__
+            exc_mod = type(e).__module__
+            if "ConnectionClosed" in exc_type or (exc_mod and "websockets" in exc_mod):
+                source._connection_closed = True
+                if source.pipeline:
+                    asyncio.create_task(source.pipeline.stop())
+            else:
+                print(f"[LocalRealtimeServer] DISC 异步刷新错误: {e}")
+
     def _bytes_to_audio(self, audio_bytes: bytes) -> np.ndarray:
         """将 PCM bytes 转换为 numpy float32 数组"""
         audio_int16 = np.frombuffer(audio_bytes, dtype=np.int16)
@@ -574,6 +640,9 @@ class LocalRealtimeServer:
         websocket
     ) -> None:
         """流式转录回调 - 实时推送结果"""
+        # 快速路径：连接已断开，跳过所有操作
+        if source._connection_closed:
+            return
         try:
             if not delta.text.strip():
                 return
@@ -604,10 +673,10 @@ class LocalRealtimeServer:
                 "is_final": delta.is_final,
                 "start_ms": delta.start_ms,
                 "end_ms": delta.end_ms,
-                "speaker_confidence": delta.speaker_confidence,
+                "speaker_confidence": float(delta.speaker_confidence),
                 "segment_reason": delta.segment_reason,  # 用于声纹未注册时区分说话人切换
-                "interviewer_sim": delta.interviewer_sim,
-                "candidate_sim": delta.candidate_sim,
+                "interviewer_sim": float(delta.interviewer_sim),
+                "candidate_sim": float(delta.candidate_sim),
                 "recognized_role": getattr(delta, "recognized_role", None),  # 由 on_delta 根据相似度推断
             }
             
@@ -615,28 +684,39 @@ class LocalRealtimeServer:
             print(f"[WS发送] → 发送 {event['type']}: speaker_id={raw_speaker}, recognized_role={event.get('recognized_role')}, "
                   f"interviewer_sim={event['interviewer_sim']}, candidate_sim={event['candidate_sim']}, is_final={event['is_final']}, text={delta.text[:30]}")
             await websocket.send(json.dumps(event, ensure_ascii=False))
-            
-            # 如果是最终结果，更新会话状态
+
             recognized_speaker = delta.speaker_id or source.speaker_id
+            if not delta.is_final and recognized_speaker:
+                realtime_store.update_partial_transcript(
+                    source.session_id,
+                    recognized_speaker,
+                    delta.text,
+                    recognized_role=event.get("recognized_role"),
+                    interviewer_sim=event["interviewer_sim"],
+                    candidate_sim=event["candidate_sim"],
+                )
+                # partial 时异步触发 DISC 分析（不阻塞事件循环）
+                asyncio.create_task(
+                    self._async_disc_refresh(source.session_id, websocket, source, is_partial=True)
+                )
+
             if delta.is_final and recognized_speaker:
                 session_update = consume_local_transcript_event(
                     source.session_id,
                     recognized_speaker,
                     event
                 )
-                
+
                 if session_update:
                     corrections = session_update.get("segment_corrections", [])
                     segments = session_update.get("session", {}).get("segments", [])
-                    # 打印即将发送到前端的完整 segments 信息
                     for i, seg in enumerate(segments):
-                        print(f"[WS发送] segment[{i}]: speaker_id={seg.get('speaker_id')}, recognized_role={seg.get('recognized_role')}, "
+                        print(f"[WS] segment[{i}]: speaker_id={seg.get('speaker_id')}, recognized_role={seg.get('recognized_role')}, "
                               f"interviewer_sim={seg.get('interviewer_sim')}, candidate_sim={seg.get('candidate_sim')}, "
                               f"text={str(seg.get('text') or '')[:30]}")
-                    print(f"[WS发送] → 发送 session.update 到前端，segments 共 {len(segments)} 条，corrections={corrections}")
+                    print(f"[WS] -> session.update, segments={len(segments)}, corrections={corrections}")
                     await websocket.send(json.dumps(session_update, ensure_ascii=False))
-                    
-                    # 推送片段角色修正事件（用于前端实时更新显示）
+
                     if corrections:
                         for idx in corrections:
                             seg = session_update["session"]["segments"][idx]
@@ -650,11 +730,31 @@ class LocalRealtimeServer:
                                 "interviewer_sim": seg.get("interviewer_sim", 0),
                                 "candidate_sim": seg.get("candidate_sim", 0),
                             }, ensure_ascii=False))
-                            print(f"[修正] 片段 {idx} 角色已修正: 面试官 → 候选人（{seg.get('text', '')[:30]}...）")
-                            print(f"[WS发送] → 发送 segment.corrected: index={idx}, new_role=candidate")
-        
+                            print(f"[Fix] segment {idx} role corrected to candidate ({seg.get('text', '')[:30]}...)")
+                            print(f"[WS] -> segment.corrected: index={idx}, new_role=candidate")
+
+                    # final segment 后异步触发 DISC 分析（含 LLM，不阻塞事件循环）
+                    asyncio.create_task(
+                        self._async_disc_refresh(source.session_id, websocket, source, is_partial=False)
+                    )
+
+        except (ConnectionError, OSError):
+            # websockets 库在不同版本可能抛出不同异常，统一处理
+            source._connection_closed = True
+            if source.pipeline:
+                asyncio.create_task(source.pipeline.stop())
         except Exception as e:
-            print(f"[LocalRealtimeServer] 转录回调错误: {e}")
+            import sys as _sys
+            exc_type = type(e).__name__
+            exc_mod = type(e).__module__
+            # 捕获 websockets ConnectionClosed 系列异常（兼容不同 websockets 版本）
+            if "ConnectionClosed" in exc_type or (exc_mod and "websockets" in exc_mod):
+                print(f"[LocalRealtimeServer] 连接已断开，停止推送: {e}")
+                source._connection_closed = True
+                if source.pipeline:
+                    asyncio.create_task(source.pipeline.stop())
+            else:
+                print(f"[LocalRealtimeServer] 转录回调错误: {e}")
     
     async def _on_speaker_identified(
         self,
@@ -664,6 +764,8 @@ class LocalRealtimeServer:
         websocket
     ) -> None:
         """声纹识别回调"""
+        if source._connection_closed:
+            return
         try:
             # 异步推送声纹识别结果
             await websocket.send(json.dumps({
@@ -673,11 +775,47 @@ class LocalRealtimeServer:
                 "confidence": confidence,
             }, ensure_ascii=False))
         except Exception as e:
-            print(f"[LocalRealtimeServer] 声纹回调错误: {e}")
+            exc_type = type(e).__name__
+            exc_mod = type(e).__module__
+            if "ConnectionClosed" in exc_type or (exc_mod and "websockets" in exc_mod):
+                print(f"[LocalRealtimeServer] 连接已断开（声纹回调）: {e}")
+                source._connection_closed = True
+                if source.pipeline:
+                    asyncio.create_task(source.pipeline.stop())
+            else:
+                print(f"[LocalRealtimeServer] 声纹回调错误: {e}")
 
 
-# 音频源名称（仅使用 system）
-SOURCE_TO_SPEAKER = {"system": "speaker_a"}
+# 音频源名称
+# `mic` 和 `system` 都会由前端通过 websocket 发送。
+# 如果这里只注册 `system`，`mic` 音频会在 `_handle_audio_chunk()` 中被直接丢弃，
+# 实时会话就只会保留一个人的发言。
+SOURCE_TO_SPEAKER = {
+    "mic": "speaker_a",
+    "system": "speaker_b",
+}
+
+# 专用线程池：LLM/DISC 分析与 ASR 线程池隔离，互不阻塞
+# max_workers=2：同时最多 2 个 LLM 请求，避免无限堆积
+_ANALYSIS_EXECUTOR = ThreadPoolExecutor(max_workers=2, thread_name_prefix="disc_llm")
+
+
+def _build_disc_update_event(disc: dict, is_partial: bool) -> dict:
+    """构建独立 disc.update 消息，供前端饼图动画使用"""
+    return {
+        "type": "disc.update",
+        "dominant_style": disc.get("dominant_style", ""),
+        "secondary_style": disc.get("secondary_style", ""),
+        "scores": disc.get("scores", {"D": 0, "I": 0, "S": 0, "C": 0}),
+        "score_deltas": disc.get("score_deltas", {"D": 0, "I": 0, "S": 0, "C": 0}),
+        "confidence": disc.get("confidence", "low"),
+        "summary": disc.get("summary", ""),
+        "recommended_roles": disc.get("recommended_roles", []),
+        "follow_up_hint": disc.get("follow_up_hint", ""),
+        "source": disc.get("source", "local_rules"),
+        "is_partial": is_partial,
+        "updated_at": disc.get("updated_at", 0),
+    }
 
 
 # 全局服务器实例
@@ -701,3 +839,4 @@ async def start_realtime_server(host: str = "127.0.0.1", port: int | None = None
     server = LocalRealtimeServer()
     await server._initialize_models()
     await server._serve(host, port or config.REALTIME_WS_PORT)
+

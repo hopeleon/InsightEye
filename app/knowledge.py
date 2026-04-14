@@ -14,6 +14,7 @@ from .config import (
     ENNEAGRAM_PROMPT_PATH,
     MBTI_KNOWLEDGE_PATH,
     MBTI_PROMPT_PATH,
+    REALTIME_DISC_PROMPT_PATH,
     STAR_KNOWLEDGE_PATH,
 )
 
@@ -65,3 +66,8 @@ def load_enneagram_prompt() -> str:
 @lru_cache(maxsize=1)
 def load_star_knowledge() -> dict:
     return yaml.safe_load(_read_text(STAR_KNOWLEDGE_PATH))
+
+
+@lru_cache(maxsize=1)
+def load_realtime_disc_prompt() -> str:
+    return _read_text(REALTIME_DISC_PROMPT_PATH)
