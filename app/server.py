@@ -219,6 +219,7 @@ def _run_full_mode_analysis(handler: BaseHTTPRequestHandler, payload: dict) -> N
 def _realtime_session_response(session: dict[str, Any]) -> dict[str, Any]:
     rolling = session.get("rolling_analysis") or {}
     voice_mapping = session.get("voice_mapping", {})
+    rolling_disc = session.get("rolling_disc_analysis") or {}
     return {
         "session_id": session["session_id"],
         "status": session["status"],
@@ -241,6 +242,7 @@ def _realtime_session_response(session: dict[str, Any]) -> dict[str, Any]:
             "mbti_summary": rolling.get("mbti_summary", ""),
             "local_result": rolling.get("local_result"),
         },
+        "rolling_disc_analysis": rolling_disc,
         "final_report": session.get("final_report"),
     }
 

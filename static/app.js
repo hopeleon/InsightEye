@@ -1000,6 +1000,31 @@ function handleLiveSocketMessage(message) {
     return;
   }
 
+  if (message.type === "disc.update") {
+    // 独立 DISC 更新消息：触发完整动画（饼图 + 数值跳动 + delta 指示器）
+    console.log(`[WS] disc.update: dominant=${message.dominant_style}, scores=${JSON.stringify(message.scores)}, deltas=${JSON.stringify(message.score_deltas)}`);
+    if (latestRealtimeSession) {
+      latestRealtimeSession.rolling_disc_analysis = {
+        ...(latestRealtimeSession.rolling_disc_analysis || {}),
+        ready: true,
+        dominant_style: message.dominant_style,
+        secondary_style: message.secondary_style,
+        scores: message.scores,
+        score_deltas: message.score_deltas,
+        confidence: message.confidence,
+        summary: message.summary,
+        recommended_roles: message.recommended_roles,
+        role_reason: message.role_reason || (latestRealtimeSession.rolling_disc_analysis || {}).role_reason || "",
+        follow_up_hint: message.follow_up_hint,
+        source: message.source,
+        is_partial: message.is_partial,
+        updated_at: message.updated_at,
+      };
+      renderRealtimeDiscPanel(latestRealtimeSession, { animate: true, showDelta: true });
+    }
+    return;
+  }
+
   if (message.type === "speech.started") {
     setText("audioSourceState", `${sourceLabel} 检测到语音`);
     return;
@@ -1250,6 +1275,27 @@ function resetRealtimeState() {
   setText("realtimeSuggestionSummary", "\u6682\u65e0\u6eda\u52a8\u5efa\u8bae");
   setHtml("realtimeSuggestionList", `<div class="panel-empty-note">\u6682\u65e0\u63a8\u8350\u63d0\u95ee</div>`);
   setHtml("realtimeLiveTranscript", `<div class="panel-empty-note">\u7b49\u5f85\u5b9e\u65f6\u7247\u6bb5</div>`);
+  setText("realtimeDiscStyle", "Collecting");
+  setText("realtimeDiscConfidence", "low", "low");
+  setText("realtimeDiscLiveState", "WAITING", "WAITING");
+  setText("realtimeDiscUpdatedAt", "Awaiting signal", "Awaiting signal");
+  setHtml("realtimeDiscBars", `<div class="panel-empty-note">Collecting signals</div>`);
+  setText("realtimeDiscSummary", "Waiting for enough candidate content to build a realtime DISC trend.", "Waiting for enough candidate content to build a realtime DISC trend.");
+  setHtml("realtimeDiscRoles", `<div class="panel-empty-note">Recommended roles will appear here.</div>`);
+  const discBlock = byId("realtimeDiscBlock");
+  if (discBlock) discBlock.className = "realtime-disc-block waiting";
+  const liveBadge = byId("realtimeDiscLiveState");
+  if (liveBadge) liveBadge.className = "realtime-disc-live waiting";
+}
+
+
+function formatRealtimeDiscUpdated(ms) {
+  const ts = Number(ms || 0);
+  if (!ts) return "Awaiting signal";
+  const diff = Math.max(0, Math.round((Date.now() - ts) / 1000));
+  if (diff <= 1) return "Updated just now";
+  if (diff < 60) return `Updated ${diff}s ago`;
+  return `Updated ${Math.floor(diff / 60)}m ago`;
 }
 
 function parseRealtimeSegments(rawText) {
@@ -1278,6 +1324,121 @@ function parseRealtimeSegments(rawText) {
     cursor += duration;
     return segment;
   }).filter((item) => item.text);
+}
+
+// ── DISC SVG donut chart helpers ──────────────────────────────────────────────
+const DISC_COLORS = { D: "#E53E3E", I: "#DD6B20", S: "#38A169", C: "#3182CE" };
+const DISC_DONUT_R = 40;
+const DISC_DONUT_CIRCUMFERENCE = 2 * Math.PI * DISC_DONUT_R; // ≈ 251.33
+
+function buildPieSegments(scores) {
+  const total = ["D", "I", "S", "C"].reduce((s, k) => s + Number(scores[k] || 0), 0) || 1;
+  let offset = 0;
+  return ["D", "I", "S", "C"].map((key) => {
+    const ratio = Number(scores[key] || 0) / total;
+    const dash = ratio * DISC_DONUT_CIRCUMFERENCE;
+    const seg = { key, dash, offset, score: Number(scores[key] || 0), color: DISC_COLORS[key] };
+    offset += dash;
+    return seg;
+  });
+}
+
+function renderRealtimeDiscPanel(session, opts = {}) {
+  const disc = session.rolling_disc_analysis || {};
+  const scores = disc.scores || {};
+  const deltas = disc.score_deltas || {};
+  const animate = Boolean(opts.animate);
+  const showDelta = Boolean(opts.showDelta);
+
+  if (!disc.ready) {
+    setHtml("realtimeDiscBars", `<div class="panel-empty-note">Collecting signals</div>`);
+  } else {
+    const segments = buildPieSegments(scores);
+    const topKey = disc.dominant_style || segments.slice().sort((a, b) => b.score - a.score)[0]?.key || "D";
+
+    // Build SVG circles for each segment
+    const circles = segments.map((seg) => {
+      const dashArray = `${seg.dash.toFixed(3)} ${(DISC_DONUT_CIRCUMFERENCE - seg.dash).toFixed(3)}`;
+      // stroke-dashoffset: negative offset rotates the segment start clockwise
+      const dashOffset = (-seg.offset).toFixed(3);
+      return `<circle
+        cx="50" cy="50" r="${DISC_DONUT_R}"
+        fill="none"
+        stroke="${seg.color}"
+        stroke-width="18"
+        stroke-dasharray="${dashArray}"
+        stroke-dashoffset="${dashOffset}"
+        class="disc-svg-segment disc-svg-${seg.key.toLowerCase()}"
+        style="transform:rotate(-90deg);transform-origin:50% 50%"
+      />`;
+    }).join("");
+
+    // Legend with optional delta indicators
+    const legend = segments.map((seg) => {
+      const delta = Number(deltas[seg.key] || 0);
+      let deltaHtml = "";
+      if (showDelta && Math.abs(delta) > 2) {
+        const arrow = delta > 0 ? "↑" : "↓";
+        const cls = delta > 0 ? "disc-delta-up" : "disc-delta-down";
+        deltaHtml = `<span class="${cls}">${arrow}${Math.abs(delta)}</span>`;
+      }
+      const isTop = seg.key === topKey;
+      const scoreClass = animate ? "disc-legend-score updated" : "disc-legend-score";
+      return `<div class="realtime-disc-legend-item${isTop ? " top" : ""}">
+        <span class="realtime-disc-legend-dot ${DISC_META[seg.key]?.className || ""}"></span>
+        <span>${DISC_META[seg.key]?.label || seg.key}</span>
+        <strong class="${scoreClass}">${seg.score}</strong>
+        ${deltaHtml}
+      </div>`;
+    }).join("");
+
+    const wrapClass = `realtime-disc-chart-wrap ${disc.is_partial_window ? "live" : "stable"}`;
+    const chart = `<div class="${wrapClass}">
+      <svg viewBox="0 0 100 100" class="disc-svg-pie" aria-label="DISC 四色饼图">
+        <circle cx="50" cy="50" r="${DISC_DONUT_R}" fill="none" stroke="#2a2a3a" stroke-width="18"/>
+        ${circles}
+        <text x="50" y="46" text-anchor="middle" class="disc-svg-center-label">${topKey}</text>
+        <text x="50" y="59" text-anchor="middle" class="disc-svg-center-score">${scores[topKey] || 0}</text>
+      </svg>
+      <div class="realtime-disc-legend">${legend}</div>
+    </div>`;
+    setHtml("realtimeDiscBars", chart);
+
+    // Trigger jump animation: remove then re-add class
+    if (animate) {
+      requestAnimationFrame(() => {
+        document.querySelectorAll(".disc-legend-score.updated").forEach((el) => {
+          el.classList.remove("updated");
+          void el.offsetWidth; // reflow
+          el.classList.add("updated");
+        });
+      });
+    }
+  }
+
+  const dominant = disc.dominant_style ? DISC_META[disc.dominant_style]?.label || disc.dominant_style : "Collecting";
+  const secondary = disc.secondary_style ? DISC_META[disc.secondary_style]?.label || disc.secondary_style : "-";
+  setText("realtimeDiscStyle", disc.ready ? `${dominant} / ${secondary}` : "Collecting");
+  setText("realtimeDiscConfidence", disc.confidence || "low", "low");
+  setText("realtimeDiscSummary", disc.summary || "Waiting for enough candidate content to build a realtime DISC trend.", "Waiting for enough candidate content to build a realtime DISC trend.");
+  const liveState = !disc.ready ? "WAITING" : disc.is_partial_window ? "LIVE" : "STABLE";
+  setText("realtimeDiscLiveState", liveState, "WAITING");
+  setText("realtimeDiscUpdatedAt", formatRealtimeDiscUpdated(disc.updated_at), "Awaiting signal");
+  const discBlock = byId("realtimeDiscBlock");
+  if (discBlock) {
+    discBlock.classList.toggle("live", Boolean(disc.is_partial_window));
+    discBlock.classList.toggle("ready", Boolean(disc.ready));
+    discBlock.classList.toggle("waiting", !disc.ready);
+  }
+  const liveBadge = byId("realtimeDiscLiveState");
+  if (liveBadge) {
+    liveBadge.classList.toggle("live", Boolean(disc.is_partial_window));
+    liveBadge.classList.toggle("stable", Boolean(disc.ready && !disc.is_partial_window));
+    liveBadge.classList.toggle("waiting", !disc.ready);
+  }
+  const roles = (disc.recommended_roles || []).map((item) => `<span class="tag">${safeText(item)}</span>`).join("");
+  const roleReason = disc.role_reason ? `<div class="realtime-disc-role-reason">${safeText(disc.role_reason)}</div>` : "";
+  setHtml("realtimeDiscRoles", roles ? `<div class="tag-list">${roles}</div>${roleReason}` : `<div class="panel-empty-note">Recommended roles will appear here.</div>`);
 }
 
 function renderRealtimeSessionPanel(session) {
@@ -1345,6 +1506,8 @@ function renderRealtimeSessionPanel(session) {
     }
     setHtml("realtimeRoleMap", roleLines.join("") || `<div class="bullet-item"><span class="bullet-dot"></span><span>\u8fdb\u884c\u4e2d\u58f0\u7eb9\u6ce8\u518c...</span></div>`);
   }
+
+  renderRealtimeDiscPanel(session);
 
   const transcriptRows = buildRealtimeTranscriptRows(session);
   setHtml("realtimeLiveTranscript", transcriptRows.join("") || `<div class="panel-empty-note">\u7b49\u5f85\u5b9e\u65f6\u7247\u6bb5</div>`);
