@@ -16,7 +16,7 @@ from .realtime_session import store as realtime_store
 def consume_local_transcript_event(session_id: str, vad_speaker_id: str, event: dict[str, Any]) -> dict[str, Any] | None:
     """
     处理本地 FunASR 转录完成事件，更新会话状态。
-    
+
     策略：注册前用 enrollment_source 标签存储 segment；注册后用 CAM++ 识别结果。
     注册完成后通过 _retroactive_identify 批量修正之前存储的 segment 角色。
     """
@@ -86,6 +86,7 @@ def consume_local_transcript_event(session_id: str, vad_speaker_id: str, event: 
                 print(f"[AutoReg] 修正 enrollment_source segment[{len(segments)-1}] → {role}")
             pending_audio.pop(0)
 
+        realtime_store.mark_analysis_update_needed(session_id)
         return _build_session_update(session_id, session.get("segments", []), [])
 
     # 注册后：CAM++ 直接给角色，用识别结果存储
@@ -107,6 +108,7 @@ def consume_local_transcript_event(session_id: str, vad_speaker_id: str, event: 
     except ValueError:
         return None
 
+    realtime_store.mark_analysis_update_needed(session_id)
     return _build_session_update(session_id, session.get("segments", []), [])
 
 
@@ -114,7 +116,7 @@ def _build_session_update(session_id: str, segments: list, corrections: list) ->
     """构建 session.update 响应"""
     session = realtime_store.get(session_id)
     rolling = (session or {}).get("rolling_analysis") or {}
-    
+
     return {
         "type": "session.update",
         "segment_corrections": corrections,
@@ -127,7 +129,7 @@ def _build_session_update(session_id: str, segments: list, corrections: list) ->
             "voice_mapping": (session or {}).get("voice_mapping", {}),
             "display_transcript": build_realtime_transcript(
                 segments,
-                (session or {}).get("voice_mapping", {})
+                (session or {}).get("voice_mapping", {}),
             ),
             "rolling_analysis": {
                 "summary": rolling.get("summary", ""),
@@ -141,6 +143,11 @@ def _build_session_update(session_id: str, segments: list, corrections: list) ->
             },
         },
     }
+
+
+def build_session_update_for_push(session_id: str, segments: list, corrections: list) -> dict[str, Any]:
+    """后台分析完成后主动推送 session.update 的统一入口"""
+    return _build_session_update(session_id, segments, corrections)
 
 
 def _payload_text(event: dict[str, Any]) -> str:
@@ -223,7 +230,7 @@ def consume_realtime_event(session_id: str, speaker_id: str, event: dict[str, An
                 "voice_mapping": session.get("voice_mapping", {}),
                 "display_transcript": build_realtime_transcript(
                     session.get("segments") or [],
-                    session.get("voice_mapping") or {}
+                    session.get("voice_mapping") or {},
                 ),
                 "rolling_analysis": {
                     "summary": rolling.get("summary", ""),

@@ -844,8 +844,42 @@ function buildRealtimeTranscriptRows(session) {
       item.candidate_sim || 0
     );
     console.log(`[Transcript] 片段[${index}] → 标签="${label}"`);
-    return `<div class="live-transcript-item"><strong>${label}</strong><p>${safeText(item.text)}</p></div>`;
+    return `<div class="live-transcript-item" data-segment-id="${safeText(item.id, index)}"><strong>${label}</strong><p>${safeText(item.text)}</p></div>`;
   });
+}
+
+function appendRealtimeTranscriptRows(session) {
+  const transcriptList = byId("realtimeLiveTranscript");
+  if (!transcriptList) return;
+
+  const segments = session?.segments || [];
+  const existingIds = new Set(
+    Array.from(transcriptList.querySelectorAll(".live-transcript-item[data-segment-id]"))
+      .map((el) => el.getAttribute("data-segment-id"))
+      .filter(Boolean)
+  );
+
+  const newItems = segments.filter((item, index) => {
+    const id = String(item?.id ?? index);
+    return !existingIds.has(id);
+  });
+
+  if (!newItems.length) return;
+
+  const html = newItems.map((item, index) => {
+    const label = speakerDisplayLabel(
+      item.speaker_id,
+      item.recognized_role || null,
+      item.interviewer_sim || 0,
+      item.candidate_sim || 0
+    );
+    return `<div class="live-transcript-item" data-segment-id="${safeText(item.id, index)}"><strong>${label}</strong><p>${safeText(item.text)}</p></div>`;
+  }).join("");
+
+  const emptyNote = transcriptList.querySelector(".panel-empty-note");
+  if (emptyNote) emptyNote.remove();
+  transcriptList.insertAdjacentHTML("beforeend", html);
+  scrollRealtimeTranscriptToLatest();
 }
 
 function handleLiveSocketMessage(message) {
@@ -873,6 +907,16 @@ function handleLiveSocketMessage(message) {
     return;
   }
 
+  if (message.type === "transcript.completed") {
+    if (latestRealtimeSession && message.session) {
+      latestRealtimeSession = message.session;
+      appendRealtimeTranscriptRows(latestRealtimeSession);
+      setText("audioSourceState", "本地 FunASR 转写中");
+      if (hint) hint.textContent = `${sourceLabel} 转写完成。`;
+    }
+    return;
+  }
+
   if (message.type === "segment.corrected") {
     // 收到后端修正的片段角色，更新本地 segments 并重新渲染转录
     console.log(`[WS] segment.corrected: index=${message.index}, old_role="${message.old_role}", new_role="${message.new_role}", text="${(message.text || "").slice(0, 20)}"`);
@@ -883,7 +927,7 @@ function handleLiveSocketMessage(message) {
         latestRealtimeSession.segments[idx].interviewer_sim = message.interviewer_sim || 0;
         latestRealtimeSession.segments[idx].candidate_sim = message.candidate_sim || 0;
         console.log(`[WS] 已更新 latestRealtimeSession.segments[${idx}]: recognized_role="${message.new_role}"`);
-        renderRealtimeResponse(latestRealtimeSession);
+        renderRealtimeSessionPanel(latestRealtimeSession);
       } else {
         console.log(`[WS] segment.corrected 失败: idx=${idx} 超出范围 [0, ${latestRealtimeSession.segments.length})`);
       }
@@ -928,8 +972,22 @@ function handleLiveSocketMessage(message) {
 
   if (message.type === "session.update" && message.session) {
     console.log(`[WS] session.update: voice_registered=${message.session.voice_registered}, voice_mapping=${JSON.stringify(message.session.voice_mapping)}, segment_count=${message.session.segments ? message.session.segments.length : 0}`);
-    latestRealtimeSession = message.session;
-    const segments = message.session.segments || [];
+
+    const incomingSession = message.session;
+    if (
+      latestRealtimeSession &&
+      latestRealtimeSession.rolling_analysis?.follow_up_questions?.length > 0 &&
+      !(incomingSession.rolling_analysis?.follow_up_questions?.length > 0)
+    ) {
+      incomingSession.rolling_analysis = incomingSession.rolling_analysis || {};
+      incomingSession.rolling_analysis.follow_up_questions = latestRealtimeSession.rolling_analysis.follow_up_questions;
+      incomingSession.rolling_analysis.follow_up_questions_source = latestRealtimeSession.rolling_analysis.follow_up_questions_source || incomingSession.rolling_analysis.follow_up_questions_source;
+      incomingSession.rolling_analysis.follow_up_questions_updated_at = latestRealtimeSession.rolling_analysis.follow_up_questions_updated_at || incomingSession.rolling_analysis.follow_up_questions_updated_at;
+      console.log("[WS] 保留已有 follow_up_questions，避免被空快照覆盖");
+    }
+
+    latestRealtimeSession = incomingSession;
+    const segments = incomingSession.segments || [];
     if (segments.length > lastRenderedSegmentCount) {
       const lastSegment = segments[segments.length - 1] || {};
       if (lastSegment.speaker_id) {
@@ -937,7 +995,7 @@ function handleLiveSocketMessage(message) {
       }
       lastRenderedSegmentCount = segments.length;
     }
-    renderRealtimeResponse(message.session);
+    renderRealtimeSessionPanel(incomingSession);
     setText("audioSourceState", "本地 FunASR 转写中");
     return;
   }
@@ -1232,6 +1290,12 @@ function renderRealtimeSessionPanel(session) {
   const sequentialRoles = session.sequential_roles || {first_speaker: null, second_speaker: null};
   const voiceRegistered = session.voice_registered || false;
   const segments = session.segments || [];
+
+  const transcriptList = byId("realtimeLiveTranscript");
+  if (transcriptList && segments.length) {
+    transcriptList.innerHTML = buildRealtimeTranscriptRows(session).join("");
+    scrollRealtimeTranscriptToLatest();
+  }
 
   // 计算各角色的平均相似度（用于显示）
   const roleAvgSims = {};

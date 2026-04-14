@@ -25,13 +25,13 @@ from .realtime_session import store as realtime_store
 from .realtime_ws_state import consume_local_transcript_event
 from .model_manager import ModelManager, get_model_manager
 from .streaming_pipeline import (
-    StreamingPipeline, 
+    StreamingPipeline,
     create_streaming_pipeline,
     TranscriptDelta,
     SpeechSegment
 )
 from .speaker_recognition import (
-    SpeakerRecognizer, 
+    SpeakerRecognizer,
     create_speaker_recognizer
 )
 
@@ -79,92 +79,117 @@ class LocalRealtimeServer:
     本地实时语音识别服务器
     使用流式 VAD + ASR + CAM++ 处理音频，无需外部 API
     """
-    
+
     def __init__(self):
         self._thread: threading.Thread | None = None
         self._loop: asyncio.AbstractEventLoop | None = None
         self._started = threading.Event()
         self._server = None
-        
+
         self._model_manager: Optional[ModelManager] = None
         self._initialized = False
-        
+        self._bind_error: Optional[Exception] = None
+
         # 当前活动的源处理器
         self._active_sources: Dict[str, AudioSource] = {}
-    
+
     async def _initialize_models(self) -> None:
         """初始化模型"""
         if self._initialized:
             return
-        
+
         print("[LocalRealtimeServer] 正在初始化模型...")
         sys.stdout.flush()
-        
+
         self._model_manager = get_model_manager()
         await self._model_manager.initialize()
-        
+
         self._initialized = True
         print("[LocalRealtimeServer] 模型初始化完成")
         sys.stdout.flush()
-    
+
     def start(self, host: str = "127.0.0.1", port: int | None = None) -> None:
         """启动服务器"""
         if self._thread and self._thread.is_alive():
             return
-        
+
         target_port = port or config.REALTIME_WS_PORT
+        self._bind_error = None
+        self._started.clear()
+
         self._thread = threading.Thread(target=self._run, args=(host, target_port), daemon=True)
         self._thread.start()
-        self._started.wait(timeout=10)
-    
+
+        # 等待启动完成或绑定失败
+        if not self._started.wait(timeout=10):
+            if self._bind_error:
+                print(f"[LocalRealtimeServer] 启动失败: {self._bind_error}")
+            else:
+                print("[LocalRealtimeServer] 启动超时，可能端口被占用或事件循环未正常启动")
+
     def _run(self, host: str, port: int) -> None:
         """在独立线程中运行事件循环"""
-        self._loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self._loop)
-        
-        async def init_and_serve():
-            await self._initialize_models()
-            await self._serve(host, port)
-        
-        self._loop.run_until_complete(init_and_serve())
-        self._started.set()
-        self._loop.run_forever()
-    
+        try:
+            self._loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self._loop)
+
+            async def init_and_serve():
+                await self._initialize_models()
+                await self._serve(host, port)
+
+            self._loop.run_until_complete(init_and_serve())
+            self._started.set()
+            self._loop.run_forever()
+        except OSError as exc:
+            self._bind_error = exc
+            self._started.set()
+            print(f"[LocalRealtimeServer] WebSocket 服务启动失败: {exc}")
+            sys.stdout.flush()
+        except Exception as exc:
+            self._bind_error = exc
+            self._started.set()
+            print(f"[LocalRealtimeServer] 运行异常: {exc}")
+            sys.stdout.flush()
+
     async def _serve(self, host: str, port: int) -> None:
         """启动 WebSocket 服务器"""
+        if self._server is not None:
+            print(f"[LocalRealtimeServer] WebSocket 服务器已存在，跳过重复启动 ws://{host}:{port}/realtime")
+            return
+
         print(f"[LocalRealtimeServer] 开始启动 WebSocket 服务器...")
         self._server = await serve(self._handle_client, host, port, max_size=2**22)
         print(f"[LocalRealtimeServer] WebSocket 服务已启动 ws://{host}:{port}/realtime")
         sys.stdout.flush()
-    
+
     async def _handle_client(self, websocket) -> None:
         """处理客户端连接"""
         request = getattr(websocket, "request", None)
         path = getattr(request, "path", "/")
         parsed = urlparse(path)
-        
+
         if parsed.path != "/realtime":
             await websocket.send(json.dumps({"type": "error", "message": "Invalid websocket path"}))
             await websocket.close()
             return
-        
+
         query = parse_qs(parsed.query)
         session_id = (query.get("session_id") or [""])[0].strip()
         language = (query.get("language") or ["zh"])[0].strip() or "zh"
-        
+
         if not session_id:
             await websocket.send(json.dumps({"type": "error", "message": "Missing session_id"}))
             await websocket.close()
             return
-        
+
         session = realtime_store.get(session_id)
         if not session:
             await websocket.send(json.dumps({"type": "error", "message": "Realtime session not found"}))
             await websocket.close()
             return
-        
+
         await self._initialize_models()
-        
+
         # 创建源处理器
         sources = {}
         for source_name, speaker_id in SOURCE_TO_SPEAKER.items():
@@ -174,10 +199,10 @@ class LocalRealtimeServer:
                 session_id=session_id,
                 client_websocket=websocket
             )
-        
+
         # 创建说话人管理器（用于手动注册）
         speaker_recognizer = create_speaker_recognizer(self._model_manager)
-        
+
         # 自动声纹注册状态
         auto_reg = AutoRegistrationState(
             enabled=True,
@@ -190,6 +215,8 @@ class LocalRealtimeServer:
             raw = realtime_store._sessions.get(session_id, {})
             raw["speaker_recognizer"] = speaker_recognizer
 
+        realtime_store.register_ws_client(session_id, websocket)
+
         try:
             # 发送就绪消息
             await websocket.send(json.dumps({
@@ -201,9 +228,9 @@ class LocalRealtimeServer:
                 "supports_auto_registration": True,  # 标记支持自动注册
                 "streaming": True,
             }, ensure_ascii=False))
-            
+
             print(f"[WS发送] → 发送 session.ready (本地模式), session_id={session_id}")
-            
+
             # 消息处理循环
             async for raw_message in websocket:
                 try:
@@ -211,10 +238,10 @@ class LocalRealtimeServer:
                 except json.JSONDecodeError:
                     await websocket.send(json.dumps({"type": "error", "message": "Invalid JSON"}))
                     continue
-                
+
                 try:
                     message_type = str(message.get("type") or "")
-                    
+
                     if message_type == "audio_chunk":
                         await self._handle_audio_chunk(
                             sources, message, websocket,
@@ -233,7 +260,7 @@ class LocalRealtimeServer:
                             "phase": current_phase,
                             "message": "请面试官说话录音（至少2段）"
                         }, ensure_ascii=False))
-                    
+
                     elif message_type == "start_auto_registration":
                         # 重新开启/重置自动注册（即使默认已开启，也可手动重置）
                         auto_reg.enabled = True
@@ -246,7 +273,7 @@ class LocalRealtimeServer:
                             "type": "auto_registration.started",
                             "message": "请第一位说话人开始发言"
                         }, ensure_ascii=False))
-                    
+
                     elif message_type == "add_registration_sample":
                         # 手动注册：添加样本
                         phase = str(message.get("phase") or "interviewer")
@@ -267,7 +294,7 @@ class LocalRealtimeServer:
                                 "candidate_samples": len(auto_reg.candidate_samples),
                                 "samples_needed": 2
                             }, ensure_ascii=False))
-                    
+
                     elif message_type == "finish_registration":
                         # 完成手动注册
                         if len(auto_reg.interviewer_samples) < 2:
@@ -317,7 +344,7 @@ class LocalRealtimeServer:
                             }, ensure_ascii=False))
                             print(f"[WS发送] → 发送 registration.finished: success={int_result.success and cand_result.success}, "
                                   f"voice_registered={int_result.success and cand_result.success}")
-                    
+
                     elif message_type == "get_registration_status":
                         await websocket.send(json.dumps({
                             "type": "registration.status",
@@ -327,13 +354,13 @@ class LocalRealtimeServer:
                             "auto_mode": auto_reg.enabled,
                             "auto_done": auto_reg.auto_register_done
                         }, ensure_ascii=False))
-                    
+
                     elif message_type == "close":
                         break
-                    
+
                     else:
                         print(f"[Server] 未知消息类型: {message_type}")
-                
+
                 except Exception as exc:
                     print(f"[Server] 处理消息错误: {exc}")
                     import traceback
@@ -342,8 +369,9 @@ class LocalRealtimeServer:
                         await websocket.send(json.dumps({"type": "error", "message": str(exc)}, ensure_ascii=False))
                     except Exception:
                         pass
-        
+
         finally:
+            realtime_store.unregister_ws_client(session_id, websocket)
             for source in sources.values():
                 if source.pipeline:
                     source.pipeline.reset()
@@ -361,29 +389,29 @@ class LocalRealtimeServer:
         """处理音频块"""
         source_name = str(message.get("source") or "system").strip()
         audio_b64 = str(message.get("audio") or "")
-        
+
         if not audio_b64 or source_name not in sources:
             return
-        
+
         source = sources[source_name]
-        
+
         # 解码音频
         try:
             audio_bytes = base64.b64decode(audio_b64)
         except Exception as e:
             print(f"[LocalRealtimeServer] 音频解码失败: {e}")
             return
-        
+
         audio_float32 = self._bytes_to_audio(audio_bytes)
         audio_duration = len(audio_float32) / 16000
-        
+
         # 调试：只在首次收到音频时打印
         if not hasattr(self, '_audio_logged') or not self._audio_logged:
             is_init = self._model_manager.is_initialized() if self._model_manager else False
             vad_model = self._model_manager.get_vad_model() if self._model_manager else None
             print(f"[Server] 收到音频: source={source_name}, 时长={audio_duration:.2f}s, 模型已初始化={is_init}, VAD模型={'有' if vad_model else '无'}")
             self._audio_logged = True
-        
+
         # 确保流式管道已创建
         if source.pipeline is None:
             if not self._model_manager.is_initialized():
@@ -391,14 +419,14 @@ class LocalRealtimeServer:
             vad_model = self._model_manager.get_vad_model()
             if vad_model is None:
                 return
-            
+
             source.pipeline = create_streaming_pipeline(self._model_manager, language)
-            
+
             # 设置流式转录回调
             source.pipeline.on_transcript = lambda delta: self._on_transcript_delta(
                 delta, source, websocket
             )
-            
+
             # 声纹识别回调
             source.pipeline.on_speaker = lambda sid, score: self._on_speaker_identified(
                 sid, score, source, websocket
@@ -408,17 +436,17 @@ class LocalRealtimeServer:
             source.pipeline.on_speech_segment = lambda seg: self._on_speech_segment_for_auto_reg(
                 seg, sources, auto_reg
             )
-            
+
             # 启动流式管道
             await source.pipeline.start()
             print(f"[Server] 管道已创建并启动")
-        
+
         # 自动注册模式：注册期间也走 ASR，只是还没有已注册的声纹
         # 声纹注册在 on_speech_segment 回调中处理（用 VAD 完整段落）
-        
+
         # 流式喂入音频
         await source.pipeline.feed_audio(audio_float32)
-    
+
     async def _on_speech_segment_for_auto_reg(
         self,
         segment,
@@ -428,17 +456,17 @@ class LocalRealtimeServer:
         """VAD 段落回调：触发自动声纹注册（用 VAD 完整段落提取声纹）"""
         if not auto_reg.enabled or auto_reg.auto_register_done:
             return
-        
+
         duration = len(segment.audio_data) / 16000
         print(f"[AutoReg] VAD 段落触发，时长={duration:.2f}s")
-        
+
         # 从 sources 获取 websocket 和 session_id
         if not sources:
             return
         first_source = next(iter(sources.values()))
         websocket = first_source.client_websocket
         session_id = first_source.session_id
-        
+
         # 保存音频到 session.pending_audio（注册期间积累，注册完成后批量比对）
         with realtime_store._lock:
             raw = realtime_store._sessions.get(session_id, {})
@@ -447,13 +475,13 @@ class LocalRealtimeServer:
                 "start_ms": getattr(segment, "start_ms", 0),
                 "end_ms": getattr(segment, "end_ms", 0),
             })
-        
+
         asyncio.create_task(
             self._process_auto_registration(
                 segment.audio_data, sources, websocket, auto_reg, session_id=session_id
             )
         )
-    
+
     async def _process_auto_registration(
         self,
         audio_float32: np.ndarray,
@@ -561,12 +589,12 @@ class LocalRealtimeServer:
             print(f"[AutoReg] 处理失败: {e}")
             import traceback
             traceback.print_exc()
-    
+
     def _bytes_to_audio(self, audio_bytes: bytes) -> np.ndarray:
         """将 PCM bytes 转换为 numpy float32 数组"""
         audio_int16 = np.frombuffer(audio_bytes, dtype=np.int16)
         return audio_int16.astype(np.float32) / 32768.0
-    
+
     async def _on_transcript_delta(
         self,
         delta: TranscriptDelta,
@@ -577,10 +605,10 @@ class LocalRealtimeServer:
         try:
             if not delta.text.strip():
                 return
-            
+
             # 获取说话人信息
             raw_speaker = delta.speaker_id or source.speaker_id
-            
+
             # 转换说话人标签为更友好的显示
             speaker_display = raw_speaker
             if raw_speaker == "interviewer":
@@ -589,13 +617,13 @@ class LocalRealtimeServer:
                 speaker_display = "候选人"
             elif raw_speaker == "speaker_unk":
                 speaker_display = "未知说话人"
-            
+
             int_sim_str = f" 面试官={delta.interviewer_sim:.2f}" if delta.interviewer_sim > 0 else ""
             cand_sim_str = f" 候选人={delta.candidate_sim:.2f}" if delta.candidate_sim > 0 else ""
             confidence_str = f" ({int_sim_str}{cand_sim_str})" if int_sim_str or cand_sim_str else ""
             reason_str = f" [{delta.segment_reason}]" if delta.segment_reason else ""
             print(f"[转录] 【{speaker_display}{confidence_str}{reason_str}】 {delta.text[:50]}{'...' if len(delta.text) > 50 else ''}")
-            
+
             event = {
                 "type": "transcript.delta" if not delta.is_final else "transcript.completed",
                 "source": source.source_name,
@@ -610,12 +638,12 @@ class LocalRealtimeServer:
                 "candidate_sim": delta.candidate_sim,
                 "recognized_role": getattr(delta, "recognized_role", None),  # 由 on_delta 根据相似度推断
             }
-            
+
             # 实时推送转录结果（不等待分析完成）
             print(f"[WS发送] → 发送 {event['type']}: speaker_id={raw_speaker}, recognized_role={event.get('recognized_role')}, "
                   f"interviewer_sim={event['interviewer_sim']}, candidate_sim={event['candidate_sim']}, is_final={event['is_final']}, text={delta.text[:30]}")
             await websocket.send(json.dumps(event, ensure_ascii=False))
-            
+
             # 如果是最终结果，更新会话状态
             recognized_speaker = delta.speaker_id or source.speaker_id
             if delta.is_final and recognized_speaker:
@@ -624,7 +652,7 @@ class LocalRealtimeServer:
                     recognized_speaker,
                     event
                 )
-                
+
                 if session_update:
                     corrections = session_update.get("segment_corrections", [])
                     segments = session_update.get("session", {}).get("segments", [])
@@ -635,7 +663,7 @@ class LocalRealtimeServer:
                               f"text={str(seg.get('text') or '')[:30]}")
                     print(f"[WS发送] → 发送 session.update 到前端，segments 共 {len(segments)} 条，corrections={corrections}")
                     await websocket.send(json.dumps(session_update, ensure_ascii=False))
-                    
+
                     # 推送片段角色修正事件（用于前端实时更新显示）
                     if corrections:
                         for idx in corrections:
@@ -652,10 +680,10 @@ class LocalRealtimeServer:
                             }, ensure_ascii=False))
                             print(f"[修正] 片段 {idx} 角色已修正: 面试官 → 候选人（{seg.get('text', '')[:30]}...）")
                             print(f"[WS发送] → 发送 segment.corrected: index={idx}, new_role=candidate")
-        
+
         except Exception as e:
             print(f"[LocalRealtimeServer] 转录回调错误: {e}")
-    
+
     async def _on_speaker_identified(
         self,
         speaker_id: str,
