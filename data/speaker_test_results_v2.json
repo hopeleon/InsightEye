@@ -1,0 +1,2812 @@
+{
+  "summary": {
+    "total_segments": 200,
+    "top1_correct": 162,
+    "top1_accuracy": 0.81,
+    "top3_correct": 173,
+    "top3_accuracy": 0.865,
+    "uncertain_count": 132
+  },
+  "results": [
+    {
+      "segment_id": 1,
+      "audio_file": "f4813820-9b65-4f1e-b8f8-4924de5038e1.wav",
+      "ground_truth_id": "648",
+      "ground_truth_name": "张涛",
+      "recognized": {
+        "speaker_id": "648",
+        "speaker_name": "张涛",
+        "score": 0.7286813515617098
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.68
+    },
+    {
+      "segment_id": 2,
+      "audio_file": "f328b0d8-bc87-43fa-a111-346af63d8297.wav",
+      "ground_truth_id": "275",
+      "ground_truth_name": "高晨",
+      "recognized": {
+        "speaker_id": "275",
+        "speaker_name": "高晨",
+        "score": 0.7446386696043357
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.18
+    },
+    {
+      "segment_id": 3,
+      "audio_file": "db9fa77f-9c52-4d71-b01b-da64e38c7cb2.wav",
+      "ground_truth_id": "914",
+      "ground_truth_name": "林志强",
+      "recognized": {
+        "speaker_id": "914",
+        "speaker_name": "林志强",
+        "score": 0.7457972065494055
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.68
+    },
+    {
+      "segment_id": 4,
+      "audio_file": "bea679e3-62cf-4fb1-bc10-4cda90b69a49.wav",
+      "ground_truth_id": "441",
+      "ground_truth_name": "何梅",
+      "recognized": {
+        "speaker_id": "848",
+        "speaker_name": "黄颖",
+        "score": 0.5357245374544581
+      },
+      "is_correct": false,
+      "top3_includes_correct": true,
+      "duration_sec": 6.72
+    },
+    {
+      "segment_id": 5,
+      "audio_file": "3154f5c1-6644-464b-90b1-f1d4662fd0b9.wav",
+      "ground_truth_id": "908",
+      "ground_truth_name": "朱丽",
+      "recognized": {
+        "speaker_id": "908",
+        "speaker_name": "朱丽",
+        "score": 0.7564398631791249
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 9.96
+    },
+    {
+      "segment_id": 6,
+      "audio_file": "c1048a59-b4ac-44c9-b265-997fc08f6ab1.wav",
+      "ground_truth_id": "441",
+      "ground_truth_name": "何梅",
+      "recognized": {
+        "speaker_id": "441",
+        "speaker_name": "何梅",
+        "score": 0.7563289609050686
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.56
+    },
+    {
+      "segment_id": 7,
+      "audio_file": "5f9c745c-c26f-4c01-b92b-4e2319fe22f6.wav",
+      "ground_truth_id": "937",
+      "ground_truth_name": "张兰",
+      "recognized": {
+        "speaker_id": "937",
+        "speaker_name": "张兰",
+        "score": 0.7175021661061369
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.88
+    },
+    {
+      "segment_id": 8,
+      "audio_file": "531b62da-8a13-425e-9fdc-1db4466037d2.wav",
+      "ground_truth_id": "514",
+      "ground_truth_name": "赵鹏",
+      "recognized": {
+        "speaker_id": "514",
+        "speaker_name": "赵鹏",
+        "score": 0.7682009294406672
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 9.24
+    },
+    {
+      "segment_id": 9,
+      "audio_file": "dca10850-2431-4a6a-b3c8-692b8c325278.wav",
+      "ground_truth_id": "900",
+      "ground_truth_name": "林勇",
+      "recognized": {
+        "speaker_id": "298",
+        "speaker_name": "胡海燕",
+        "score": 0.468369713809837
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 8.34
+    },
+    {
+      "segment_id": 10,
+      "audio_file": "bf8ffe45-b0d7-49e6-8e26-0fcb8f8f60e3.wav",
+      "ground_truth_id": "937",
+      "ground_truth_name": "张兰",
+      "recognized": {
+        "speaker_id": "848",
+        "speaker_name": "黄颖",
+        "score": 0.48666730578520095
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 8.04
+    },
+    {
+      "segment_id": 11,
+      "audio_file": "d4b0cefd-07ce-4d75-8163-603b104d8b53.wav",
+      "ground_truth_id": "763",
+      "ground_truth_name": "郑明",
+      "recognized": {
+        "speaker_id": "763",
+        "speaker_name": "郑明",
+        "score": 0.6724764237291927
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.72
+    },
+    {
+      "segment_id": 12,
+      "audio_file": "ccb075d1-90e0-4533-893f-75d4c5a8c39d.wav",
+      "ground_truth_id": "1209",
+      "ground_truth_name": "朱秀兰",
+      "recognized": {
+        "speaker_id": "1209",
+        "speaker_name": "朱秀兰",
+        "score": 0.754597232975137
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.16
+    },
+    {
+      "segment_id": 13,
+      "audio_file": "4dc6c710-bc85-4683-a535-ffeaa05d1fa3.wav",
+      "ground_truth_id": "435",
+      "ground_truth_name": "梁海燕",
+      "recognized": {
+        "speaker_id": "1092",
+        "speaker_name": "赵浩",
+        "score": 0.5888370169359745
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 5.28
+    },
+    {
+      "segment_id": 14,
+      "audio_file": "12ae4036-2837-434b-b896-bddf3f8831bd.wav",
+      "ground_truth_id": "1016",
+      "ground_truth_name": "周建华",
+      "recognized": {
+        "speaker_id": "1016",
+        "speaker_name": "周建华",
+        "score": 0.6897336127315017
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.0
+    },
+    {
+      "segment_id": 15,
+      "audio_file": "274ad2b0-f025-4350-9c1e-7b0d649fdc19.wav",
+      "ground_truth_id": "672",
+      "ground_truth_name": "何欣",
+      "recognized": {
+        "speaker_id": "672",
+        "speaker_name": "何欣",
+        "score": 0.656850647855548
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.52
+    },
+    {
+      "segment_id": 16,
+      "audio_file": "37006424-4e22-4927-a134-cdb87a93ec74.wav",
+      "ground_truth_id": "298",
+      "ground_truth_name": "胡海燕",
+      "recognized": {
+        "speaker_id": "298",
+        "speaker_name": "胡海燕",
+        "score": 0.7090406992261992
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 9.04
+    },
+    {
+      "segment_id": 17,
+      "audio_file": "a972473a-2ae2-4242-b240-5630c9e67257.wav",
+      "ground_truth_id": "672",
+      "ground_truth_name": "何欣",
+      "recognized": {
+        "speaker_id": "672",
+        "speaker_name": "何欣",
+        "score": 0.782478338045555
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.64
+    },
+    {
+      "segment_id": 18,
+      "audio_file": "99d5b789-c527-447f-984f-a04430080a25.wav",
+      "ground_truth_id": "442",
+      "ground_truth_name": "吴洋",
+      "recognized": {
+        "speaker_id": "442",
+        "speaker_name": "吴洋",
+        "score": 0.7196593658386234
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.92
+    },
+    {
+      "segment_id": 19,
+      "audio_file": "58395537-8556-49d0-a303-2126f7014ae2.wav",
+      "ground_truth_id": "1003",
+      "ground_truth_name": "黄琪",
+      "recognized": {
+        "speaker_id": "1204",
+        "speaker_name": "杨强",
+        "score": 0.38565904362887204
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 8.88
+    },
+    {
+      "segment_id": 20,
+      "audio_file": "9f5d309a-d647-432d-b798-9ce55ab7eebf.wav",
+      "ground_truth_id": "1013",
+      "ground_truth_name": "郭飞",
+      "recognized": {
+        "speaker_id": "1013",
+        "speaker_name": "郭飞",
+        "score": 0.6327034097201315
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.32
+    },
+    {
+      "segment_id": 21,
+      "audio_file": "3eb1765e-b333-482d-8f81-0392e9f063ec.wav",
+      "ground_truth_id": "912",
+      "ground_truth_name": "周勇",
+      "recognized": {
+        "speaker_id": "912",
+        "speaker_name": "周勇",
+        "score": 0.73270178420024
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.52
+    },
+    {
+      "segment_id": 22,
+      "audio_file": "faa9f8ef-3ac9-4688-b060-03def461de2e.wav",
+      "ground_truth_id": "1016",
+      "ground_truth_name": "周建华",
+      "recognized": {
+        "speaker_id": "1016",
+        "speaker_name": "周建华",
+        "score": 0.5566952612682735
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.0
+    },
+    {
+      "segment_id": 23,
+      "audio_file": "7dc76fb8-9584-484a-bc14-bd1169929178.wav",
+      "ground_truth_id": "1097",
+      "ground_truth_name": "罗晨",
+      "recognized": {
+        "speaker_id": "1097",
+        "speaker_name": "罗晨",
+        "score": 0.6035763582736877
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.56
+    },
+    {
+      "segment_id": 24,
+      "audio_file": "f8ba05bf-90e5-43ad-885e-04e4957690ee.wav",
+      "ground_truth_id": "423",
+      "ground_truth_name": "王艳",
+      "recognized": {
+        "speaker_id": "423",
+        "speaker_name": "王艳",
+        "score": 0.616386522314797
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.92
+    },
+    {
+      "segment_id": 25,
+      "audio_file": "e4cff621-18a3-4df0-be5d-f03e4717fd00.wav",
+      "ground_truth_id": "802",
+      "ground_truth_name": "郑涛",
+      "recognized": {
+        "speaker_id": "802",
+        "speaker_name": "郑涛",
+        "score": 0.7650014264000466
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.64
+    },
+    {
+      "segment_id": 26,
+      "audio_file": "e0cf7a72-4cff-43d9-8327-b9c61260bda4.wav",
+      "ground_truth_id": "1093",
+      "ground_truth_name": "陈莉",
+      "recognized": {
+        "speaker_id": "1093",
+        "speaker_name": "陈莉",
+        "score": 0.6210964205612123
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.4
+    },
+    {
+      "segment_id": 27,
+      "audio_file": "45be7b33-e14d-49de-bec1-7a6499d9ec75.wav",
+      "ground_truth_id": "326",
+      "ground_truth_name": "徐飞",
+      "recognized": {
+        "speaker_id": "326",
+        "speaker_name": "徐飞",
+        "score": 0.6464574475396757
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 10.68
+    },
+    {
+      "segment_id": 28,
+      "audio_file": "3fd1bc65-4ed2-4f53-8e65-43f1ae859fcd.wav",
+      "ground_truth_id": "819",
+      "ground_truth_name": "吴雪",
+      "recognized": {
+        "speaker_id": "819",
+        "speaker_name": "吴雪",
+        "score": 0.6750495657548525
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.6
+    },
+    {
+      "segment_id": 29,
+      "audio_file": "9327e79e-6493-4866-84a9-cbcf8acffd24.wav",
+      "ground_truth_id": "649",
+      "ground_truth_name": "刘艳",
+      "recognized": {
+        "speaker_id": "649",
+        "speaker_name": "刘艳",
+        "score": 0.7208727594970009
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 10.5
+    },
+    {
+      "segment_id": 30,
+      "audio_file": "4ac38fa9-a35a-4128-a237-cbb1d0318b12.wav",
+      "ground_truth_id": "1172",
+      "ground_truth_name": "徐莉",
+      "recognized": {
+        "speaker_id": "1172",
+        "speaker_name": "徐莉",
+        "score": 0.609883752149913
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.76
+    },
+    {
+      "segment_id": 31,
+      "audio_file": "8de20eff-9a9b-4c8b-be37-5be00e5279d0.wav",
+      "ground_truth_id": "893",
+      "ground_truth_name": "梁秀珍",
+      "recognized": {
+        "speaker_id": "893",
+        "speaker_name": "梁秀珍",
+        "score": 0.5999714515797863
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.52
+    },
+    {
+      "segment_id": 32,
+      "audio_file": "8772e70e-7916-45be-8dda-fda188999a00.wav",
+      "ground_truth_id": "635",
+      "ground_truth_name": "郭莉",
+      "recognized": {
+        "speaker_id": "635",
+        "speaker_name": "郭莉",
+        "score": 0.7013718242295225
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.92
+    },
+    {
+      "segment_id": 33,
+      "audio_file": "4bbf01e2-f37a-4cd9-bd3f-328da8bd67a2.wav",
+      "ground_truth_id": "760",
+      "ground_truth_name": "李霞",
+      "recognized": {
+        "speaker_id": "760",
+        "speaker_name": "李霞",
+        "score": 0.7535383808811086
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.64
+    },
+    {
+      "segment_id": 34,
+      "audio_file": "e01be14d-7134-411f-9848-8fc0f44c0c10.wav",
+      "ground_truth_id": "1041",
+      "ground_truth_name": "郑洋",
+      "recognized": {
+        "speaker_id": "974",
+        "speaker_name": "郑兰",
+        "score": 0.491807786164312
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 4.08
+    },
+    {
+      "segment_id": 35,
+      "audio_file": "ced01d63-3c0c-43a0-b4f9-278caf51b336.wav",
+      "ground_truth_id": "458",
+      "ground_truth_name": "郭龙",
+      "recognized": {
+        "speaker_id": "999",
+        "speaker_name": "朱华",
+        "score": 0.3745139323531724
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 9.24
+    },
+    {
+      "segment_id": 36,
+      "audio_file": "3d80f702-1beb-4e78-a69a-a44753676ed4.wav",
+      "ground_truth_id": "937",
+      "ground_truth_name": "张兰",
+      "recognized": {
+        "speaker_id": "937",
+        "speaker_name": "张兰",
+        "score": 0.7549258984143816
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.56
+    },
+    {
+      "segment_id": 37,
+      "audio_file": "cacd03d0-973b-4e0d-b034-30746a07240f.wav",
+      "ground_truth_id": "532",
+      "ground_truth_name": "郭云",
+      "recognized": {
+        "speaker_id": "532",
+        "speaker_name": "郭云",
+        "score": 0.755633367876538
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.72
+    },
+    {
+      "segment_id": 38,
+      "audio_file": "87675261-a839-4672-a963-a4b7d39a0125.wav",
+      "ground_truth_id": "1183",
+      "ground_truth_name": "胡明",
+      "recognized": {
+        "speaker_id": "1183",
+        "speaker_name": "胡明",
+        "score": 0.7104517238048099
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.16
+    },
+    {
+      "segment_id": 39,
+      "audio_file": "cd64f968-6f84-4f09-9f74-b1bfd810d0d6.wav",
+      "ground_truth_id": "753",
+      "ground_truth_name": "赵杰",
+      "recognized": {
+        "speaker_id": "753",
+        "speaker_name": "赵杰",
+        "score": 0.7462864731528501
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.12
+    },
+    {
+      "segment_id": 40,
+      "audio_file": "c8d5600d-6fd0-4013-8de8-57293f0c8040.wav",
+      "ground_truth_id": "1070",
+      "ground_truth_name": "朱峰",
+      "recognized": {
+        "speaker_id": "1070",
+        "speaker_name": "朱峰",
+        "score": 0.7121831642589905
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.2
+    },
+    {
+      "segment_id": 41,
+      "audio_file": "17f419e4-dd67-49d8-ab68-5eacd8068c0a.wav",
+      "ground_truth_id": "473",
+      "ground_truth_name": "徐晨",
+      "recognized": {
+        "speaker_id": "473",
+        "speaker_name": "徐晨",
+        "score": 0.760228293518101
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.8
+    },
+    {
+      "segment_id": 42,
+      "audio_file": "20bc001d-b3f8-4efa-82b3-4225c36aef1a.wav",
+      "ground_truth_id": "142",
+      "ground_truth_name": "郭娜",
+      "recognized": {
+        "speaker_id": "142",
+        "speaker_name": "郭娜",
+        "score": 0.7152043613380764
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.46
+    },
+    {
+      "segment_id": 43,
+      "audio_file": "f185ddf9-dcd7-463e-a957-e2a99308c833.wav",
+      "ground_truth_id": "1003",
+      "ground_truth_name": "黄琪",
+      "recognized": {
+        "speaker_id": "1003",
+        "speaker_name": "黄琪",
+        "score": 0.7253032578122384
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.84
+    },
+    {
+      "segment_id": 44,
+      "audio_file": "f6e0aedb-6354-4f21-a86f-6bc78e2250dd.wav",
+      "ground_truth_id": "441",
+      "ground_truth_name": "何梅",
+      "recognized": {
+        "speaker_id": "441",
+        "speaker_name": "何梅",
+        "score": 0.7654445410371647
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.16
+    },
+    {
+      "segment_id": 45,
+      "audio_file": "c47c19db-9bd1-486f-ba8e-18db1c628435.wav",
+      "ground_truth_id": "911",
+      "ground_truth_name": "张玲",
+      "recognized": {
+        "speaker_id": "911",
+        "speaker_name": "张玲",
+        "score": 0.6790081219748952
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.44
+    },
+    {
+      "segment_id": 46,
+      "audio_file": "f10a36e4-939d-44ef-8c95-a0fc715078c3.wav",
+      "ground_truth_id": "484",
+      "ground_truth_name": "林鹏",
+      "recognized": {
+        "speaker_id": "484",
+        "speaker_name": "林鹏",
+        "score": 0.7434062671740319
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.24
+    },
+    {
+      "segment_id": 47,
+      "audio_file": "147db66f-659e-4a9e-8e71-d0591cb0002c.wav",
+      "ground_truth_id": "1041",
+      "ground_truth_name": "郑洋",
+      "recognized": {
+        "speaker_id": "1041",
+        "speaker_name": "郑洋",
+        "score": 0.6543908661226187
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 9.24
+    },
+    {
+      "segment_id": 48,
+      "audio_file": "05fc224d-41b6-44d6-a4b1-1cd205ab0af0.wav",
+      "ground_truth_id": "1016",
+      "ground_truth_name": "周建华",
+      "recognized": {
+        "speaker_id": "1016",
+        "speaker_name": "周建华",
+        "score": 0.7423114162306476
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.48
+    },
+    {
+      "segment_id": 49,
+      "audio_file": "35576159-e2fd-4e6c-817c-44ea269073cf.wav",
+      "ground_truth_id": "326",
+      "ground_truth_name": "徐飞",
+      "recognized": {
+        "speaker_id": "326",
+        "speaker_name": "徐飞",
+        "score": 0.6581121871362232
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.64
+    },
+    {
+      "segment_id": 50,
+      "audio_file": "7e8762bb-d873-4590-906a-3c77bab3ee3a.wav",
+      "ground_truth_id": "553",
+      "ground_truth_name": "孙志强",
+      "recognized": {
+        "speaker_id": "553",
+        "speaker_name": "孙志强",
+        "score": 0.7514567543278581
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.24
+    },
+    {
+      "segment_id": 51,
+      "audio_file": "8f7c242c-f2f9-4610-840b-8e2a0e860db5.wav",
+      "ground_truth_id": "1128",
+      "ground_truth_name": "朱海燕",
+      "recognized": {
+        "speaker_id": "458",
+        "speaker_name": "郭龙",
+        "score": 0.37823937494834314
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 8.16
+    },
+    {
+      "segment_id": 52,
+      "audio_file": "7eddccf1-98c6-4a80-95f6-5b21e044cf65.wav",
+      "ground_truth_id": "1047",
+      "ground_truth_name": "杨明",
+      "recognized": {
+        "speaker_id": "1047",
+        "speaker_name": "杨明",
+        "score": 0.7365483387161967
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.42
+    },
+    {
+      "segment_id": 53,
+      "audio_file": "7401340c-57ff-4b11-977e-c6606a4e1dd1.wav",
+      "ground_truth_id": "865",
+      "ground_truth_name": "李秀珍",
+      "recognized": {
+        "speaker_id": "865",
+        "speaker_name": "李秀珍",
+        "score": 0.7398240040642837
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.16
+    },
+    {
+      "segment_id": 54,
+      "audio_file": "fae3f394-c4ca-4325-83fa-c6816f905574.wav",
+      "ground_truth_id": "865",
+      "ground_truth_name": "李秀珍",
+      "recognized": {
+        "speaker_id": "865",
+        "speaker_name": "李秀珍",
+        "score": 0.7925450998623194
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 3.24
+    },
+    {
+      "segment_id": 55,
+      "audio_file": "33bed7c7-c8ed-469a-ba22-86c77356fad4.wav",
+      "ground_truth_id": "480",
+      "ground_truth_name": "郑秀兰",
+      "recognized": {
+        "speaker_id": "480",
+        "speaker_name": "郑秀兰",
+        "score": 0.6113421901646394
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.88
+    },
+    {
+      "segment_id": 56,
+      "audio_file": "b5c2593f-40e9-4b40-b544-fb932847c495.wav",
+      "ground_truth_id": "1209",
+      "ground_truth_name": "朱秀兰",
+      "recognized": {
+        "speaker_id": "1209",
+        "speaker_name": "朱秀兰",
+        "score": 0.7550747527337172
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 3.72
+    },
+    {
+      "segment_id": 57,
+      "audio_file": "05a48d0a-2a7f-4261-a282-fe5aa5ea37e5.wav",
+      "ground_truth_id": "1163",
+      "ground_truth_name": "孙颖",
+      "recognized": {
+        "speaker_id": "1163",
+        "speaker_name": "孙颖",
+        "score": 0.7054997839740781
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 9.24
+    },
+    {
+      "segment_id": 58,
+      "audio_file": "0b2333e6-4172-46c8-bf5a-7d7f9267413a.wav",
+      "ground_truth_id": "913",
+      "ground_truth_name": "高娜",
+      "recognized": {
+        "speaker_id": "913",
+        "speaker_name": "高娜",
+        "score": 0.7366651893740958
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.72
+    },
+    {
+      "segment_id": 59,
+      "audio_file": "4d21813b-a44f-458e-b722-fc686dc2e339.wav",
+      "ground_truth_id": "753",
+      "ground_truth_name": "赵杰",
+      "recognized": {
+        "speaker_id": "753",
+        "speaker_name": "赵杰",
+        "score": 0.7467733086594568
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.96
+    },
+    {
+      "segment_id": 60,
+      "audio_file": "d2d2316d-8dc9-4878-bf58-eba68ae36840.wav",
+      "ground_truth_id": "1098",
+      "ground_truth_name": "何秀珍",
+      "recognized": {
+        "speaker_id": "1098",
+        "speaker_name": "何秀珍",
+        "score": 0.6637735876944948
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.26
+    },
+    {
+      "segment_id": 61,
+      "audio_file": "71b15dbb-abf7-49a2-9fc1-225e3cbe4c43.wav",
+      "ground_truth_id": "914",
+      "ground_truth_name": "林志强",
+      "recognized": {
+        "speaker_id": "914",
+        "speaker_name": "林志强",
+        "score": 0.6652506616965733
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.36
+    },
+    {
+      "segment_id": 62,
+      "audio_file": "fea4af81-be36-4adc-90cb-e3d057aa7a44.wav",
+      "ground_truth_id": "78",
+      "ground_truth_name": "张琪",
+      "recognized": {
+        "speaker_id": "78",
+        "speaker_name": "张琪",
+        "score": 0.7635446308490543
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.96
+    },
+    {
+      "segment_id": 63,
+      "audio_file": "5785fe9d-bbb7-451a-b78f-85340c17941b.wav",
+      "ground_truth_id": "484",
+      "ground_truth_name": "林鹏",
+      "recognized": {
+        "speaker_id": "484",
+        "speaker_name": "林鹏",
+        "score": 0.723006518630628
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.94
+    },
+    {
+      "segment_id": 64,
+      "audio_file": "fc889587-36ec-4d71-a31f-883202854152.wav",
+      "ground_truth_id": "1071",
+      "ground_truth_name": "吴桂英",
+      "recognized": {
+        "speaker_id": "686",
+        "speaker_name": "何飞",
+        "score": 0.403740607307397
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 11.64
+    },
+    {
+      "segment_id": 65,
+      "audio_file": "32d45414-b92c-4b57-ba91-1e9b527acfc7.wav",
+      "ground_truth_id": "535",
+      "ground_truth_name": "孙永强",
+      "recognized": {
+        "speaker_id": "535",
+        "speaker_name": "孙永强",
+        "score": 0.5989971839216932
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.28
+    },
+    {
+      "segment_id": 66,
+      "audio_file": "fb4df3ab-63c9-497d-ab8d-91ba6d2c5e88.wav",
+      "ground_truth_id": "473",
+      "ground_truth_name": "徐晨",
+      "recognized": {
+        "speaker_id": "473",
+        "speaker_name": "徐晨",
+        "score": 0.6951688729340203
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.72
+    },
+    {
+      "segment_id": 67,
+      "audio_file": "b3c1b52f-d837-4356-aa0b-0c863a9b421f.wav",
+      "ground_truth_id": "747",
+      "ground_truth_name": "朱建华",
+      "recognized": {
+        "speaker_id": "1136",
+        "speaker_name": "孙磊",
+        "score": 0.48162267381367563
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 7.32
+    },
+    {
+      "segment_id": 68,
+      "audio_file": "c15f97b4-98d0-49a9-8ff0-874c7d1da9dd.wav",
+      "ground_truth_id": "475",
+      "ground_truth_name": "马霞",
+      "recognized": {
+        "speaker_id": "475",
+        "speaker_name": "马霞",
+        "score": 0.6241484170402436
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.16
+    },
+    {
+      "segment_id": 69,
+      "audio_file": "be7fc87f-2205-406c-aa66-2e752b3dec33.wav",
+      "ground_truth_id": "526",
+      "ground_truth_name": "郭志",
+      "recognized": {
+        "speaker_id": "526",
+        "speaker_name": "郭志",
+        "score": 0.5591271208243618
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 10.44
+    },
+    {
+      "segment_id": 70,
+      "audio_file": "691e5adb-2aa3-452e-bd94-0f8fa307bf8c.wav",
+      "ground_truth_id": "1062",
+      "ground_truth_name": "孙勇",
+      "recognized": {
+        "speaker_id": "1062",
+        "speaker_name": "孙勇",
+        "score": 0.7438475394292979
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.56
+    },
+    {
+      "segment_id": 71,
+      "audio_file": "e8bff7d7-15c3-4046-8ea9-77ce9b60e36d.wav",
+      "ground_truth_id": "1055",
+      "ground_truth_name": "胡琳",
+      "recognized": {
+        "speaker_id": "1055",
+        "speaker_name": "胡琳",
+        "score": 0.7713848552473439
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.24
+    },
+    {
+      "segment_id": 72,
+      "audio_file": "3e9a4d4b-48d2-403c-9383-86f3086207fb.wav",
+      "ground_truth_id": "1003",
+      "ground_truth_name": "黄琪",
+      "recognized": {
+        "speaker_id": "686",
+        "speaker_name": "何飞",
+        "score": 0.3738350840340231
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 8.04
+    },
+    {
+      "segment_id": 73,
+      "audio_file": "7c21b779-615f-4987-a6b6-924ac887a791.wav",
+      "ground_truth_id": "320",
+      "ground_truth_name": "林峰",
+      "recognized": {
+        "speaker_id": "320",
+        "speaker_name": "林峰",
+        "score": 0.5457695822394343
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.52
+    },
+    {
+      "segment_id": 74,
+      "audio_file": "a353250c-be60-4578-9093-a6f56332b8f1.wav",
+      "ground_truth_id": "216",
+      "ground_truth_name": "朱平",
+      "recognized": {
+        "speaker_id": "216",
+        "speaker_name": "朱平",
+        "score": 0.7338284037515507
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.1
+    },
+    {
+      "segment_id": 75,
+      "audio_file": "c439f744-5087-47cd-b456-0d926ff8f017.wav",
+      "ground_truth_id": "1172",
+      "ground_truth_name": "徐莉",
+      "recognized": {
+        "speaker_id": "871",
+        "speaker_name": "徐海燕",
+        "score": 0.5173107933269098
+      },
+      "is_correct": false,
+      "top3_includes_correct": true,
+      "duration_sec": 7.32
+    },
+    {
+      "segment_id": 76,
+      "audio_file": "b822f332-fa18-4239-a85a-81186eee63cf.wav",
+      "ground_truth_id": "819",
+      "ground_truth_name": "吴雪",
+      "recognized": {
+        "speaker_id": "819",
+        "speaker_name": "吴雪",
+        "score": 0.7446948761242225
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.48
+    },
+    {
+      "segment_id": 77,
+      "audio_file": "e0d301d1-637c-43ae-84bb-ad863c5b54e2.wav",
+      "ground_truth_id": "196",
+      "ground_truth_name": "陈伟",
+      "recognized": {
+        "speaker_id": "196",
+        "speaker_name": "陈伟",
+        "score": 0.7224343260459234
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.7
+    },
+    {
+      "segment_id": 78,
+      "audio_file": "d6148ed8-00ed-4d71-a414-0cf5bd3428a7.wav",
+      "ground_truth_id": "526",
+      "ground_truth_name": "郭志",
+      "recognized": {
+        "speaker_id": "526",
+        "speaker_name": "郭志",
+        "score": 0.6323288134924633
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 9.0
+    },
+    {
+      "segment_id": 79,
+      "audio_file": "616281f8-4e99-4740-84c3-59c91bd10e8d.wav",
+      "ground_truth_id": "912",
+      "ground_truth_name": "周勇",
+      "recognized": {
+        "speaker_id": "912",
+        "speaker_name": "周勇",
+        "score": 0.7390145216448709
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.04
+    },
+    {
+      "segment_id": 80,
+      "audio_file": "c9d18e83-ed82-4c96-ae2d-5c7b73847822.wav",
+      "ground_truth_id": "666",
+      "ground_truth_name": "杨晨",
+      "recognized": {
+        "speaker_id": "666",
+        "speaker_name": "杨晨",
+        "score": 0.7288453297619387
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.28
+    },
+    {
+      "segment_id": 81,
+      "audio_file": "87b338b8-1efc-4e44-9e66-a9a6de750dac.wav",
+      "ground_truth_id": "871",
+      "ground_truth_name": "徐海燕",
+      "recognized": {
+        "speaker_id": "871",
+        "speaker_name": "徐海燕",
+        "score": 0.7526648606827626
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.92
+    },
+    {
+      "segment_id": 82,
+      "audio_file": "2ec7a6ec-091c-4a06-97c6-903d6b214236.wav",
+      "ground_truth_id": "284",
+      "ground_truth_name": "罗芳",
+      "recognized": {
+        "speaker_id": "284",
+        "speaker_name": "罗芳",
+        "score": 0.5808090635003983
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.6
+    },
+    {
+      "segment_id": 83,
+      "audio_file": "23c39a0e-d442-4417-bd9b-f5f68631ec9e.wav",
+      "ground_truth_id": "961",
+      "ground_truth_name": "杨鹏",
+      "recognized": {
+        "speaker_id": "961",
+        "speaker_name": "杨鹏",
+        "score": 0.6855345547057731
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 3.46
+    },
+    {
+      "segment_id": 84,
+      "audio_file": "ae550d12-6318-43d0-a59c-7cb7253aeb8c.wav",
+      "ground_truth_id": "1041",
+      "ground_truth_name": "郑洋",
+      "recognized": {
+        "speaker_id": "1041",
+        "speaker_name": "郑洋",
+        "score": 0.730760590463364
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.92
+    },
+    {
+      "segment_id": 85,
+      "audio_file": "dc50c87e-fde5-47be-b309-19f1ba693e57.wav",
+      "ground_truth_id": "700",
+      "ground_truth_name": "何颖",
+      "recognized": {
+        "speaker_id": "700",
+        "speaker_name": "何颖",
+        "score": 0.6870252546512596
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.48
+    },
+    {
+      "segment_id": 86,
+      "audio_file": "677b7c2a-3e2c-412b-a3c3-100cb86ee543.wav",
+      "ground_truth_id": "648",
+      "ground_truth_name": "张涛",
+      "recognized": {
+        "speaker_id": "648",
+        "speaker_name": "张涛",
+        "score": 0.7347271741430427
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.92
+    },
+    {
+      "segment_id": 87,
+      "audio_file": "21c977fc-bdb6-4943-8628-3713c72cea83.wav",
+      "ground_truth_id": "284",
+      "ground_truth_name": "罗芳",
+      "recognized": {
+        "speaker_id": "284",
+        "speaker_name": "罗芳",
+        "score": 0.6980233888733295
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 9.36
+    },
+    {
+      "segment_id": 88,
+      "audio_file": "30e6bded-f86f-4f10-901d-2d8fbef8b610.wav",
+      "ground_truth_id": "944",
+      "ground_truth_name": "陈峰",
+      "recognized": {
+        "speaker_id": "944",
+        "speaker_name": "陈峰",
+        "score": 0.7223436204568917
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.94
+    },
+    {
+      "segment_id": 89,
+      "audio_file": "76564a4b-96ac-42a5-a0eb-af9404245cd9.wav",
+      "ground_truth_id": "912",
+      "ground_truth_name": "周勇",
+      "recognized": {
+        "speaker_id": "912",
+        "speaker_name": "周勇",
+        "score": 0.6620983237072672
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.08
+    },
+    {
+      "segment_id": 90,
+      "audio_file": "050506be-fe5c-4a3c-b9d6-4a655143e29d.wav",
+      "ground_truth_id": "1014",
+      "ground_truth_name": "杨勇",
+      "recognized": {
+        "speaker_id": "1180",
+        "speaker_name": "周娜",
+        "score": 0.48227913695300595
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 6.72
+    },
+    {
+      "segment_id": 91,
+      "audio_file": "dd231d54-a338-4b76-be99-8cf46f4f9923.wav",
+      "ground_truth_id": "999",
+      "ground_truth_name": "朱华",
+      "recognized": {
+        "speaker_id": "999",
+        "speaker_name": "朱华",
+        "score": 0.6637354572072204
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.32
+    },
+    {
+      "segment_id": 92,
+      "audio_file": "50b1a744-e8de-4e6f-928c-44e35364f3f5.wav",
+      "ground_truth_id": "1167",
+      "ground_truth_name": "林晨",
+      "recognized": {
+        "speaker_id": "1114",
+        "speaker_name": "朱颖",
+        "score": 0.5770313168604227
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 9.6
+    },
+    {
+      "segment_id": 93,
+      "audio_file": "74484485-38db-4773-bfba-21562faea01d.wav",
+      "ground_truth_id": "1062",
+      "ground_truth_name": "孙勇",
+      "recognized": {
+        "speaker_id": "1062",
+        "speaker_name": "孙勇",
+        "score": 0.6964219511308981
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.76
+    },
+    {
+      "segment_id": 94,
+      "audio_file": "b007c13a-5fc2-496f-b77e-f4258a7ef7ad.wav",
+      "ground_truth_id": "1045",
+      "ground_truth_name": "高伟",
+      "recognized": {
+        "speaker_id": "760",
+        "speaker_name": "李霞",
+        "score": 0.6515086366545332
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 6.36
+    },
+    {
+      "segment_id": 95,
+      "audio_file": "b20c74ee-a409-420d-9327-23c2660eac30.wav",
+      "ground_truth_id": "535",
+      "ground_truth_name": "孙永强",
+      "recognized": {
+        "speaker_id": "535",
+        "speaker_name": "孙永强",
+        "score": 0.5698043984157954
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.6
+    },
+    {
+      "segment_id": 96,
+      "audio_file": "3e63ebb8-1887-49db-9de7-ba6bfa7c0cd8.wav",
+      "ground_truth_id": "1097",
+      "ground_truth_name": "罗晨",
+      "recognized": {
+        "speaker_id": "1252",
+        "speaker_name": "周小华",
+        "score": 0.5162195172829629
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 5.28
+    },
+    {
+      "segment_id": 97,
+      "audio_file": "af7a24a4-24d0-4622-8615-023affd5581e.wav",
+      "ground_truth_id": "1067",
+      "ground_truth_name": "郑浩",
+      "recognized": {
+        "speaker_id": "1067",
+        "speaker_name": "郑浩",
+        "score": 0.7357911880111132
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 9.2
+    },
+    {
+      "segment_id": 98,
+      "audio_file": "40d00584-2116-4503-99f4-55180f4e8f28.wav",
+      "ground_truth_id": "700",
+      "ground_truth_name": "何颖",
+      "recognized": {
+        "speaker_id": "1252",
+        "speaker_name": "周小华",
+        "score": 0.6444079869753672
+      },
+      "is_correct": false,
+      "top3_includes_correct": true,
+      "duration_sec": 9.12
+    },
+    {
+      "segment_id": 99,
+      "audio_file": "b2e45da1-bb05-468a-a08e-6b4afade832d.wav",
+      "ground_truth_id": "540",
+      "ground_truth_name": "郑刚",
+      "recognized": {
+        "speaker_id": "540",
+        "speaker_name": "郑刚",
+        "score": 0.6405450933502281
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.76
+    },
+    {
+      "segment_id": 100,
+      "audio_file": "bc804f9d-672c-4901-a160-288cbd8550db.wav",
+      "ground_truth_id": "733",
+      "ground_truth_name": "孙霞",
+      "recognized": {
+        "speaker_id": "733",
+        "speaker_name": "孙霞",
+        "score": 0.6906998222808417
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.28
+    },
+    {
+      "segment_id": 101,
+      "audio_file": "07845d2f-ad5a-400b-a133-50e3e6e3bcfd.wav",
+      "ground_truth_id": "192",
+      "ground_truth_name": "罗海燕",
+      "recognized": {
+        "speaker_id": "192",
+        "speaker_name": "罗海燕",
+        "score": 0.737953708297893
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.6
+    },
+    {
+      "segment_id": 102,
+      "audio_file": "cc938c94-b4d0-4e0b-95aa-e96fea2574da.wav",
+      "ground_truth_id": "853",
+      "ground_truth_name": "刘鑫",
+      "recognized": {
+        "speaker_id": "853",
+        "speaker_name": "刘鑫",
+        "score": 0.7423290601320346
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.12
+    },
+    {
+      "segment_id": 103,
+      "audio_file": "0288d05a-8008-45f0-b071-c96cb00266b8.wav",
+      "ground_truth_id": "913",
+      "ground_truth_name": "高娜",
+      "recognized": {
+        "speaker_id": "913",
+        "speaker_name": "高娜",
+        "score": 0.7532200933063273
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.28
+    },
+    {
+      "segment_id": 104,
+      "audio_file": "253ae67b-156a-4eee-8bd8-d2a4bba4d493.wav",
+      "ground_truth_id": "192",
+      "ground_truth_name": "罗海燕",
+      "recognized": {
+        "speaker_id": "192",
+        "speaker_name": "罗海燕",
+        "score": 0.7459026613540699
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 9.06
+    },
+    {
+      "segment_id": 105,
+      "audio_file": "14d95197-de97-4860-9db9-35131bbb9720.wav",
+      "ground_truth_id": "1138",
+      "ground_truth_name": "吴华",
+      "recognized": {
+        "speaker_id": "1151",
+        "speaker_name": "徐玲",
+        "score": 0.4369329254752148
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 5.4
+    },
+    {
+      "segment_id": 106,
+      "audio_file": "f1e91d7b-e968-4474-8934-3ff3197ef674.wav",
+      "ground_truth_id": "872",
+      "ground_truth_name": "吴鹏",
+      "recognized": {
+        "speaker_id": "872",
+        "speaker_name": "吴鹏",
+        "score": 0.7410214292174406
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.04
+    },
+    {
+      "segment_id": 107,
+      "audio_file": "27814d97-c949-4332-ad17-2b3a6bb691c1.wav",
+      "ground_truth_id": "648",
+      "ground_truth_name": "张涛",
+      "recognized": {
+        "speaker_id": "648",
+        "speaker_name": "张涛",
+        "score": 0.6417846181904794
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.64
+    },
+    {
+      "segment_id": 108,
+      "audio_file": "e61d7262-1418-403d-847b-c26d49b5e5fd.wav",
+      "ground_truth_id": "535",
+      "ground_truth_name": "孙永强",
+      "recognized": {
+        "speaker_id": "535",
+        "speaker_name": "孙永强",
+        "score": 0.6378644944121064
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.8
+    },
+    {
+      "segment_id": 109,
+      "audio_file": "f9b7e955-6599-497d-b810-33d09fdb8761.wav",
+      "ground_truth_id": "196",
+      "ground_truth_name": "陈伟",
+      "recognized": {
+        "speaker_id": "196",
+        "speaker_name": "陈伟",
+        "score": 0.7377876891753316
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.4
+    },
+    {
+      "segment_id": 110,
+      "audio_file": "25fda7ac-a44a-4094-8a35-46f8a7a52091.wav",
+      "ground_truth_id": "922",
+      "ground_truth_name": "何敏",
+      "recognized": {
+        "speaker_id": "922",
+        "speaker_name": "何敏",
+        "score": 0.5630553906715476
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.52
+    },
+    {
+      "segment_id": 111,
+      "audio_file": "0320018d-762d-4c0e-b450-98cef4131277.wav",
+      "ground_truth_id": "326",
+      "ground_truth_name": "徐飞",
+      "recognized": {
+        "speaker_id": "326",
+        "speaker_name": "徐飞",
+        "score": 0.7391214479962884
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.44
+    },
+    {
+      "segment_id": 112,
+      "audio_file": "d42fe723-0aa7-44f7-8955-bc79e127966f.wav",
+      "ground_truth_id": "1041",
+      "ground_truth_name": "郑洋",
+      "recognized": {
+        "speaker_id": "1041",
+        "speaker_name": "郑洋",
+        "score": 0.7645058497498333
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 11.04
+    },
+    {
+      "segment_id": 113,
+      "audio_file": "922f0742-2889-4933-ab21-787bf67cc6b7.wav",
+      "ground_truth_id": "590",
+      "ground_truth_name": "高建国",
+      "recognized": {
+        "speaker_id": "590",
+        "speaker_name": "高建国",
+        "score": 0.7400327203220781
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.6
+    },
+    {
+      "segment_id": 114,
+      "audio_file": "913d0e8c-c848-471d-a09b-d225f363364f.wav",
+      "ground_truth_id": "313",
+      "ground_truth_name": "王敏",
+      "recognized": {
+        "speaker_id": "313",
+        "speaker_name": "王敏",
+        "score": 0.6991085757123504
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.56
+    },
+    {
+      "segment_id": 115,
+      "audio_file": "e9818c81-7f6b-4651-8159-5220e47be826.wav",
+      "ground_truth_id": "1041",
+      "ground_truth_name": "郑洋",
+      "recognized": {
+        "speaker_id": "1041",
+        "speaker_name": "郑洋",
+        "score": 0.7886003846090084
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 11.52
+    },
+    {
+      "segment_id": 116,
+      "audio_file": "9d118fc2-dfc8-4bd8-82a2-b08f4d44c34e.wav",
+      "ground_truth_id": "1126",
+      "ground_truth_name": "黄秀英",
+      "recognized": {
+        "speaker_id": "1151",
+        "speaker_name": "徐玲",
+        "score": 0.43173848366990375
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 8.88
+    },
+    {
+      "segment_id": 117,
+      "audio_file": "d7fca183-a6fa-488b-9478-9877b1cd5fee.wav",
+      "ground_truth_id": "763",
+      "ground_truth_name": "郑明",
+      "recognized": {
+        "speaker_id": "763",
+        "speaker_name": "郑明",
+        "score": 0.6039437237366282
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 3.72
+    },
+    {
+      "segment_id": 118,
+      "audio_file": "44346ac9-e2c4-4f4d-9bf6-52fcbd11bcd6.wav",
+      "ground_truth_id": "1098",
+      "ground_truth_name": "何秀珍",
+      "recognized": {
+        "speaker_id": "480",
+        "speaker_name": "郑秀兰",
+        "score": 0.6143938915097782
+      },
+      "is_correct": false,
+      "top3_includes_correct": true,
+      "duration_sec": 5.16
+    },
+    {
+      "segment_id": 119,
+      "audio_file": "56750256-fd4f-4b5c-9a16-5a4dbc780f5a.wav",
+      "ground_truth_id": "1055",
+      "ground_truth_name": "胡琳",
+      "recognized": {
+        "speaker_id": "1055",
+        "speaker_name": "胡琳",
+        "score": 0.615502973064625
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 10.56
+    },
+    {
+      "segment_id": 120,
+      "audio_file": "2481db61-60f8-4e19-9725-95ffcfdaf7c0.wav",
+      "ground_truth_id": "204",
+      "ground_truth_name": "朱鑫",
+      "recognized": {
+        "speaker_id": "204",
+        "speaker_name": "朱鑫",
+        "score": 0.7262907841599722
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.04
+    },
+    {
+      "segment_id": 121,
+      "audio_file": "9bf8f3b8-7c78-4924-87fa-350483ce3472.wav",
+      "ground_truth_id": "216",
+      "ground_truth_name": "朱平",
+      "recognized": {
+        "speaker_id": "216",
+        "speaker_name": "朱平",
+        "score": 0.7189136694522488
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.5
+    },
+    {
+      "segment_id": 122,
+      "audio_file": "7ccf75ab-ef62-44f6-90b8-a70fe5a9c5c4.wav",
+      "ground_truth_id": "1096",
+      "ground_truth_name": "何芬",
+      "recognized": {
+        "speaker_id": "1096",
+        "speaker_name": "何芬",
+        "score": 0.7200993396799191
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.7
+    },
+    {
+      "segment_id": 123,
+      "audio_file": "5ae171ed-1f23-4fd6-b551-8bf4244b7323.wav",
+      "ground_truth_id": "1019",
+      "ground_truth_name": "林浩",
+      "recognized": {
+        "speaker_id": "1019",
+        "speaker_name": "林浩",
+        "score": 0.7217110775462628
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.32
+    },
+    {
+      "segment_id": 124,
+      "audio_file": "d611045d-4b4a-4911-b769-f3312b7e73df.wav",
+      "ground_truth_id": "1172",
+      "ground_truth_name": "徐莉",
+      "recognized": {
+        "speaker_id": "1172",
+        "speaker_name": "徐莉",
+        "score": 0.5861516106364976
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.08
+    },
+    {
+      "segment_id": 125,
+      "audio_file": "3b1048b8-ee1f-446f-9a0b-e87b4be381e7.wav",
+      "ground_truth_id": "313",
+      "ground_truth_name": "王敏",
+      "recognized": {
+        "speaker_id": "313",
+        "speaker_name": "王敏",
+        "score": 0.7011524262427372
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.7
+    },
+    {
+      "segment_id": 126,
+      "audio_file": "6d6af3da-e772-4c2f-b391-be62790f2896.wav",
+      "ground_truth_id": "473",
+      "ground_truth_name": "徐晨",
+      "recognized": {
+        "speaker_id": "473",
+        "speaker_name": "徐晨",
+        "score": 0.7585971598628173
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.16
+    },
+    {
+      "segment_id": 127,
+      "audio_file": "2332cad0-950a-4dca-a328-3c60608f9b07.wav",
+      "ground_truth_id": "1167",
+      "ground_truth_name": "林晨",
+      "recognized": {
+        "speaker_id": "1167",
+        "speaker_name": "林晨",
+        "score": 0.6324716880296788
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.32
+    },
+    {
+      "segment_id": 128,
+      "audio_file": "14bea1b4-189b-44bd-9c1a-65cadc46f3e2.wav",
+      "ground_truth_id": "961",
+      "ground_truth_name": "杨鹏",
+      "recognized": {
+        "speaker_id": "961",
+        "speaker_name": "杨鹏",
+        "score": 0.7715224868840477
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.6
+    },
+    {
+      "segment_id": 129,
+      "audio_file": "c4ac092c-4f94-4786-a735-98e5bd7e6455.wav",
+      "ground_truth_id": "441",
+      "ground_truth_name": "何梅",
+      "recognized": {
+        "speaker_id": "473",
+        "speaker_name": "徐晨",
+        "score": 0.7997250365348137
+      },
+      "is_correct": false,
+      "top3_includes_correct": true,
+      "duration_sec": 8.52
+    },
+    {
+      "segment_id": 130,
+      "audio_file": "15472ba3-99f5-45e3-a193-8f52febd5bfb.wav",
+      "ground_truth_id": "937",
+      "ground_truth_name": "张兰",
+      "recognized": {
+        "speaker_id": "937",
+        "speaker_name": "张兰",
+        "score": 0.7679827094516463
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.88
+    },
+    {
+      "segment_id": 131,
+      "audio_file": "63a1fc59-5c4c-4155-894a-a545c5f154ec.wav",
+      "ground_truth_id": "865",
+      "ground_truth_name": "李秀珍",
+      "recognized": {
+        "speaker_id": "865",
+        "speaker_name": "李秀珍",
+        "score": 0.7020143451630289
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.56
+    },
+    {
+      "segment_id": 132,
+      "audio_file": "e39115b0-f799-4f1d-99a4-0ff633ebb05e.wav",
+      "ground_truth_id": "535",
+      "ground_truth_name": "孙永强",
+      "recognized": {
+        "speaker_id": "1038",
+        "speaker_name": "郭军",
+        "score": 0.7217755210663007
+      },
+      "is_correct": false,
+      "top3_includes_correct": true,
+      "duration_sec": 8.88
+    },
+    {
+      "segment_id": 133,
+      "audio_file": "6c4fdace-19f1-442a-9acd-6781c53fad0f.wav",
+      "ground_truth_id": "313",
+      "ground_truth_name": "王敏",
+      "recognized": {
+        "speaker_id": "313",
+        "speaker_name": "王敏",
+        "score": 0.7170251485781513
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.16
+    },
+    {
+      "segment_id": 134,
+      "audio_file": "cbfc5466-ffc5-494d-91e7-0f20e5e46760.wav",
+      "ground_truth_id": "1026",
+      "ground_truth_name": "马欣",
+      "recognized": {
+        "speaker_id": "1026",
+        "speaker_name": "马欣",
+        "score": 0.5700170334372952
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 9.84
+    },
+    {
+      "segment_id": 135,
+      "audio_file": "8ff98662-4e48-4add-ae6d-84e2087921ee.wav",
+      "ground_truth_id": "1003",
+      "ground_truth_name": "黄琪",
+      "recognized": {
+        "speaker_id": "1003",
+        "speaker_name": "黄琪",
+        "score": 0.5951526494106278
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.28
+    },
+    {
+      "segment_id": 136,
+      "audio_file": "48692c88-ab46-46c6-9a05-e605593245f3.wav",
+      "ground_truth_id": "682",
+      "ground_truth_name": "李浩",
+      "recognized": {
+        "speaker_id": "682",
+        "speaker_name": "李浩",
+        "score": 0.7127023731353127
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.64
+    },
+    {
+      "segment_id": 137,
+      "audio_file": "408bf751-4036-4128-a911-07b921afc738.wav",
+      "ground_truth_id": "1013",
+      "ground_truth_name": "郭飞",
+      "recognized": {
+        "speaker_id": "1013",
+        "speaker_name": "郭飞",
+        "score": 0.745562377218756
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 11.52
+    },
+    {
+      "segment_id": 138,
+      "audio_file": "8eb4ae77-e8af-44a6-a1fd-3ab210f58558.wav",
+      "ground_truth_id": "827",
+      "ground_truth_name": "胡军",
+      "recognized": {
+        "speaker_id": "827",
+        "speaker_name": "胡军",
+        "score": 0.7410488500114538
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.12
+    },
+    {
+      "segment_id": 139,
+      "audio_file": "6c0ebdcf-d930-4961-bdfa-e4556f90492b.wav",
+      "ground_truth_id": "1163",
+      "ground_truth_name": "孙颖",
+      "recognized": {
+        "speaker_id": "1163",
+        "speaker_name": "孙颖",
+        "score": 0.7266948163589374
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.16
+    },
+    {
+      "segment_id": 140,
+      "audio_file": "98a7a89f-6916-4644-9931-20fdccf077f0.wav",
+      "ground_truth_id": "1209",
+      "ground_truth_name": "朱秀兰",
+      "recognized": {
+        "speaker_id": "1209",
+        "speaker_name": "朱秀兰",
+        "score": 0.6895636426811123
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.04
+    },
+    {
+      "segment_id": 141,
+      "audio_file": "81fe2d7f-cc9d-4894-be6c-a7de5190bac9.wav",
+      "ground_truth_id": "1014",
+      "ground_truth_name": "杨勇",
+      "recognized": {
+        "speaker_id": "1014",
+        "speaker_name": "杨勇",
+        "score": 0.7511452810518593
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 9.72
+    },
+    {
+      "segment_id": 142,
+      "audio_file": "7b0263e5-a695-489b-84cb-a1f27acc9250.wav",
+      "ground_truth_id": "961",
+      "ground_truth_name": "杨鹏",
+      "recognized": {
+        "speaker_id": "961",
+        "speaker_name": "杨鹏",
+        "score": 0.6247778548082872
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.88
+    },
+    {
+      "segment_id": 143,
+      "audio_file": "7505beb2-7302-4b83-8bb2-ea3a231f1b5d.wav",
+      "ground_truth_id": "540",
+      "ground_truth_name": "郑刚",
+      "recognized": {
+        "speaker_id": "540",
+        "speaker_name": "郑刚",
+        "score": 0.6180104349796045
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.44
+    },
+    {
+      "segment_id": 144,
+      "audio_file": "4a8aa4c5-63bb-4b3c-8caf-0a3ff19b3693.wav",
+      "ground_truth_id": "1092",
+      "ground_truth_name": "赵浩",
+      "recognized": {
+        "speaker_id": "803",
+        "speaker_name": "刘秀兰",
+        "score": 0.6382156452660237
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 7.56
+    },
+    {
+      "segment_id": 145,
+      "audio_file": "4dc41e53-6d9d-440c-987d-6b2d639ebb53.wav",
+      "ground_truth_id": "142",
+      "ground_truth_name": "郭娜",
+      "recognized": {
+        "speaker_id": "142",
+        "speaker_name": "郭娜",
+        "score": 0.7411871063019134
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.06
+    },
+    {
+      "segment_id": 146,
+      "audio_file": "6c3706b7-eb6b-4818-bede-0dd9a210eabe.wav",
+      "ground_truth_id": "758",
+      "ground_truth_name": "郭雪",
+      "recognized": {
+        "speaker_id": "758",
+        "speaker_name": "郭雪",
+        "score": 0.7286625173036233
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.4
+    },
+    {
+      "segment_id": 147,
+      "audio_file": "97304369-d129-460e-a678-eacc11fbddd3.wav",
+      "ground_truth_id": "458",
+      "ground_truth_name": "郭龙",
+      "recognized": {
+        "speaker_id": "908",
+        "speaker_name": "朱丽",
+        "score": 0.6095409720214755
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 10.32
+    },
+    {
+      "segment_id": 148,
+      "audio_file": "623b66ef-5efe-4a08-9f1c-a65299aba833.wav",
+      "ground_truth_id": "1046",
+      "ground_truth_name": "梁小华",
+      "recognized": {
+        "speaker_id": "1046",
+        "speaker_name": "梁小华",
+        "score": 0.7378299343748381
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.52
+    },
+    {
+      "segment_id": 149,
+      "audio_file": "2bc61b95-ef77-4ffd-ae9d-8582afaf6767.wav",
+      "ground_truth_id": "622",
+      "ground_truth_name": "吴杰",
+      "recognized": {
+        "speaker_id": "622",
+        "speaker_name": "吴杰",
+        "score": 0.6672997341543367
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 11.62
+    },
+    {
+      "segment_id": 150,
+      "audio_file": "29568534-4ada-4728-af05-83d435f12f0c.wav",
+      "ground_truth_id": "590",
+      "ground_truth_name": "高建国",
+      "recognized": {
+        "speaker_id": "590",
+        "speaker_name": "高建国",
+        "score": 0.740795754478457
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.32
+    },
+    {
+      "segment_id": 151,
+      "audio_file": "3c00c526-ac3c-456a-814c-9f54060127cc.wav",
+      "ground_truth_id": "498",
+      "ground_truth_name": "李鹏",
+      "recognized": {
+        "speaker_id": "974",
+        "speaker_name": "郑兰",
+        "score": 0.4436818248239015
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 6.12
+    },
+    {
+      "segment_id": 152,
+      "audio_file": "26dd9f77-95b8-441b-8c87-5b840281d0bd.wav",
+      "ground_truth_id": "871",
+      "ground_truth_name": "徐海燕",
+      "recognized": {
+        "speaker_id": "871",
+        "speaker_name": "徐海燕",
+        "score": 0.6364490720367398
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.04
+    },
+    {
+      "segment_id": 153,
+      "audio_file": "8a21e779-c834-4356-9b5a-bfb5a779808a.wav",
+      "ground_truth_id": "532",
+      "ground_truth_name": "郭云",
+      "recognized": {
+        "speaker_id": "532",
+        "speaker_name": "郭云",
+        "score": 0.7501163600229918
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.92
+    },
+    {
+      "segment_id": 154,
+      "audio_file": "f165b812-8f3c-483e-b3d4-86280a49ad2b.wav",
+      "ground_truth_id": "819",
+      "ground_truth_name": "吴雪",
+      "recognized": {
+        "speaker_id": "270",
+        "speaker_name": "徐燕",
+        "score": 0.46942703798293317
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 9.84
+    },
+    {
+      "segment_id": 155,
+      "audio_file": "c63d8376-792b-40d3-952e-773a536b76ce.wav",
+      "ground_truth_id": "484",
+      "ground_truth_name": "林鹏",
+      "recognized": {
+        "speaker_id": "484",
+        "speaker_name": "林鹏",
+        "score": 0.7615781830389189
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.52
+    },
+    {
+      "segment_id": 156,
+      "audio_file": "5ff8bdbc-bd9f-4e77-b4a8-945b43e69846.wav",
+      "ground_truth_id": "672",
+      "ground_truth_name": "何欣",
+      "recognized": {
+        "speaker_id": "672",
+        "speaker_name": "何欣",
+        "score": 0.7557621183355208
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.36
+    },
+    {
+      "segment_id": 157,
+      "audio_file": "2989dd91-4424-4c06-a2de-0c6a5b2e3ea3.wav",
+      "ground_truth_id": "812",
+      "ground_truth_name": "刘晨",
+      "recognized": {
+        "speaker_id": "812",
+        "speaker_name": "刘晨",
+        "score": 0.7040928429832577
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.12
+    },
+    {
+      "segment_id": 158,
+      "audio_file": "08528560-7f77-4840-82a9-5038e8c36d4f.wav",
+      "ground_truth_id": "419",
+      "ground_truth_name": "朱琪",
+      "recognized": {
+        "speaker_id": "1166",
+        "speaker_name": "张秀英",
+        "score": 0.5712736062033283
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 9.36
+    },
+    {
+      "segment_id": 159,
+      "audio_file": "d6f6c999-2338-4660-b5b3-eda85109b2a1.wav",
+      "ground_truth_id": "700",
+      "ground_truth_name": "何颖",
+      "recognized": {
+        "speaker_id": "700",
+        "speaker_name": "何颖",
+        "score": 0.5946432854545666
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.74
+    },
+    {
+      "segment_id": 160,
+      "audio_file": "abe4103c-71ec-44c0-ad79-f6f195c7c898.wav",
+      "ground_truth_id": "672",
+      "ground_truth_name": "何欣",
+      "recognized": {
+        "speaker_id": "1151",
+        "speaker_name": "徐玲",
+        "score": 0.3730710621411957
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 7.92
+    },
+    {
+      "segment_id": 161,
+      "audio_file": "55b866e5-e6b3-49a1-8494-c6372d97bae3.wav",
+      "ground_truth_id": "1183",
+      "ground_truth_name": "胡明",
+      "recognized": {
+        "speaker_id": "1183",
+        "speaker_name": "胡明",
+        "score": 0.7156338137337678
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.68
+    },
+    {
+      "segment_id": 162,
+      "audio_file": "2571c17c-6207-441d-8b9e-a0f4d6036805.wav",
+      "ground_truth_id": "1093",
+      "ground_truth_name": "陈莉",
+      "recognized": {
+        "speaker_id": "686",
+        "speaker_name": "何飞",
+        "score": 0.3685111577830848
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 7.68
+    },
+    {
+      "segment_id": 163,
+      "audio_file": "ad994422-29da-44ca-a1b8-f35f3bb2e76a.wav",
+      "ground_truth_id": "441",
+      "ground_truth_name": "何梅",
+      "recognized": {
+        "speaker_id": "473",
+        "speaker_name": "徐晨",
+        "score": 0.7691784932372324
+      },
+      "is_correct": false,
+      "top3_includes_correct": true,
+      "duration_sec": 8.88
+    },
+    {
+      "segment_id": 164,
+      "audio_file": "1d910432-06d6-42a5-989d-fbfa1df85cea.wav",
+      "ground_truth_id": "423",
+      "ground_truth_name": "王艳",
+      "recognized": {
+        "speaker_id": "423",
+        "speaker_name": "王艳",
+        "score": 0.7047976977364637
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.32
+    },
+    {
+      "segment_id": 165,
+      "audio_file": "1889661f-171c-4e4e-b4fd-1f0d42e2144e.wav",
+      "ground_truth_id": "435",
+      "ground_truth_name": "梁海燕",
+      "recognized": {
+        "speaker_id": "435",
+        "speaker_name": "梁海燕",
+        "score": 0.6738219276717706
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.36
+    },
+    {
+      "segment_id": 166,
+      "audio_file": "148c94cf-ee61-4130-aa93-9320f32e0510.wav",
+      "ground_truth_id": "1013",
+      "ground_truth_name": "郭飞",
+      "recognized": {
+        "speaker_id": "1013",
+        "speaker_name": "郭飞",
+        "score": 0.7241566691901481
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.12
+    },
+    {
+      "segment_id": 167,
+      "audio_file": "99554484-757f-4f1e-a844-09a377ce41bc.wav",
+      "ground_truth_id": "192",
+      "ground_truth_name": "罗海燕",
+      "recognized": {
+        "speaker_id": "192",
+        "speaker_name": "罗海燕",
+        "score": 0.728447837796376
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 9.78
+    },
+    {
+      "segment_id": 168,
+      "audio_file": "d430da2b-2931-408f-a5a1-99cb90ee7402.wav",
+      "ground_truth_id": "871",
+      "ground_truth_name": "徐海燕",
+      "recognized": {
+        "speaker_id": "871",
+        "speaker_name": "徐海燕",
+        "score": 0.6495720500524625
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.84
+    },
+    {
+      "segment_id": 169,
+      "audio_file": "dcaf2caf-eca3-440f-bd7c-6ce45f278959.wav",
+      "ground_truth_id": "853",
+      "ground_truth_name": "刘鑫",
+      "recognized": {
+        "speaker_id": "853",
+        "speaker_name": "刘鑫",
+        "score": 0.5188844641292076
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.46
+    },
+    {
+      "segment_id": 170,
+      "audio_file": "4a61d7aa-30b5-44dc-9caa-ab0cd31febd1.wav",
+      "ground_truth_id": "1037",
+      "ground_truth_name": "胡敏",
+      "recognized": {
+        "speaker_id": "1037",
+        "speaker_name": "胡敏",
+        "score": 0.6027453652130891
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 9.1
+    },
+    {
+      "segment_id": 171,
+      "audio_file": "02e36a2e-8db4-41fc-ab1e-1bd6eef0daa0.wav",
+      "ground_truth_id": "905",
+      "ground_truth_name": "李娟",
+      "recognized": {
+        "speaker_id": "905",
+        "speaker_name": "李娟",
+        "score": 0.6623484709517719
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.76
+    },
+    {
+      "segment_id": 172,
+      "audio_file": "9e665342-2382-4a9c-996f-f482a807003b.wav",
+      "ground_truth_id": "535",
+      "ground_truth_name": "孙永强",
+      "recognized": {
+        "speaker_id": "535",
+        "speaker_name": "孙永强",
+        "score": 0.6435995711805176
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.76
+    },
+    {
+      "segment_id": 173,
+      "audio_file": "1cf5f9e1-e08f-4639-b918-81d7f5e875b8.wav",
+      "ground_truth_id": "747",
+      "ground_truth_name": "朱建华",
+      "recognized": {
+        "speaker_id": "747",
+        "speaker_name": "朱建华",
+        "score": 0.5596925318922881
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.92
+    },
+    {
+      "segment_id": 174,
+      "audio_file": "6548b802-7783-4786-82ef-257d0ce86f21.wav",
+      "ground_truth_id": "1041",
+      "ground_truth_name": "郑洋",
+      "recognized": {
+        "speaker_id": "1041",
+        "speaker_name": "郑洋",
+        "score": 0.7479836840995576
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.2
+    },
+    {
+      "segment_id": 175,
+      "audio_file": "80c1990e-5cd5-491d-8455-19c0d2c26bb2.wav",
+      "ground_truth_id": "1055",
+      "ground_truth_name": "胡琳",
+      "recognized": {
+        "speaker_id": "1055",
+        "speaker_name": "胡琳",
+        "score": 0.7162716438155529
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 3.6
+    },
+    {
+      "segment_id": 176,
+      "audio_file": "eaa7cc2b-4361-434f-a930-78df60ed3b8e.wav",
+      "ground_truth_id": "1062",
+      "ground_truth_name": "孙勇",
+      "recognized": {
+        "speaker_id": "1062",
+        "speaker_name": "孙勇",
+        "score": 0.6390135481269686
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.76
+    },
+    {
+      "segment_id": 177,
+      "audio_file": "d3a36a12-3796-426e-8e0e-4e63345367bc.wav",
+      "ground_truth_id": "1059",
+      "ground_truth_name": "徐浩",
+      "recognized": {
+        "speaker_id": "1059",
+        "speaker_name": "徐浩",
+        "score": 0.737128003565605
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.84
+    },
+    {
+      "segment_id": 178,
+      "audio_file": "3e481c43-f2e3-46fb-8d1f-06c1b731bb31.wav",
+      "ground_truth_id": "481",
+      "ground_truth_name": "陈红",
+      "recognized": {
+        "speaker_id": "481",
+        "speaker_name": "陈红",
+        "score": 0.6507927040002995
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 7.32
+    },
+    {
+      "segment_id": 179,
+      "audio_file": "04165d79-b271-4b64-b59e-3611eddf944b.wav",
+      "ground_truth_id": "1183",
+      "ground_truth_name": "胡明",
+      "recognized": {
+        "speaker_id": "1183",
+        "speaker_name": "胡明",
+        "score": 0.6817099398223457
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.64
+    },
+    {
+      "segment_id": 180,
+      "audio_file": "2e5ba8af-fd90-458c-8d42-1ea55283061c.wav",
+      "ground_truth_id": "887",
+      "ground_truth_name": "郭桂英",
+      "recognized": {
+        "speaker_id": "887",
+        "speaker_name": "郭桂英",
+        "score": 0.6519234567012497
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.46
+    },
+    {
+      "segment_id": 181,
+      "audio_file": "0311b61e-1417-462d-ba89-abbeaa3144d1.wav",
+      "ground_truth_id": "540",
+      "ground_truth_name": "郑刚",
+      "recognized": {
+        "speaker_id": "419",
+        "speaker_name": "朱琪",
+        "score": 0.5555875520265039
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 7.68
+    },
+    {
+      "segment_id": 182,
+      "audio_file": "bacd3ba2-c305-43d0-b799-02cf8ca0d070.wav",
+      "ground_truth_id": "914",
+      "ground_truth_name": "林志强",
+      "recognized": {
+        "speaker_id": "686",
+        "speaker_name": "何飞",
+        "score": 0.41113528638541075
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 8.88
+    },
+    {
+      "segment_id": 183,
+      "audio_file": "9973aa6f-fc4d-4c1d-8de4-8d5af0cb016a.wav",
+      "ground_truth_id": "435",
+      "ground_truth_name": "梁海燕",
+      "recognized": {
+        "speaker_id": "645",
+        "speaker_name": "梁刚",
+        "score": 0.6328816550763119
+      },
+      "is_correct": false,
+      "top3_includes_correct": true,
+      "duration_sec": 6.36
+    },
+    {
+      "segment_id": 184,
+      "audio_file": "2e84624a-3ac5-426e-8725-ffbac1132308.wav",
+      "ground_truth_id": "827",
+      "ground_truth_name": "胡军",
+      "recognized": {
+        "speaker_id": "827",
+        "speaker_name": "胡军",
+        "score": 0.7154673768409618
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 3.6
+    },
+    {
+      "segment_id": 185,
+      "audio_file": "6cd40a0e-e6b1-463e-ba29-5c2a7eeaef22.wav",
+      "ground_truth_id": "1138",
+      "ground_truth_name": "吴华",
+      "recognized": {
+        "speaker_id": "848",
+        "speaker_name": "黄颖",
+        "score": 0.49213941352118973
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 5.04
+    },
+    {
+      "segment_id": 186,
+      "audio_file": "cb363e74-b200-4f53-9656-bf2f5d215f1d.wav",
+      "ground_truth_id": "1019",
+      "ground_truth_name": "林浩",
+      "recognized": {
+        "speaker_id": "1019",
+        "speaker_name": "林浩",
+        "score": 0.7221060104508945
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.68
+    },
+    {
+      "segment_id": 187,
+      "audio_file": "92c9cd90-1b9d-4eee-a235-bf0a74f93475.wav",
+      "ground_truth_id": "1097",
+      "ground_truth_name": "罗晨",
+      "recognized": {
+        "speaker_id": "342",
+        "speaker_name": "徐平",
+        "score": 0.5309067987677287
+      },
+      "is_correct": false,
+      "top3_includes_correct": false,
+      "duration_sec": 9.0
+    },
+    {
+      "segment_id": 188,
+      "audio_file": "31efe43e-371c-4ccd-80a5-b523a1eeb32e.wav",
+      "ground_truth_id": "441",
+      "ground_truth_name": "何梅",
+      "recognized": {
+        "speaker_id": "1055",
+        "speaker_name": "胡琳",
+        "score": 0.7686150156072827
+      },
+      "is_correct": false,
+      "top3_includes_correct": true,
+      "duration_sec": 6.12
+    },
+    {
+      "segment_id": 189,
+      "audio_file": "52a1d13e-7135-4cb3-8bf9-834c85df2487.wav",
+      "ground_truth_id": "1172",
+      "ground_truth_name": "徐莉",
+      "recognized": {
+        "speaker_id": "1172",
+        "speaker_name": "徐莉",
+        "score": 0.6523208392649261
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 3.0
+    },
+    {
+      "segment_id": 190,
+      "audio_file": "2297a675-4b40-4442-bcaf-1d00d8bdb030.wav",
+      "ground_truth_id": "346",
+      "ground_truth_name": "黄飞",
+      "recognized": {
+        "speaker_id": "346",
+        "speaker_name": "黄飞",
+        "score": 0.7424284430602168
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.64
+    },
+    {
+      "segment_id": 191,
+      "audio_file": "d40abdff-40e0-4a8d-ab82-c06b4776abeb.wav",
+      "ground_truth_id": "1041",
+      "ground_truth_name": "郑洋",
+      "recognized": {
+        "speaker_id": "1041",
+        "speaker_name": "郑洋",
+        "score": 0.7163364205517659
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 3.6
+    },
+    {
+      "segment_id": 192,
+      "audio_file": "0e6751a7-61e5-4cbc-ac80-9d13b3e2ee72.wav",
+      "ground_truth_id": "792",
+      "ground_truth_name": "李建华",
+      "recognized": {
+        "speaker_id": "792",
+        "speaker_name": "李建华",
+        "score": 0.5971343725840796
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.6
+    },
+    {
+      "segment_id": 193,
+      "audio_file": "37a3680b-ab49-4bdc-b8c5-53dd4d5d3aa0.wav",
+      "ground_truth_id": "865",
+      "ground_truth_name": "李秀珍",
+      "recognized": {
+        "speaker_id": "865",
+        "speaker_name": "李秀珍",
+        "score": 0.6194561017468614
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 8.28
+    },
+    {
+      "segment_id": 194,
+      "audio_file": "daeb5d29-fa06-44b2-85a1-fd7b2ae08a9f.wav",
+      "ground_truth_id": "672",
+      "ground_truth_name": "何欣",
+      "recognized": {
+        "speaker_id": "672",
+        "speaker_name": "何欣",
+        "score": 0.7125135926467746
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.96
+    },
+    {
+      "segment_id": 195,
+      "audio_file": "0d42bd5a-9b61-4e93-b71b-25e16e693e86.wav",
+      "ground_truth_id": "196",
+      "ground_truth_name": "陈伟",
+      "recognized": {
+        "speaker_id": "196",
+        "speaker_name": "陈伟",
+        "score": 0.6581193713840662
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 9.56
+    },
+    {
+      "segment_id": 196,
+      "audio_file": "e1fb98ab-e61d-4a10-81f8-1fadb58767d4.wav",
+      "ground_truth_id": "812",
+      "ground_truth_name": "刘晨",
+      "recognized": {
+        "speaker_id": "812",
+        "speaker_name": "刘晨",
+        "score": 0.7551535162946225
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 6.38
+    },
+    {
+      "segment_id": 197,
+      "audio_file": "091e183a-f116-45a2-8816-ef18a51dfd55.wav",
+      "ground_truth_id": "435",
+      "ground_truth_name": "梁海燕",
+      "recognized": {
+        "speaker_id": "435",
+        "speaker_name": "梁海燕",
+        "score": 0.658643892351822
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 5.76
+    },
+    {
+      "segment_id": 198,
+      "audio_file": "d89fe03c-3989-44ec-9393-702ddf354472.wav",
+      "ground_truth_id": "441",
+      "ground_truth_name": "何梅",
+      "recognized": {
+        "speaker_id": "1055",
+        "speaker_name": "胡琳",
+        "score": 0.7699251739628412
+      },
+      "is_correct": false,
+      "top3_includes_correct": true,
+      "duration_sec": 5.52
+    },
+    {
+      "segment_id": 199,
+      "audio_file": "76ed16a0-b5e3-4087-a8ae-f6a8045fddd4.wav",
+      "ground_truth_id": "853",
+      "ground_truth_name": "刘鑫",
+      "recognized": {
+        "speaker_id": "961",
+        "speaker_name": "杨鹏",
+        "score": 0.6097308372721285
+      },
+      "is_correct": false,
+      "top3_includes_correct": true,
+      "duration_sec": 4.6
+    },
+    {
+      "segment_id": 200,
+      "audio_file": "d643905d-bef2-407f-9020-12ca9207cfaf.wav",
+      "ground_truth_id": "507",
+      "ground_truth_name": "郑芬",
+      "recognized": {
+        "speaker_id": "507",
+        "speaker_name": "郑芬",
+        "score": 0.656912888416305
+      },
+      "is_correct": true,
+      "top3_includes_correct": true,
+      "duration_sec": 4.2
+    }
+  ]
+}

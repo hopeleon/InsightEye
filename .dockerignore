@@ -1,0 +1,44 @@
+# 排除版本控制和 IDE 文件
+.git
+.gitignore
+.codex
+.vscode
+.idea
+
+# 排除 Python 缓存和临时文件
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.eggs
+dist
+build
+*.egg
+
+# 排除测试和开发文件（但保留 requirements.txt）
+test_*.py
+do_*.py
+fix_*.py
+add_*.py
+
+# 排除文档（保留模型相关）
+*.md
+
+# 保留 models 目录中的隐藏标记文件
+!.mdl
+!.msc
+!.mv
+
+# 排除示例和样本数据
+samples
+InsightEye-models
+
+# 排除 conda 环境
+.env
+.venv
+env/
+venv/
+
+# 保留 models 目录（通过 Dockerfile COPY）
+# 排除大型模型文件（建议通过 volume 挂载）
+# models/

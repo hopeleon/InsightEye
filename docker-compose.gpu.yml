@@ -1,0 +1,22 @@
+# ============================================================
+# GPU 加速配置 - 与 docker-compose.yml 配合使用
+# ============================================================
+# 使用方法:
+#   docker-compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+#
+# 注意: GPU 调度已由 docker-compose.yml 中的 deploy.resources.reservations
+#       统一配置，此文件仅作为补充选项保留
+# ============================================================
+
+services:
+  insighteye:
+    environment:
+      # GPU 推理
+      - LOCAL_DEVICE=cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

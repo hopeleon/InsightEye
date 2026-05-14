@@ -1,0 +1,380 @@
+{
+  "generated_at": "2026-04-30T13:21:16.714746",
+  "total_in_dataset": 296,
+  "previously_registered": 250,
+  "this_run_success": 0,
+  "this_run_failed": 46,
+  "total_in_db_now": 250,
+  "duration_sec": 0.4,
+  "results": [
+    {
+      "speaker_id": "159",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "188",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "211",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "307",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "347",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "492",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "579",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "653",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "727",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "755",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "778",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "781",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "801",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "884",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "915",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "926",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "977",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1009",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1023",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1039",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1043",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1048",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1065",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1081",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1085",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1086",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1100",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1101",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1112",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1139",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1142",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1150",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1155",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1161",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1174",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1178",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1182",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1206",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1207",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1220",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1221",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1225",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1232",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1236",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1239",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1250",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    }
+  ],
+  "errors": []
+}

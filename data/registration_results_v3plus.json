@@ -1,0 +1,2672 @@
+{
+  "generated_at": "2026-04-30T02:28:14.722585",
+  "total": 296,
+  "successful": 250,
+  "failed": 46,
+  "results": [
+    {
+      "speaker_id": "17",
+      "name": "pw_17",
+      "success": true,
+      "quality": 14.0096,
+      "sample_count": 24,
+      "duration_sec": 2.873133420944214,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "19",
+      "name": "pw_19",
+      "success": true,
+      "quality": 15.0226,
+      "sample_count": 14,
+      "duration_sec": 1.3390681743621826,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "68",
+      "name": "pw_68",
+      "success": true,
+      "quality": 13.5456,
+      "sample_count": 3,
+      "duration_sec": 0.36879968643188477,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "69",
+      "name": "pw_69",
+      "success": true,
+      "quality": 13.5823,
+      "sample_count": 111,
+      "duration_sec": 7.408434867858887,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "76",
+      "name": "pw_76",
+      "success": true,
+      "quality": 14.1387,
+      "sample_count": 5,
+      "duration_sec": 0.5689196586608887,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "78",
+      "name": "pw_78",
+      "success": true,
+      "quality": 14.7687,
+      "sample_count": 9,
+      "duration_sec": 1.0320019721984863,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "142",
+      "name": "pw_142",
+      "success": true,
+      "quality": 14.3126,
+      "sample_count": 813,
+      "duration_sec": 60.305216789245605,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "148",
+      "name": "pw_148",
+      "success": true,
+      "quality": 13.4032,
+      "sample_count": 7,
+      "duration_sec": 0.8839387893676758,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "159",
+      "name": "pw_159",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "173",
+      "name": "pw_173",
+      "success": true,
+      "quality": 15.2154,
+      "sample_count": 303,
+      "duration_sec": 23.842437267303467,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "177",
+      "name": "pw_177",
+      "success": true,
+      "quality": 13.7148,
+      "sample_count": 116,
+      "duration_sec": 8.190662622451782,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "188",
+      "name": "pw_188",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "192",
+      "name": "pw_192",
+      "success": true,
+      "quality": 15.1293,
+      "sample_count": 799,
+      "duration_sec": 58.60775423049927,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "196",
+      "name": "pw_196",
+      "success": true,
+      "quality": 14.4074,
+      "sample_count": 752,
+      "duration_sec": 47.161736726760864,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "204",
+      "name": "pw_204",
+      "success": true,
+      "quality": 15.3052,
+      "sample_count": 579,
+      "duration_sec": 26.146191596984863,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "211",
+      "name": "pw_211",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "216",
+      "name": "pw_216",
+      "success": true,
+      "quality": 14.6157,
+      "sample_count": 873,
+      "duration_sec": 80.52709197998047,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "251",
+      "name": "pw_251",
+      "success": true,
+      "quality": 14.5488,
+      "sample_count": 184,
+      "duration_sec": 15.009902715682983,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "270",
+      "name": "pw_270",
+      "success": true,
+      "quality": 14.9442,
+      "sample_count": 200,
+      "duration_sec": 11.128004550933838,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "275",
+      "name": "pw_275",
+      "success": true,
+      "quality": 15.3121,
+      "sample_count": 199,
+      "duration_sec": 13.728800773620605,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "277",
+      "name": "pw_277",
+      "success": true,
+      "quality": 14.2983,
+      "sample_count": 106,
+      "duration_sec": 8.021774768829346,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "284",
+      "name": "pw_284",
+      "success": true,
+      "quality": 14.1242,
+      "sample_count": 434,
+      "duration_sec": 19.950721979141235,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "292",
+      "name": "pw_292",
+      "success": true,
+      "quality": 15.0356,
+      "sample_count": 54,
+      "duration_sec": 2.978766441345215,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "298",
+      "name": "pw_298",
+      "success": true,
+      "quality": 13.5292,
+      "sample_count": 279,
+      "duration_sec": 21.72500729560852,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "307",
+      "name": "pw_307",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "311",
+      "name": "pw_311",
+      "success": true,
+      "quality": 13.9427,
+      "sample_count": 30,
+      "duration_sec": 2.22613263130188,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "313",
+      "name": "pw_313",
+      "success": true,
+      "quality": 14.7065,
+      "sample_count": 446,
+      "duration_sec": 28.669124364852905,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "320",
+      "name": "pw_320",
+      "success": true,
+      "quality": 14.4148,
+      "sample_count": 297,
+      "duration_sec": 13.707441806793213,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "326",
+      "name": "pw_326",
+      "success": true,
+      "quality": 14.0455,
+      "sample_count": 388,
+      "duration_sec": 16.81464719772339,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "342",
+      "name": "pw_342",
+      "success": true,
+      "quality": 14.2366,
+      "sample_count": 132,
+      "duration_sec": 9.659718990325928,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "346",
+      "name": "pw_346",
+      "success": true,
+      "quality": 14.1742,
+      "sample_count": 103,
+      "duration_sec": 4.686679363250732,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "347",
+      "name": "pw_347",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "419",
+      "name": "pw_419",
+      "success": true,
+      "quality": 14.2291,
+      "sample_count": 276,
+      "duration_sec": 11.240208864212036,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "421",
+      "name": "pw_421",
+      "success": true,
+      "quality": 13.9201,
+      "sample_count": 182,
+      "duration_sec": 12.87701964378357,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "423",
+      "name": "pw_423",
+      "success": true,
+      "quality": 14.9308,
+      "sample_count": 80,
+      "duration_sec": 3.592022657394409,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "435",
+      "name": "pw_435",
+      "success": true,
+      "quality": 15.0435,
+      "sample_count": 622,
+      "duration_sec": 25.451006174087524,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "441",
+      "name": "pw_441",
+      "success": true,
+      "quality": 20.6448,
+      "sample_count": 671,
+      "duration_sec": 27.15768837928772,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "442",
+      "name": "pw_442",
+      "success": true,
+      "quality": 15.1852,
+      "sample_count": 34,
+      "duration_sec": 1.461031436920166,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "458",
+      "name": "pw_458",
+      "success": true,
+      "quality": 23.7876,
+      "sample_count": 574,
+      "duration_sec": 26.69844913482666,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "468",
+      "name": "pw_468",
+      "success": true,
+      "quality": 14.5403,
+      "sample_count": 64,
+      "duration_sec": 2.6667628288269043,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "473",
+      "name": "pw_473",
+      "success": true,
+      "quality": 17.0393,
+      "sample_count": 482,
+      "duration_sec": 21.056878566741943,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "475",
+      "name": "pw_475",
+      "success": true,
+      "quality": 14.8532,
+      "sample_count": 277,
+      "duration_sec": 13.193162679672241,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "480",
+      "name": "pw_480",
+      "success": true,
+      "quality": 16.968,
+      "sample_count": 540,
+      "duration_sec": 23.884275674819946,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "481",
+      "name": "pw_481",
+      "success": true,
+      "quality": 14.1405,
+      "sample_count": 179,
+      "duration_sec": 9.220293760299683,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "484",
+      "name": "pw_484",
+      "success": true,
+      "quality": 14.982,
+      "sample_count": 32,
+      "duration_sec": 3.3093600273132324,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "492",
+      "name": "pw_492",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "498",
+      "name": "pw_498",
+      "success": true,
+      "quality": 14.3365,
+      "sample_count": 480,
+      "duration_sec": 27.54140329360962,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "504",
+      "name": "pw_504",
+      "success": true,
+      "quality": 14.0723,
+      "sample_count": 17,
+      "duration_sec": 1.0172793865203857,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "507",
+      "name": "pw_507",
+      "success": true,
+      "quality": 15.0668,
+      "sample_count": 297,
+      "duration_sec": 19.554035186767578,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "514",
+      "name": "pw_514",
+      "success": true,
+      "quality": 13.3391,
+      "sample_count": 5,
+      "duration_sec": 0.22158598899841309,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "522",
+      "name": "pw_522",
+      "success": true,
+      "quality": 14.0548,
+      "sample_count": 14,
+      "duration_sec": 0.8391330242156982,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "526",
+      "name": "pw_526",
+      "success": true,
+      "quality": 14.8624,
+      "sample_count": 113,
+      "duration_sec": 8.815093994140625,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "532",
+      "name": "pw_532",
+      "success": true,
+      "quality": 14.6833,
+      "sample_count": 496,
+      "duration_sec": 28.590423345565796,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "535",
+      "name": "pw_535",
+      "success": true,
+      "quality": 14.7912,
+      "sample_count": 409,
+      "duration_sec": 23.887265920639038,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "540",
+      "name": "pw_540",
+      "success": true,
+      "quality": 15.1973,
+      "sample_count": 632,
+      "duration_sec": 35.64444088935852,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "552",
+      "name": "pw_552",
+      "success": true,
+      "quality": 14.5678,
+      "sample_count": 8,
+      "duration_sec": 0.5523202419281006,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "553",
+      "name": "pw_553",
+      "success": true,
+      "quality": 15.1802,
+      "sample_count": 556,
+      "duration_sec": 40.9728889465332,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "560",
+      "name": "pw_560",
+      "success": true,
+      "quality": 15.4755,
+      "sample_count": 10,
+      "duration_sec": 1.996415615081787,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "569",
+      "name": "pw_569",
+      "success": true,
+      "quality": 13.3046,
+      "sample_count": 31,
+      "duration_sec": 2.776782512664795,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "579",
+      "name": "pw_579",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "589",
+      "name": "pw_589",
+      "success": true,
+      "quality": 14.4636,
+      "sample_count": 93,
+      "duration_sec": 21.817768335342407,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "590",
+      "name": "pw_590",
+      "success": true,
+      "quality": 14.3013,
+      "sample_count": 704,
+      "duration_sec": 66.31449508666992,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "599",
+      "name": "pw_599",
+      "success": true,
+      "quality": 14.283,
+      "sample_count": 23,
+      "duration_sec": 4.27421498298645,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "601",
+      "name": "pw_601",
+      "success": true,
+      "quality": 16.0488,
+      "sample_count": 236,
+      "duration_sec": 29.305559158325195,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "613",
+      "name": "pw_613",
+      "success": true,
+      "quality": 15.3439,
+      "sample_count": 80,
+      "duration_sec": 5.198868989944458,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "619",
+      "name": "pw_619",
+      "success": true,
+      "quality": 17.3302,
+      "sample_count": 304,
+      "duration_sec": 18.792606592178345,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "622",
+      "name": "pw_622",
+      "success": true,
+      "quality": 14.7608,
+      "sample_count": 121,
+      "duration_sec": 16.541014432907104,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "635",
+      "name": "pw_635",
+      "success": true,
+      "quality": 15.5931,
+      "sample_count": 593,
+      "duration_sec": 38.12039661407471,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "645",
+      "name": "pw_645",
+      "success": true,
+      "quality": 15.9283,
+      "sample_count": 63,
+      "duration_sec": 3.5898025035858154,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "648",
+      "name": "pw_648",
+      "success": true,
+      "quality": 16.142,
+      "sample_count": 455,
+      "duration_sec": 25.80254554748535,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "649",
+      "name": "pw_649",
+      "success": true,
+      "quality": 14.8473,
+      "sample_count": 450,
+      "duration_sec": 64.12261438369751,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "653",
+      "name": "pw_653",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "656",
+      "name": "pw_656",
+      "success": true,
+      "quality": 15.183,
+      "sample_count": 8,
+      "duration_sec": 1.554368257522583,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "659",
+      "name": "pw_659",
+      "success": true,
+      "quality": 13.2516,
+      "sample_count": 7,
+      "duration_sec": 0.6105599403381348,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "666",
+      "name": "pw_666",
+      "success": true,
+      "quality": 15.9345,
+      "sample_count": 200,
+      "duration_sec": 15.76502799987793,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "668",
+      "name": "pw_668",
+      "success": true,
+      "quality": 15.3011,
+      "sample_count": 9,
+      "duration_sec": 0.5174376964569092,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "672",
+      "name": "pw_672",
+      "success": true,
+      "quality": 14.6802,
+      "sample_count": 387,
+      "duration_sec": 21.220459938049316,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "682",
+      "name": "pw_682",
+      "success": true,
+      "quality": 15.3544,
+      "sample_count": 314,
+      "duration_sec": 15.06975531578064,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "686",
+      "name": "pw_686",
+      "success": true,
+      "quality": 16.7714,
+      "sample_count": 501,
+      "duration_sec": 31.13841199874878,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "688",
+      "name": "pw_688",
+      "success": true,
+      "quality": 14.2985,
+      "sample_count": 6,
+      "duration_sec": 0.9695076942443848,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "699",
+      "name": "pw_699",
+      "success": true,
+      "quality": 15.5242,
+      "sample_count": 7,
+      "duration_sec": 1.1804726123809814,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "700",
+      "name": "pw_700",
+      "success": true,
+      "quality": 16.0454,
+      "sample_count": 573,
+      "duration_sec": 81.35787200927734,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "702",
+      "name": "pw_702",
+      "success": true,
+      "quality": 15.0339,
+      "sample_count": 70,
+      "duration_sec": 8.395994424819946,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "712",
+      "name": "pw_712",
+      "success": true,
+      "quality": 14.1764,
+      "sample_count": 29,
+      "duration_sec": 3.5014543533325195,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "714",
+      "name": "pw_714",
+      "success": true,
+      "quality": 14.5038,
+      "sample_count": 33,
+      "duration_sec": 5.805248498916626,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "721",
+      "name": "pw_721",
+      "success": true,
+      "quality": 13.9239,
+      "sample_count": 53,
+      "duration_sec": 8.411260604858398,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "724",
+      "name": "pw_724",
+      "success": true,
+      "quality": 14.329,
+      "sample_count": 43,
+      "duration_sec": 3.4972665309906006,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "725",
+      "name": "pw_725",
+      "success": true,
+      "quality": 15.3292,
+      "sample_count": 37,
+      "duration_sec": 2.16245436668396,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "727",
+      "name": "pw_727",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "733",
+      "name": "pw_733",
+      "success": true,
+      "quality": 15.4307,
+      "sample_count": 99,
+      "duration_sec": 5.047314643859863,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "747",
+      "name": "pw_747",
+      "success": true,
+      "quality": 14.3916,
+      "sample_count": 394,
+      "duration_sec": 19.939722299575806,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "753",
+      "name": "pw_753",
+      "success": true,
+      "quality": 16.2588,
+      "sample_count": 564,
+      "duration_sec": 27.700972080230713,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "755",
+      "name": "pw_755",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "758",
+      "name": "pw_758",
+      "success": true,
+      "quality": 15.4712,
+      "sample_count": 119,
+      "duration_sec": 10.1297287940979,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "760",
+      "name": "pw_760",
+      "success": true,
+      "quality": 13.4392,
+      "sample_count": 201,
+      "duration_sec": 9.867321014404297,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "763",
+      "name": "pw_763",
+      "success": true,
+      "quality": 16.1497,
+      "sample_count": 468,
+      "duration_sec": 24.453563690185547,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "764",
+      "name": "pw_764",
+      "success": true,
+      "quality": 14.7585,
+      "sample_count": 218,
+      "duration_sec": 17.865219116210938,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "770",
+      "name": "pw_770",
+      "success": true,
+      "quality": 14.0583,
+      "sample_count": 67,
+      "duration_sec": 3.6916310787200928,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "775",
+      "name": "pw_775",
+      "success": true,
+      "quality": 14.0101,
+      "sample_count": 6,
+      "duration_sec": 0.3907339572906494,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "778",
+      "name": "pw_778",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "780",
+      "name": "pw_780",
+      "success": true,
+      "quality": 15.1482,
+      "sample_count": 26,
+      "duration_sec": 1.3212451934814453,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "781",
+      "name": "pw_781",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "791",
+      "name": "pw_791",
+      "success": true,
+      "quality": 13.9938,
+      "sample_count": 8,
+      "duration_sec": 0.9246516227722168,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "792",
+      "name": "pw_792",
+      "success": true,
+      "quality": 14.2558,
+      "sample_count": 84,
+      "duration_sec": 4.540193796157837,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "796",
+      "name": "pw_796",
+      "success": true,
+      "quality": 13.8127,
+      "sample_count": 25,
+      "duration_sec": 1.0945792198181152,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "799",
+      "name": "pw_799",
+      "success": true,
+      "quality": 16.3974,
+      "sample_count": 568,
+      "duration_sec": 39.44584107398987,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "801",
+      "name": "pw_801",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "802",
+      "name": "pw_802",
+      "success": true,
+      "quality": 16.7384,
+      "sample_count": 737,
+      "duration_sec": 37.553897857666016,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "803",
+      "name": "pw_803",
+      "success": true,
+      "quality": 15.0886,
+      "sample_count": 8,
+      "duration_sec": 0.6305899620056152,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "806",
+      "name": "pw_806",
+      "success": true,
+      "quality": 13.9598,
+      "sample_count": 14,
+      "duration_sec": 2.2125256061553955,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "810",
+      "name": "pw_810",
+      "success": true,
+      "quality": 15.1625,
+      "sample_count": 127,
+      "duration_sec": 19.357022285461426,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "812",
+      "name": "pw_812",
+      "success": true,
+      "quality": 16.2803,
+      "sample_count": 376,
+      "duration_sec": 41.96611022949219,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "819",
+      "name": "pw_819",
+      "success": true,
+      "quality": 15.5199,
+      "sample_count": 666,
+      "duration_sec": 30.363810062408447,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "827",
+      "name": "pw_827",
+      "success": true,
+      "quality": 14.905,
+      "sample_count": 127,
+      "duration_sec": 5.016814947128296,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "830",
+      "name": "pw_830",
+      "success": true,
+      "quality": 15.9553,
+      "sample_count": 190,
+      "duration_sec": 7.570487022399902,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "833",
+      "name": "pw_833",
+      "success": true,
+      "quality": 14.3317,
+      "sample_count": 20,
+      "duration_sec": 0.9996311664581299,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "836",
+      "name": "pw_836",
+      "success": true,
+      "quality": 14.6304,
+      "sample_count": 131,
+      "duration_sec": 10.059120893478394,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "848",
+      "name": "pw_848",
+      "success": true,
+      "quality": 15.5255,
+      "sample_count": 50,
+      "duration_sec": 3.3818962574005127,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "853",
+      "name": "pw_853",
+      "success": true,
+      "quality": 14.2657,
+      "sample_count": 220,
+      "duration_sec": 17.39458155632019,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "856",
+      "name": "pw_856",
+      "success": true,
+      "quality": 14.3717,
+      "sample_count": 424,
+      "duration_sec": 18.869616985321045,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "865",
+      "name": "pw_865",
+      "success": true,
+      "quality": 16.7195,
+      "sample_count": 793,
+      "duration_sec": 36.19293403625488,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "870",
+      "name": "pw_870",
+      "success": true,
+      "quality": 15.8399,
+      "sample_count": 778,
+      "duration_sec": 30.99654984474182,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "871",
+      "name": "pw_871",
+      "success": true,
+      "quality": 15.6,
+      "sample_count": 494,
+      "duration_sec": 19.887470483779907,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "872",
+      "name": "pw_872",
+      "success": true,
+      "quality": 16.5388,
+      "sample_count": 501,
+      "duration_sec": 22.940924644470215,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "884",
+      "name": "pw_884",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "887",
+      "name": "pw_887",
+      "success": true,
+      "quality": 14.2588,
+      "sample_count": 392,
+      "duration_sec": 50.896910429000854,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "892",
+      "name": "pw_892",
+      "success": true,
+      "quality": 14.3535,
+      "sample_count": 59,
+      "duration_sec": 8.413774728775024,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "893",
+      "name": "pw_893",
+      "success": true,
+      "quality": 17.4966,
+      "sample_count": 449,
+      "duration_sec": 38.50870156288147,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "900",
+      "name": "pw_900",
+      "success": true,
+      "quality": 17.4378,
+      "sample_count": 371,
+      "duration_sec": 49.166035413742065,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "901",
+      "name": "pw_901",
+      "success": true,
+      "quality": 16.2378,
+      "sample_count": 380,
+      "duration_sec": 28.826524019241333,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "905",
+      "name": "pw_905",
+      "success": true,
+      "quality": 15.8653,
+      "sample_count": 529,
+      "duration_sec": 37.117820024490356,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "906",
+      "name": "pw_906",
+      "success": true,
+      "quality": 13.853,
+      "sample_count": 25,
+      "duration_sec": 2.881420373916626,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "908",
+      "name": "pw_908",
+      "success": true,
+      "quality": 14.2132,
+      "sample_count": 299,
+      "duration_sec": 24.614835500717163,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "911",
+      "name": "pw_911",
+      "success": true,
+      "quality": 13.913,
+      "sample_count": 207,
+      "duration_sec": 36.1073694229126,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "912",
+      "name": "pw_912",
+      "success": true,
+      "quality": 14.596,
+      "sample_count": 201,
+      "duration_sec": 12.232837677001953,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "913",
+      "name": "pw_913",
+      "success": true,
+      "quality": 15.7124,
+      "sample_count": 559,
+      "duration_sec": 30.19405460357666,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "914",
+      "name": "pw_914",
+      "success": true,
+      "quality": 18.7408,
+      "sample_count": 661,
+      "duration_sec": 29.602581024169922,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "915",
+      "name": "pw_915",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "922",
+      "name": "pw_922",
+      "success": true,
+      "quality": 15.0641,
+      "sample_count": 37,
+      "duration_sec": 1.8795623779296875,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "923",
+      "name": "pw_923",
+      "success": true,
+      "quality": 14.4069,
+      "sample_count": 10,
+      "duration_sec": 0.8503377437591553,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "926",
+      "name": "pw_926",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "928",
+      "name": "pw_928",
+      "success": true,
+      "quality": 13.6058,
+      "sample_count": 8,
+      "duration_sec": 0.45378804206848145,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "929",
+      "name": "pw_929",
+      "success": true,
+      "quality": 16.105,
+      "sample_count": 156,
+      "duration_sec": 13.566797018051147,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "937",
+      "name": "pw_937",
+      "success": true,
+      "quality": 19.325,
+      "sample_count": 332,
+      "duration_sec": 14.973777770996094,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "942",
+      "name": "pw_942",
+      "success": true,
+      "quality": 15.6633,
+      "sample_count": 12,
+      "duration_sec": 0.5265243053436279,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "944",
+      "name": "pw_944",
+      "success": true,
+      "quality": 14.9276,
+      "sample_count": 254,
+      "duration_sec": 21.214985847473145,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "948",
+      "name": "pw_948",
+      "success": true,
+      "quality": 15.3414,
+      "sample_count": 124,
+      "duration_sec": 7.522075891494751,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "953",
+      "name": "pw_953",
+      "success": true,
+      "quality": 13.591,
+      "sample_count": 48,
+      "duration_sec": 3.3303184509277344,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "955",
+      "name": "pw_955",
+      "success": true,
+      "quality": 13.9009,
+      "sample_count": 4,
+      "duration_sec": 0.2598917484283447,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "961",
+      "name": "pw_961",
+      "success": true,
+      "quality": 16.9404,
+      "sample_count": 787,
+      "duration_sec": 58.50735640525818,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "962",
+      "name": "pw_962",
+      "success": true,
+      "quality": 14.5887,
+      "sample_count": 212,
+      "duration_sec": 11.719979763031006,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "963",
+      "name": "pw_963",
+      "success": true,
+      "quality": 13.7523,
+      "sample_count": 113,
+      "duration_sec": 4.619031667709351,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "965",
+      "name": "pw_965",
+      "success": true,
+      "quality": 14.8879,
+      "sample_count": 22,
+      "duration_sec": 1.1039831638336182,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "967",
+      "name": "pw_967",
+      "success": true,
+      "quality": 15.6631,
+      "sample_count": 211,
+      "duration_sec": 9.367027521133423,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "969",
+      "name": "pw_969",
+      "success": true,
+      "quality": 14.8223,
+      "sample_count": 97,
+      "duration_sec": 5.217045783996582,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "970",
+      "name": "pw_970",
+      "success": true,
+      "quality": 15.3754,
+      "sample_count": 9,
+      "duration_sec": 0.7155041694641113,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "974",
+      "name": "pw_974",
+      "success": true,
+      "quality": 12.8368,
+      "sample_count": 3,
+      "duration_sec": 0.3448941707611084,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "977",
+      "name": "pw_977",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "981",
+      "name": "pw_981",
+      "success": true,
+      "quality": 16.175,
+      "sample_count": 482,
+      "duration_sec": 27.97516107559204,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "985",
+      "name": "pw_985",
+      "success": true,
+      "quality": 11.8984,
+      "sample_count": 13,
+      "duration_sec": 1.0339229106903076,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "999",
+      "name": "pw_999",
+      "success": true,
+      "quality": 15.4114,
+      "sample_count": 661,
+      "duration_sec": 31.33409833908081,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1003",
+      "name": "pw_1003",
+      "success": true,
+      "quality": 16.2072,
+      "sample_count": 652,
+      "duration_sec": 28.413997173309326,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1009",
+      "name": "pw_1009",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1013",
+      "name": "pw_1013",
+      "success": true,
+      "quality": 16.1067,
+      "sample_count": 665,
+      "duration_sec": 34.02435278892517,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1014",
+      "name": "pw_1014",
+      "success": true,
+      "quality": 14.7044,
+      "sample_count": 504,
+      "duration_sec": 22.02231001853943,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1016",
+      "name": "pw_1016",
+      "success": true,
+      "quality": 16.3201,
+      "sample_count": 619,
+      "duration_sec": 29.065837383270264,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1019",
+      "name": "pw_1019",
+      "success": true,
+      "quality": 14.3706,
+      "sample_count": 31,
+      "duration_sec": 4.62928581237793,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1022",
+      "name": "pw_1022",
+      "success": true,
+      "quality": 15.0327,
+      "sample_count": 11,
+      "duration_sec": 1.206204891204834,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1023",
+      "name": "pw_1023",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1024",
+      "name": "pw_1024",
+      "success": true,
+      "quality": 16.8331,
+      "sample_count": 425,
+      "duration_sec": 18.991838455200195,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1025",
+      "name": "pw_1025",
+      "success": true,
+      "quality": 15.189,
+      "sample_count": 11,
+      "duration_sec": 0.5662002563476562,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1026",
+      "name": "pw_1026",
+      "success": true,
+      "quality": 15.3963,
+      "sample_count": 23,
+      "duration_sec": 0.9172515869140625,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1027",
+      "name": "pw_1027",
+      "success": true,
+      "quality": 13.8995,
+      "sample_count": 56,
+      "duration_sec": 7.023722887039185,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1030",
+      "name": "pw_1030",
+      "success": true,
+      "quality": 13.8159,
+      "sample_count": 304,
+      "duration_sec": 30.45908522605896,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1032",
+      "name": "pw_1032",
+      "success": true,
+      "quality": 14.0002,
+      "sample_count": 9,
+      "duration_sec": 0.5831992626190186,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1033",
+      "name": "pw_1033",
+      "success": true,
+      "quality": 14.7217,
+      "sample_count": 23,
+      "duration_sec": 1.3333854675292969,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1034",
+      "name": "pw_1034",
+      "success": true,
+      "quality": 15.8847,
+      "sample_count": 101,
+      "duration_sec": 7.2858240604400635,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1035",
+      "name": "pw_1035",
+      "success": true,
+      "quality": 13.7682,
+      "sample_count": 3,
+      "duration_sec": 0.38871097564697266,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1037",
+      "name": "pw_1037",
+      "success": true,
+      "quality": 14.385,
+      "sample_count": 112,
+      "duration_sec": 8.586462020874023,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1038",
+      "name": "pw_1038",
+      "success": true,
+      "quality": 15.3934,
+      "sample_count": 204,
+      "duration_sec": 9.165789604187012,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1039",
+      "name": "pw_1039",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1041",
+      "name": "pw_1041",
+      "success": true,
+      "quality": 16.0183,
+      "sample_count": 894,
+      "duration_sec": 41.26347208023071,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1043",
+      "name": "pw_1043",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1044",
+      "name": "pw_1044",
+      "success": true,
+      "quality": 13.9269,
+      "sample_count": 102,
+      "duration_sec": 4.8407769203186035,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1045",
+      "name": "pw_1045",
+      "success": true,
+      "quality": 14.5782,
+      "sample_count": 206,
+      "duration_sec": 8.970759391784668,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1046",
+      "name": "pw_1046",
+      "success": true,
+      "quality": 16.6728,
+      "sample_count": 420,
+      "duration_sec": 28.271586656570435,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1047",
+      "name": "pw_1047",
+      "success": true,
+      "quality": 14.7355,
+      "sample_count": 160,
+      "duration_sec": 12.574744462966919,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1048",
+      "name": "pw_1048",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1049",
+      "name": "pw_1049",
+      "success": true,
+      "quality": 14.004,
+      "sample_count": 30,
+      "duration_sec": 2.4905738830566406,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1054",
+      "name": "pw_1054",
+      "success": true,
+      "quality": 14.245,
+      "sample_count": 56,
+      "duration_sec": 2.9403862953186035,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1055",
+      "name": "pw_1055",
+      "success": true,
+      "quality": 21.1231,
+      "sample_count": 466,
+      "duration_sec": 19.909176349639893,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1056",
+      "name": "pw_1056",
+      "success": true,
+      "quality": 14.6069,
+      "sample_count": 3,
+      "duration_sec": 0.5188608169555664,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1059",
+      "name": "pw_1059",
+      "success": true,
+      "quality": 15.5952,
+      "sample_count": 307,
+      "duration_sec": 12.301121234893799,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1062",
+      "name": "pw_1062",
+      "success": true,
+      "quality": 16.3731,
+      "sample_count": 639,
+      "duration_sec": 28.78877878189087,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1063",
+      "name": "pw_1063",
+      "success": true,
+      "quality": 13.8564,
+      "sample_count": 28,
+      "duration_sec": 1.1594815254211426,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1064",
+      "name": "pw_1064",
+      "success": true,
+      "quality": 13.5877,
+      "sample_count": 36,
+      "duration_sec": 1.411773681640625,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1065",
+      "name": "pw_1065",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1066",
+      "name": "pw_1066",
+      "success": true,
+      "quality": 14.3828,
+      "sample_count": 7,
+      "duration_sec": 0.26241350173950195,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1067",
+      "name": "pw_1067",
+      "success": true,
+      "quality": 15.838,
+      "sample_count": 218,
+      "duration_sec": 16.726876735687256,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1068",
+      "name": "pw_1068",
+      "success": true,
+      "quality": 13.1107,
+      "sample_count": 100,
+      "duration_sec": 3.776034116744995,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1070",
+      "name": "pw_1070",
+      "success": true,
+      "quality": 14.3466,
+      "sample_count": 401,
+      "duration_sec": 15.076996564865112,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1071",
+      "name": "pw_1071",
+      "success": true,
+      "quality": 14.159,
+      "sample_count": 79,
+      "duration_sec": 3.2726142406463623,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1072",
+      "name": "pw_1072",
+      "success": true,
+      "quality": 15.3975,
+      "sample_count": 227,
+      "duration_sec": 9.298723220825195,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1073",
+      "name": "pw_1073",
+      "success": true,
+      "quality": 14.4688,
+      "sample_count": 5,
+      "duration_sec": 0.3443610668182373,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1075",
+      "name": "pw_1075",
+      "success": true,
+      "quality": 14.5447,
+      "sample_count": 10,
+      "duration_sec": 0.4257667064666748,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1077",
+      "name": "pw_1077",
+      "success": true,
+      "quality": 14.1414,
+      "sample_count": 9,
+      "duration_sec": 0.3840034008026123,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1078",
+      "name": "pw_1078",
+      "success": true,
+      "quality": 15.0323,
+      "sample_count": 47,
+      "duration_sec": 4.851781368255615,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1081",
+      "name": "pw_1081",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1082",
+      "name": "pw_1082",
+      "success": true,
+      "quality": 13.6948,
+      "sample_count": 8,
+      "duration_sec": 0.8616399765014648,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1083",
+      "name": "pw_1083",
+      "success": true,
+      "quality": 13.9472,
+      "sample_count": 8,
+      "duration_sec": 0.37102651596069336,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1085",
+      "name": "pw_1085",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1086",
+      "name": "pw_1086",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1092",
+      "name": "pw_1092",
+      "success": true,
+      "quality": 14.4113,
+      "sample_count": 54,
+      "duration_sec": 2.389401912689209,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1093",
+      "name": "pw_1093",
+      "success": true,
+      "quality": 15.1349,
+      "sample_count": 400,
+      "duration_sec": 19.08776330947876,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1096",
+      "name": "pw_1096",
+      "success": true,
+      "quality": 14.1484,
+      "sample_count": 202,
+      "duration_sec": 16.663676261901855,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1097",
+      "name": "pw_1097",
+      "success": true,
+      "quality": 16.256,
+      "sample_count": 589,
+      "duration_sec": 24.53071427345276,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1098",
+      "name": "pw_1098",
+      "success": true,
+      "quality": 15.7949,
+      "sample_count": 501,
+      "duration_sec": 30.121257543563843,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1100",
+      "name": "pw_1100",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1101",
+      "name": "pw_1101",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1102",
+      "name": "pw_1102",
+      "success": true,
+      "quality": 14.0469,
+      "sample_count": 4,
+      "duration_sec": 1.317384958267212,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1103",
+      "name": "pw_1103",
+      "success": true,
+      "quality": 14.6945,
+      "sample_count": 4,
+      "duration_sec": 2.6982650756835938,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1106",
+      "name": "pw_1106",
+      "success": true,
+      "quality": 14.3623,
+      "sample_count": 32,
+      "duration_sec": 1.9511387348175049,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1107",
+      "name": "pw_1107",
+      "success": true,
+      "quality": 15.9801,
+      "sample_count": 219,
+      "duration_sec": 19.250950574874878,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1109",
+      "name": "pw_1109",
+      "success": true,
+      "quality": 15.0069,
+      "sample_count": 51,
+      "duration_sec": 5.639284610748291,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1110",
+      "name": "pw_1110",
+      "success": true,
+      "quality": 15.8613,
+      "sample_count": 322,
+      "duration_sec": 17.5963351726532,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1112",
+      "name": "pw_1112",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1114",
+      "name": "pw_1114",
+      "success": true,
+      "quality": 17.5132,
+      "sample_count": 40,
+      "duration_sec": 2.4754385948181152,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1115",
+      "name": "pw_1115",
+      "success": true,
+      "quality": 14.784,
+      "sample_count": 27,
+      "duration_sec": 1.3999619483947754,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1117",
+      "name": "pw_1117",
+      "success": true,
+      "quality": 15.3287,
+      "sample_count": 31,
+      "duration_sec": 2.2908120155334473,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1121",
+      "name": "pw_1121",
+      "success": true,
+      "quality": 14.2957,
+      "sample_count": 101,
+      "duration_sec": 13.263418436050415,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1126",
+      "name": "pw_1126",
+      "success": true,
+      "quality": 14.2318,
+      "sample_count": 347,
+      "duration_sec": 25.377461194992065,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1128",
+      "name": "pw_1128",
+      "success": true,
+      "quality": 13.26,
+      "sample_count": 20,
+      "duration_sec": 1.379284381866455,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1129",
+      "name": "pw_1129",
+      "success": true,
+      "quality": 14.2114,
+      "sample_count": 4,
+      "duration_sec": 0.6232273578643799,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1130",
+      "name": "pw_1130",
+      "success": true,
+      "quality": 14.5445,
+      "sample_count": 102,
+      "duration_sec": 7.4447221755981445,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1131",
+      "name": "pw_1131",
+      "success": true,
+      "quality": 15.1201,
+      "sample_count": 16,
+      "duration_sec": 4.4052414894104,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1136",
+      "name": "pw_1136",
+      "success": true,
+      "quality": 13.6752,
+      "sample_count": 32,
+      "duration_sec": 2.3288543224334717,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1138",
+      "name": "pw_1138",
+      "success": true,
+      "quality": 14.8556,
+      "sample_count": 57,
+      "duration_sec": 3.9812378883361816,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1139",
+      "name": "pw_1139",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1141",
+      "name": "pw_1141",
+      "success": true,
+      "quality": 14.8092,
+      "sample_count": 25,
+      "duration_sec": 1.7734143733978271,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1142",
+      "name": "pw_1142",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1143",
+      "name": "pw_1143",
+      "success": true,
+      "quality": 15.3655,
+      "sample_count": 86,
+      "duration_sec": 5.7718188762664795,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1149",
+      "name": "pw_1149",
+      "success": true,
+      "quality": 14.5833,
+      "sample_count": 10,
+      "duration_sec": 0.5381753444671631,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1150",
+      "name": "pw_1150",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1151",
+      "name": "pw_1151",
+      "success": true,
+      "quality": 13.9591,
+      "sample_count": 6,
+      "duration_sec": 0.5948507785797119,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1153",
+      "name": "pw_1153",
+      "success": true,
+      "quality": 14.1491,
+      "sample_count": 30,
+      "duration_sec": 7.283452987670898,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1155",
+      "name": "pw_1155",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1158",
+      "name": "pw_1158",
+      "success": true,
+      "quality": 14.5636,
+      "sample_count": 12,
+      "duration_sec": 2.5023510456085205,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1159",
+      "name": "pw_1159",
+      "success": true,
+      "quality": 15.2032,
+      "sample_count": 102,
+      "duration_sec": 7.967076778411865,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1161",
+      "name": "pw_1161",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1163",
+      "name": "pw_1163",
+      "success": true,
+      "quality": 16.2628,
+      "sample_count": 103,
+      "duration_sec": 6.471550703048706,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1165",
+      "name": "pw_1165",
+      "success": true,
+      "quality": 15.5253,
+      "sample_count": 161,
+      "duration_sec": 10.657779216766357,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1166",
+      "name": "pw_1166",
+      "success": true,
+      "quality": 14.5767,
+      "sample_count": 6,
+      "duration_sec": 0.6703550815582275,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1167",
+      "name": "pw_1167",
+      "success": true,
+      "quality": 15.6933,
+      "sample_count": 302,
+      "duration_sec": 31.099994897842407,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1172",
+      "name": "pw_1172",
+      "success": true,
+      "quality": 14.7143,
+      "sample_count": 422,
+      "duration_sec": 23.475295066833496,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1174",
+      "name": "pw_1174",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1175",
+      "name": "pw_1175",
+      "success": true,
+      "quality": 14.9685,
+      "sample_count": 102,
+      "duration_sec": 5.0390944480896,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1177",
+      "name": "pw_1177",
+      "success": true,
+      "quality": 14.3497,
+      "sample_count": 126,
+      "duration_sec": 6.369175434112549,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1178",
+      "name": "pw_1178",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1180",
+      "name": "pw_1180",
+      "success": true,
+      "quality": 15.2157,
+      "sample_count": 161,
+      "duration_sec": 8.154980182647705,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1181",
+      "name": "pw_1181",
+      "success": true,
+      "quality": 12.7075,
+      "sample_count": 65,
+      "duration_sec": 3.17824649810791,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1182",
+      "name": "pw_1182",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1183",
+      "name": "pw_1183",
+      "success": true,
+      "quality": 15.4631,
+      "sample_count": 311,
+      "duration_sec": 16.373435735702515,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1184",
+      "name": "pw_1184",
+      "success": true,
+      "quality": 14.6021,
+      "sample_count": 7,
+      "duration_sec": 0.3393082618713379,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1199",
+      "name": "pw_1199",
+      "success": true,
+      "quality": 14.8317,
+      "sample_count": 18,
+      "duration_sec": 2.86319637298584,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1200",
+      "name": "pw_1200",
+      "success": true,
+      "quality": 13.8673,
+      "sample_count": 13,
+      "duration_sec": 1.1003663539886475,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1202",
+      "name": "pw_1202",
+      "success": true,
+      "quality": 13.8923,
+      "sample_count": 27,
+      "duration_sec": 1.3104658126831055,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1204",
+      "name": "pw_1204",
+      "success": true,
+      "quality": 15.2046,
+      "sample_count": 13,
+      "duration_sec": 0.649423360824585,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1205",
+      "name": "pw_1205",
+      "success": true,
+      "quality": 13.3874,
+      "sample_count": 71,
+      "duration_sec": 3.6297357082366943,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1206",
+      "name": "pw_1206",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1207",
+      "name": "pw_1207",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1209",
+      "name": "pw_1209",
+      "success": true,
+      "quality": 16.3007,
+      "sample_count": 404,
+      "duration_sec": 19.593916416168213,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1210",
+      "name": "pw_1210",
+      "success": true,
+      "quality": 16.6272,
+      "sample_count": 4,
+      "duration_sec": 0.19781088829040527,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1214",
+      "name": "pw_1214",
+      "success": true,
+      "quality": 13.4484,
+      "sample_count": 235,
+      "duration_sec": 11.633731603622437,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1216",
+      "name": "pw_1216",
+      "success": true,
+      "quality": 14.6058,
+      "sample_count": 3,
+      "duration_sec": 0.2923915386199951,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1218",
+      "name": "pw_1218",
+      "success": true,
+      "quality": 14.3765,
+      "sample_count": 114,
+      "duration_sec": 5.8040008544921875,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1219",
+      "name": "pw_1219",
+      "success": true,
+      "quality": 13.7325,
+      "sample_count": 10,
+      "duration_sec": 0.4760568141937256,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1220",
+      "name": "pw_1220",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1221",
+      "name": "pw_1221",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1224",
+      "name": "pw_1224",
+      "success": true,
+      "quality": 13.9779,
+      "sample_count": 7,
+      "duration_sec": 0.36211061477661133,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1225",
+      "name": "pw_1225",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1228",
+      "name": "pw_1228",
+      "success": true,
+      "quality": 14.1261,
+      "sample_count": 33,
+      "duration_sec": 1.6755361557006836,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1232",
+      "name": "pw_1232",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1233",
+      "name": "pw_1233",
+      "success": true,
+      "quality": 12.2118,
+      "sample_count": 11,
+      "duration_sec": 0.5490453243255615,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1234",
+      "name": "pw_1234",
+      "success": true,
+      "quality": 14.3209,
+      "sample_count": 90,
+      "duration_sec": 4.3731303215026855,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1236",
+      "name": "pw_1236",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1237",
+      "name": "pw_1237",
+      "success": true,
+      "quality": 14.1714,
+      "sample_count": 80,
+      "duration_sec": 4.2895331382751465,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1239",
+      "name": "pw_1239",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 1,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（1 < 3）"
+    },
+    {
+      "speaker_id": "1241",
+      "name": "pw_1241",
+      "success": true,
+      "quality": 14.6241,
+      "sample_count": 31,
+      "duration_sec": 1.5067322254180908,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1242",
+      "name": "pw_1242",
+      "success": true,
+      "quality": 14.2268,
+      "sample_count": 4,
+      "duration_sec": 0.48812294006347656,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1243",
+      "name": "pw_1243",
+      "success": true,
+      "quality": 13.7911,
+      "sample_count": 138,
+      "duration_sec": 7.363236665725708,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1247",
+      "name": "pw_1247",
+      "success": true,
+      "quality": 14.1299,
+      "sample_count": 102,
+      "duration_sec": 12.433988809585571,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1249",
+      "name": "pw_1249",
+      "success": true,
+      "quality": 15.5005,
+      "sample_count": 4,
+      "duration_sec": 0.23175334930419922,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1250",
+      "name": "pw_1250",
+      "success": false,
+      "quality": 0.0,
+      "sample_count": 2,
+      "duration_sec": 0.0,
+      "message": "有效音频不足（2 < 3）"
+    },
+    {
+      "speaker_id": "1251",
+      "name": "pw_1251",
+      "success": true,
+      "quality": 14.1007,
+      "sample_count": 32,
+      "duration_sec": 1.5351860523223877,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1252",
+      "name": "pw_1252",
+      "success": true,
+      "quality": 13.8222,
+      "sample_count": 6,
+      "duration_sec": 0.28343963623046875,
+      "message": "成功"
+    },
+    {
+      "speaker_id": "1255",
+      "name": "pw_1255",
+      "success": true,
+      "quality": 14.3319,
+      "sample_count": 3,
+      "duration_sec": 0.16243314743041992,
+      "message": "成功"
+    }
+  ]
+}

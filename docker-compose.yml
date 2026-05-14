@@ -1,0 +1,43 @@
+# ============================================================
+# InsightEye docker-compose 配置 (GPU Only)
+# ============================================================
+# 使用方法:
+#   GPU 版本:  docker-compose -f docker-compose.yml up -d
+# ============================================================
+
+services:
+  insighteye:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: insighteye
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+      - "8765:8765"
+    environment:
+      # API 配置（必需）
+      - OPENAI_API_KEY=sk-zk24d0977d588f88f0d6bf136f9f1b5b42569c1f1efc0763
+      - OPENAI_BASE_URL=https://api.zhizengzeng.com/v1
+      - OPENAI_PARSER_MODEL=gpt-5-mini
+      - OPENAI_ANALYSIS_MODEL=gpt-5.4
+      # 本地模型配置（可选，留空使用内置模型）
+      - LOCAL_MODEL_DIR=${LOCAL_MODEL_DIR:-}
+      - FUNASR_MODEL_DIR=${FUNASR_MODEL_DIR:-}
+      - CAMPPLUS_MODEL_DIR=${CAMPPLUS_MODEL_DIR:-}
+      - CAMPPLUS_EN_MODEL_DIR=${CAMPPLUS_EN_MODEL_DIR:-}
+      # GPU 运行
+      - LOCAL_DEVICE=${LOCAL_DEVICE:-cuda}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

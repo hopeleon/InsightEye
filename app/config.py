@@ -33,7 +33,12 @@ DEFAULT_LOCAL_MODEL_DIR = str(BASE_DIR / "models")
 DEFAULT_FUNASR_MODEL = str(BASE_DIR / "models" / "funasr")
 DEFAULT_CAMPPLUS_MODEL = str(BASE_DIR / "models" / "campplus" / "zh-cn")
 DEFAULT_CAMPPLUS_EN_MODEL = str(BASE_DIR / "models" / "campplus" / "en")
+DEFAULT_MACBERT_MODEL_DIR = str(BASE_DIR / "models" / "macbert")
 DEFAULT_LOCAL_DEVICE = "cuda"  # "cuda" 或 "cpu"
+
+# Primewords 中文语料库路径（SLR47）
+# 下载地址: https://openslr.org/resources/47/primewords_md_2018_set1.tar.gz
+DEFAULT_PRIMEWORDS_DATA_DIR = str(BASE_DIR / "data_primewords")
 
 local_settings = {}
 local_settings_path = BASE_DIR / "local_settings.py"
@@ -67,5 +72,16 @@ FUNASR_MODEL_DIR = _get_config_path(local_settings.get("FUNASR_MODEL_DIR"), "FUN
 CAMPPLUS_MODEL_DIR = _get_config_path(local_settings.get("CAMPPLUS_MODEL_DIR"), "CAMPPLUS_MODEL_DIR", DEFAULT_CAMPPLUS_MODEL)
 # CAM++ 英文声纹模型目录
 CAMPPLUS_EN_MODEL_DIR = _get_config_path(local_settings.get("CAMPPLUS_EN_MODEL_DIR"), "CAMPPLUS_EN_MODEL_DIR", DEFAULT_CAMPPLUS_EN_MODEL)
+# MacBERT 文本纠错模型目录
+MACBERT_MODEL_DIR = _get_config_path(local_settings.get("MACBERT_MODEL_DIR"), "MACBERT_MODEL_DIR", DEFAULT_MACBERT_MODEL_DIR)
+# 是否启用 MacBERT 纠错
+ENABLE_MACBERT_CORRECTION = local_settings.get("ENABLE_MACBERT_CORRECTION", True)
 # 推理设备
 LOCAL_DEVICE = _get_config_path(local_settings.get("LOCAL_DEVICE"), "LOCAL_DEVICE", DEFAULT_LOCAL_DEVICE)
+
+# Primewords 中文语料库（SLR47）根目录
+PRIMEWORDS_DATA_DIR = _get_config_path(
+    local_settings.get("PRIMEWORDS_DATA_DIR"),
+    "PRIMEWORDS_DATA_DIR",
+    DEFAULT_PRIMEWORDS_DATA_DIR
+)

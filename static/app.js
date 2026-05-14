@@ -30,6 +30,36 @@ const quickCard = document.getElementById("modeQuickCard");
 const fullCard = document.getElementById("modeFullCard");
 const modeQuickEl = document.getElementById("modeQuick");
 const modeFullEl = document.getElementById("modeFull");
+const mainNavLinks = document.getElementById("mainNavLinks");
+
+// ===== 声纹模式选择 =====
+const modeAutoCard = document.getElementById("realtimeModeAutoCard");
+const modeManualCard = document.getElementById("realtimeModeMultiCard");
+const modeAutoEl = document.getElementById("realtimeModeAuto");
+const modeManualEl = document.getElementById("realtimeModeMulti");
+const multiSpeakerPanel = document.getElementById("realtimeMultiSpeakerPanel");
+const autoMultiStatusEl = document.getElementById("realtimeAutoMultiStatus");
+const autoMultiDbCountEl = document.getElementById("realtimeAutoMultiDbCount");
+const autoMultiSpeakerListEl = document.getElementById("realtimeAutoMultiSpeakerList");
+
+// ===== Phase 1 音频源选择 =====
+const captureMicPhase1El = document.getElementById("captureMicPhase1");
+const captureSystemPhase1El = document.getElementById("captureSystemPhase1");
+const startCaptureBtnEl = document.getElementById("startCaptureBtn");
+const captureControlsRowEl = document.getElementById("captureControlsRow");
+
+// ===== 声纹识别模式状态 =====
+let currentSpeakerMode = "auto"; // "auto" | "auto_multi"
+let captureStarted = false;      // Phase 1 是否已完成（音频源已选择，弹窗已处理）
+let autoMultiDbSpeakers = []; // [{speaker_id, name, role, department}] 从 DB 加载的说话人列表
+let meetingActive = false; // 会议是否正在进行（连接建立后为 true，退出会议后为 false）
+let modeLocked = false;     // 会议中是否锁定模式选择（防止中途切换）
+
+// ===== Benchmark 测试模式状态 =====
+let benchmarkMode = "normal"; // "normal" | "benchmark"
+let benchmarkReferenceTexts = []; // 预置答案
+let benchmarkResults = null;   // 当前评估结果
+let benchmarkEvaluationDone = false;
 
 const TEXT = {
   na: "\u6682\u65e0",
@@ -169,9 +199,12 @@ function applyModeCards() {
 }
 
 function showView(name) {
+  console.log(`[Nav] showView("${name}") 被调用`);
   inputView.classList.toggle("hidden", name !== "input");
   loadingView.classList.toggle("hidden", name !== "loading");
   resultView.classList.toggle("hidden", name !== "result");
+  // 主导航按钮仅在 input 页面显示
+  if (mainNavLinks) mainNavLinks.classList.toggle("hidden", name !== "input");
 }
 
 function setFullReportVisible(visible) {
@@ -179,7 +212,11 @@ function setFullReportVisible(visible) {
 }
 
 function setRealtimeWorkspaceMode(active) {
+  console.log(`[Nav] setRealtimeWorkspaceMode(${active}) 被调用`);
   byId("realtimeStage")?.classList.toggle("hidden", !active);
+  byId("realtimeModeSelector")?.classList.toggle("hidden", !active);
+  // 实时模式中隐藏主导航
+  if (mainNavLinks) mainNavLinks.classList.toggle("hidden", active);
   if (active) setFullReportVisible(false);
 }
 
@@ -226,14 +263,14 @@ function stopPolling() {
 }
 
 function hideError() {
-  errorBoxEl.classList.add("hidden");
-  errorTextEl.textContent = "";
+  errorBoxEl?.classList.add("hidden");
+  if (errorTextEl) errorTextEl.textContent = "";
 }
 
 function showError(message) {
   stopLoadingSequence();
-  errorBoxEl.classList.remove("hidden");
-  errorTextEl.textContent = message || TEXT.requestFailed;
+  errorBoxEl?.classList.remove("hidden");
+  if (errorTextEl) errorTextEl.textContent = message || TEXT.requestFailed;
 }
 
 function getPrimaryAnalysis(report) {
@@ -697,19 +734,23 @@ async function getRequestedAudioStreams() {
   if (wantSystem) {
     try {
       const displayStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
+        video: false,
         audio: true,
       });
       const audioTracks = displayStream.getAudioTracks();
-      const videoTracks = displayStream.getVideoTracks();
-      videoTracks.forEach((track) => track.stop());
       if (!audioTracks.length) {
-        throw new Error("No system audio track was shared. Re-run and enable audio sharing.");
+        throw new Error("No system audio track was shared. Please re-share and enable audio.");
       }
       nextSystemStream = new MediaStream(audioTracks);
     } catch (error) {
+      // 清理已获取的麦克风流
       if (nextMicStream) {
         nextMicStream.getTracks().forEach((track) => track.stop());
+      }
+      if (error.name === "NotAllowedError") {
+        throw new Error(
+          "系统音频权限被拒绝。请先点击右侧「Capture System Audio」按钮，\n在弹窗中选择要共享的标签页/窗口并开启「分享音频」，\n然后再点击「Live Audio Realtime」。"
+        );
       }
       throw error;
     }
@@ -748,29 +789,69 @@ function connectStreamToProcessor(stream, name) {
 }
 
 /**
- * 获取说话人显示标签（带双相似度）
+ * 获取说话人显示标签（支持模式一/二）
  * @param {string} speakerId - 说话人ID
  * @param {string|null} recognizedRole - 角色（interviewer/candidate/null）
  * @param {number} interviewerSim - 与面试官的相似度 [0, 1]
  * @param {number} candidateSim - 与候选人的相似度 [0, 1]
- * @returns {string} 显示标签，如 "面试官(面试官:0.92 候选人:0.31)"
+ * @param {object} session - 当前 session（用于获取多人姓名映射）
+ * @returns {string} 显示标签，如 "张三(0.92)" 或 "面试官(面试官:0.92 候选人:0.31)"
  */
-function speakerDisplayLabel(speakerId, recognizedRole, interviewerSim = 0, candidateSim = 0) {
-  // 【DEBUG】日志：入参详情
+function speakerDisplayLabel(speakerId, recognizedRole, interviewerSim = 0, candidateSim = 0, session = null) {
   console.log(`[Label] speaker_id="${speakerId}", recognized_role="${recognizedRole}", interviewer_sim=${interviewerSim}, candidate_sim=${candidateSim}`);
 
   const role = recognizedRole
     || (speakerId === "interviewer" ? "interviewer"
       : speakerId === "candidate" ? "candidate" : null);
 
+  // ---- 模式二（auto_multi）：从 DB 说话人列表中查找姓名 ----
+  // 优先用 session 中的 db_speakers（后端推送），其次用前端 JS 变量
+  const dbSpeakers = (session && session.db_speakers) || autoMultiDbSpeakers || [];
+  if (dbSpeakers.length > 0) {
+    const dbSpeaker = dbSpeakers.find((s) => s.speaker_id === speakerId);
+    if (dbSpeaker && dbSpeaker.name) {
+      let label = dbSpeaker.name;
+      // 如果有相似度，显示出来
+      if (interviewerSim > 0 || candidateSim > 0) {
+        const simLabel = `${label}(\u9762\u8bd5\u5b98=${interviewerSim.toFixed(2)} \u5019\u9009\u4eba=${candidateSim.toFixed(2)})`;
+        console.log(`[Label] 命中分支: Mode2 DB 姓名 + 双相似度 → "${simLabel}"`);
+        return simLabel;
+      }
+      console.log(`[Label] 命中分支: Mode2 DB 姓名 → "${label}"`);
+      return label;
+    }
+    // DB 有数据但当前 speakerId 不在 DB 中 → 未知
+    if (dbSpeakers.length > 0) {
+      console.log(`[Label] 命中分支: Mode2 DB 为空但有 DB 数据 → "未知"`);
+      return "\u672a\u77e5";
+    }
+  }
+
+  // ---- 旧版多人模式（multi_participants）----
+  if (session && session.multi_participants) {
+    const participant = session.multi_participants.find((p) => p.participant_id === speakerId);
+    if (participant && participant.name) {
+      let label = participant.name;
+      if (session.registered_speaker_sims && Object.keys(session.registered_speaker_sims).length > 1) {
+        const sims = Object.entries(session.registered_speaker_sims)
+          .map(([sid, score]) => {
+            const p2 = session.multi_participants.find((p) => p.participant_id === sid);
+            return `${p2 ? p2.name : sid}:${(Number(score) || 0).toFixed(2)}`;
+          })
+          .join(" ");
+        return `${label}(${sims})`;
+      }
+      return label;
+    }
+  }
+
   let label;
   if (role === "interviewer") label = "\u9762\u8bd5\u5b98";
   else if (role === "candidate") label = "\u5019\u9009\u4eba";
   else if (role === "enrollment_source") label = "\u58f0\u7eb9\u6ce8\u518c\u97f3\u9891";
-  else if (speakerId === "speaker_unk") label = "\u672a\u77e5\u8bf4\u8bdd\u4eba";
+  else if (speakerId === "speaker_unk" || speakerId === "unknown") label = "\u672a\u77e5\u8bf4\u8bdd\u4eba";
   else label = speakerId || TEXT.na;
 
-  // 【DEBUG】日志：标签选择原因
   const reason = recognizedRole
     ? `recognized_role="${recognizedRole}" → "${label}"`
     : speakerId === "interviewer" || speakerId === "candidate"
@@ -778,7 +859,6 @@ function speakerDisplayLabel(speakerId, recognizedRole, interviewerSim = 0, cand
       : `兜底 speaker_id="${speakerId}" → "${label}"`;
   console.log(`[Label] 原因: ${reason}`);
 
-  // 双相似度：CAM++ 已识别时显示与两位角色的相似度
   if (interviewerSim > 0 || candidateSim > 0) {
     const simLabel = `${label}(\u9762\u8bd5\u5b98=${interviewerSim.toFixed(2)} \u5019\u9009\u4eba=${candidateSim.toFixed(2)})`;
     console.log(`[Label] 命中分支: 双相似度(>0) → "${simLabel}"`);
@@ -832,6 +912,26 @@ function inferSingleSourceSegmentRoles(segments) {
   return inferred;
 }
 
+const _partialRowId = "partial-transcript-row";
+
+function updateRealtimePartialDisplay(speakerId, text) {
+  const list = byId("realtimeLiveTranscript");
+  if (!list) return;
+  let row = byId(_partialRowId);
+  if (!text) {
+    if (row) row.remove();
+    return;
+  }
+  const label = speakerDisplayLabel(speakerId, null, 0, 0, latestRealtimeSession);
+  const html = `<div class="live-transcript-item partial" id="${_partialRowId}"><strong>${label}</strong><p>${escapeHtml(text)}<span class="blink-cursor">|</span></p></div>`;
+  if (row) {
+    row.outerHTML = html;
+  } else {
+    list.insertAdjacentHTML("beforeend", html);
+  }
+  scrollRealtimeTranscriptToLatest();
+}
+
 function buildRealtimeTranscriptRows(session) {
   const stableSegments = session.segments || [];
   console.log(`[Transcript] buildRealtimeTranscriptRows: 共 ${stableSegments.length} 个片段, voice_registered=${session.voice_registered}, voice_mapping=${JSON.stringify(session.voice_mapping)}`);
@@ -841,45 +941,12 @@ function buildRealtimeTranscriptRows(session) {
       item.speaker_id,
       item.recognized_role || null,
       item.interviewer_sim || 0,
-      item.candidate_sim || 0
+      item.candidate_sim || 0,
+      session
     );
     console.log(`[Transcript] 片段[${index}] → 标签="${label}"`);
     return `<div class="live-transcript-item" data-segment-id="${safeText(item.id, index)}"><strong>${label}</strong><p>${safeText(item.text)}</p></div>`;
   });
-}
-
-function appendRealtimeTranscriptRows(session) {
-  const transcriptList = byId("realtimeLiveTranscript");
-  if (!transcriptList) return;
-
-  const segments = session?.segments || [];
-  const existingIds = new Set(
-    Array.from(transcriptList.querySelectorAll(".live-transcript-item[data-segment-id]"))
-      .map((el) => el.getAttribute("data-segment-id"))
-      .filter(Boolean)
-  );
-
-  const newItems = segments.filter((item, index) => {
-    const id = String(item?.id ?? index);
-    return !existingIds.has(id);
-  });
-
-  if (!newItems.length) return;
-
-  const html = newItems.map((item, index) => {
-    const label = speakerDisplayLabel(
-      item.speaker_id,
-      item.recognized_role || null,
-      item.interviewer_sim || 0,
-      item.candidate_sim || 0
-    );
-    return `<div class="live-transcript-item" data-segment-id="${safeText(item.id, index)}"><strong>${label}</strong><p>${safeText(item.text)}</p></div>`;
-  }).join("");
-
-  const emptyNote = transcriptList.querySelector(".panel-empty-note");
-  if (emptyNote) emptyNote.remove();
-  transcriptList.insertAdjacentHTML("beforeend", html);
-  scrollRealtimeTranscriptToLatest();
 }
 
 function handleLiveSocketMessage(message) {
@@ -890,6 +957,11 @@ function handleLiveSocketMessage(message) {
   if (message.type === "session.ready") {
     setText("audioSourceState", "已连接本地 FunASR");
     if (hint) hint.textContent = "实时音频链路已连通。";
+    // Phase 1: 仪表盘还没显示，先渲染面板让它看起来已连接
+    // Phase 2: 仪表盘已经显示了，不需要重复 render
+    if (latestRealtimeSession) {
+      renderRealtimeSessionPanel(latestRealtimeSession);
+    }
     return;
   }
 
@@ -899,21 +971,49 @@ function handleLiveSocketMessage(message) {
   }
 
   if (message.type === "transcript.delta") {
-    const speakerId = message.speaker_id || (message.source === "mic" ? "speaker_a" : "speaker_b");
+    const speakerId = message.speaker_id || "interviewer";
     console.log(`[WS] transcript.delta: speaker_id="${speakerId}", recognized_role="${message.recognized_role}", interviewer_sim=${message.interviewer_sim}, candidate_sim=${message.candidate_sim}, is_final=${message.is_final}`);
-    realtimePartialBySpeaker[speakerId] = `${realtimePartialBySpeaker[speakerId] || ""}${message.delta || ""}`.trim();
-    setText("audioSourceState", `${sourceLabel} \u6b63\u5728\u8bc6\u522b`);
-    if (hint) hint.textContent = `${sourceLabel} \u6b63\u5728\u8bc6\u522b\u3002`;
+    realtimePartialBySpeaker[speakerId] = `${realtimePartialBySpeaker[speakerId] || ""}${message.text || ""}`.trim();
+    updateRealtimePartialDisplay(speakerId, realtimePartialBySpeaker[speakerId]);
+    setText("audioSourceState", `${sourceLabel} 正在识别`);
+    if (hint) hint.textContent = `${sourceLabel} 正在识别。`;
     return;
   }
 
   if (message.type === "transcript.completed") {
-    if (latestRealtimeSession && message.session) {
-      latestRealtimeSession = message.session;
-      appendRealtimeTranscriptRows(latestRealtimeSession);
-      setText("audioSourceState", "本地 FunASR 转写中");
-      if (hint) hint.textContent = `${sourceLabel} 转写完成。`;
+    console.log(`[WS] transcript.completed: speaker_id="${message.speaker_id}", recognized_role="${message.recognized_role}", text="${(message.text || "").slice(0, 30)}"`);
+    delete realtimePartialBySpeaker[message.speaker_id];
+    const partialRow = byId(_partialRowId);
+    if (partialRow) partialRow.remove();
+
+    // 追加到 latestRealtimeSession 并渲染转录列表
+    if (!latestRealtimeSession) {
+      // latestRealtimeSession 尚未初始化，先用空 session 占位
+      latestRealtimeSession = {
+        segments: [],
+        voice_registered: false,
+        voice_mapping: {},
+        rolling_analysis: null,
+        rolling_disc_analysis: null,
+      };
     }
+
+    if (!latestRealtimeSession.segments) latestRealtimeSession.segments = [];
+    latestRealtimeSession.segments.push({ ...message });
+    lastRenderedSegmentCount = latestRealtimeSession.segments.length;
+
+    // 直接追加新片段的行，不依赖 buildRealtimeTranscriptRows（避免 session 不完整导致标签错误）
+    const list = byId("realtimeLiveTranscript");
+    if (list) {
+      const emptyNote = list.querySelector(".panel-empty-note");
+      if (emptyNote) emptyNote.remove();
+      // 只追加最后一条，而非重建整个列表
+      const rowHtml = buildRealtimeTranscriptRows({ ...latestRealtimeSession, segments: [message] }).join("");
+      list.insertAdjacentHTML("beforeend", rowHtml);
+      scrollRealtimeTranscriptToLatest();
+    }
+    // 更新 role mapping 等其他面板区域（但不重建转录列表）
+    renderRealtimeSessionPanel(latestRealtimeSession, { skipTranscript: true });
     return;
   }
 
@@ -970,6 +1070,59 @@ function handleLiveSocketMessage(message) {
     return;
   }
 
+  // ===== 模式切换响应 =====
+  if (message.type === "mode.switched") {
+    console.log(`[WS] 模式切换: mode=${message.mode}, message=${message.message}`);
+    const hint = byId("audioDebugHint");
+    if (hint) hint.textContent = message.message || "";
+
+    // 模式二：多人自动识别 - 更新已加载的说话人列表
+    if (message.mode === "auto_multi") {
+      const count = message.db_speaker_count || 0;
+      const speakers = message.db_speakers || [];
+      autoMultiDbSpeakers = speakers;
+      if (autoMultiDbCountEl) autoMultiDbCountEl.innerHTML = `已加载 <strong>${count}</strong> 位员工`;
+      renderAutoMultiSpeakerList(speakers);
+      // 同步到 session，供 transcript 显示姓名
+      if (latestRealtimeSession) {
+        latestRealtimeSession.db_speakers = speakers;
+      }
+      if (count === 0) {
+        console.warn("[WS] 声纹数据库为空，请在「声纹数据库」页面先注册员工");
+      }
+    }
+    return;
+  }
+
+  // ===== Benchmark 测试模式消息处理 =====
+  if (message.type === "benchmark.started") {
+    console.log(`[WS] benchmark.started: reference_count=${message.reference_count}, message=${message.message}`);
+    const hint = byId("audioDebugHint");
+    if (hint) hint.textContent = message.message || "Benchmark 模式已开启";
+    return;
+  }
+
+  if (message.type === "benchmark.stopped") {
+    console.log(`[WS] benchmark.stopped: ${message.message}`);
+    return;
+  }
+
+  if (message.type === "benchmark.error") {
+    console.error(`[WS] benchmark.error: ${message.message}`);
+    showError(message.message || "Benchmark 模式错误");
+    return;
+  }
+
+  if (message.type === "benchmark.results") {
+    console.log(`[WS] benchmark.results: WER=${message.total_wer}, CER=${message.total_cer}, Accuracy=${message.total_accuracy}, SpeakerAcc=${message.speaker_accuracy}, samples=${message.total_samples}`);
+    benchmarkResults = message;
+    benchmarkEvaluationDone = true;
+    renderBenchmarkResults(message);
+    const hint = byId("audioDebugHint");
+    if (hint) hint.textContent = `评估完成：准确率 ${(message.total_accuracy * 100).toFixed(1)}%，WER ${(message.total_wer * 100).toFixed(1)}%`;
+    return;
+  }
+
   if (message.type === "session.update" && message.session) {
     console.log(`[WS] session.update: voice_registered=${message.session.voice_registered}, voice_mapping=${JSON.stringify(message.session.voice_mapping)}, segment_count=${message.session.segments ? message.session.segments.length : 0}`);
 
@@ -986,16 +1139,35 @@ function handleLiveSocketMessage(message) {
       console.log("[WS] 保留已有 follow_up_questions，避免被空快照覆盖");
     }
 
-    latestRealtimeSession = incomingSession;
-    const segments = incomingSession.segments || [];
-    if (segments.length > lastRenderedSegmentCount) {
-      const lastSegment = segments[segments.length - 1] || {};
-      if (lastSegment.speaker_id) {
+    // 增量渲染转录列表：检测新增的片段，只追加新行
+    const prevCount = (latestRealtimeSession?.segments?.length) || 0;
+    const newSegments = (incomingSession.segments || []).slice(prevCount);
+    const hasNewSegments = newSegments.length > 0;
+
+    if (hasNewSegments) {
+      const list = byId("realtimeLiveTranscript");
+      if (list) {
+        const emptyNote = list.querySelector(".panel-empty-note");
+        if (emptyNote) emptyNote.remove();
+        for (const seg of newSegments) {
+          const rowHtml = buildRealtimeTranscriptRows({ ...incomingSession, segments: [seg] }).join("");
+          list.insertAdjacentHTML("beforeend", rowHtml);
+        }
+        scrollRealtimeTranscriptToLatest();
+        console.log(`[WS] 增量追加 ${newSegments.length} 条转录到列表`);
+      }
+      // 清除新片段对应的 partial transcript
+      const lastSegment = newSegments[newSegments.length - 1];
+      if (lastSegment?.speaker_id) {
         delete realtimePartialBySpeaker[lastSegment.speaker_id];
       }
-      lastRenderedSegmentCount = segments.length;
     }
-    renderRealtimeSessionPanel(incomingSession);
+
+    latestRealtimeSession = incomingSession;
+    lastRenderedSegmentCount = incomingSession.segments?.length || 0;
+
+    // 仅刷新面板其他区域（不重建转录列表），若列表为空则补全
+    renderRealtimeSessionPanel(incomingSession, { skipTranscript: hasNewSegments });
     setText("audioSourceState", "本地 FunASR 转写中");
     return;
   }
@@ -1036,6 +1208,7 @@ function handleLiveSocketMessage(message) {
   }
 
   if (message.type === "error") {
+    console.warn(`[WS] 收到 error 消息: ${JSON.stringify(message)}`);
     const detail = [safeText(message.message, "实时链路错误"), safeText(message.hint, "")].filter(Boolean).join(" ");
     showError(detail);
     if (hint) hint.textContent = detail;
@@ -1078,9 +1251,17 @@ function openLiveSocket(wsUrl) {
       console.warn(`[WS] 🔌 WebSocket 关闭! code=${event.code}, reason="${event.reason}", wasClean=${event.wasClean}`);
       if (micSocket === socket) micSocket = null;
       if (!liveStreamingMode) return;
+      if (!settled) {
+        settled = true;
+        resetRealtimeState();
+        showView("input");
+        showError("实时链路连接失败，请检查服务器是否启动。");
+        return;
+      }
       setText("audioSourceState", "\u8fde\u63a5\u5df2\u65ad\u5f00");
       const hint = byId("audioDebugHint");
-      if (hint) hint.textContent = "\u672c\u5730\u5b9e\u65f6\u94fe\u8def\u5df2\u65ad\u5f00\uff0c\u8bf7\u68c0\u67e5 DASHSCOPE_API_KEY \u548c\u963f\u91cc realtime \u914d\u7f6e\u3002";
+      if (hint) hint.textContent = "\u672c\u5730\u5b9e\u65f6\u94fe\u8def\u5df2\u65ad\u5f00\u3002";
+      resetRealtimeState();
     };
   });
 }
@@ -1113,7 +1294,7 @@ async function uploadLiveAudioChunk(blob, sourceName) {
     return;
   }
 
-  const speakerId = sourceName === "mic" ? "speaker_a" : "speaker_b";
+  const speakerId = "interviewer";
   const startMs = liveChunkCursorMs[sourceName] || 0;
   const endMs = startMs + liveChunkDurationMs;
   liveChunkCursorMs[sourceName] = endMs;
@@ -1172,7 +1353,11 @@ function startSourceRecorder(stream, sourceName) {
   liveMediaRecorders.push({ name: sourceName, recorder });
 }
 
+// ============================================================
+// Phase 1: 创建 session → 显示模式选择器 → 用户选模式
+// ============================================================
 async function startLiveAudioWs() {
+  if (meetingActive) return; // 会议进行中禁止重复触发
   resetRealtimeState();
   hideError();
 
@@ -1191,44 +1376,198 @@ async function startLiveAudioWs() {
   realtimeRunning = true;
   showView("result");
   setRealtimeWorkspaceMode(true);
-  setRealtimeControls(true, true);
-  statusEl.textContent = "\u6b63\u5728\u8fde\u63a5\u963f\u91cc\u5b9e\u65f6 ASR";
+  // 不再在这里 setRealtimeControls(true, true)，改为显示 mode selector + capture controls
+  statusEl.textContent = "请选择声纹识别模式，然后点击「开始采集音频」";
   renderRealtimeSessionPanel({ status: data.status, segment_count: 0, segments: [], voice_registered: false, voice_mapping: {} });
 
-  const streams = await getRequestedAudioStreams();
-  micStream = streams.nextMicStream;
-  systemStream = streams.nextSystemStream;
+  // 存储 ws_url 供 Phase 2 使用
+  _pendingWsUrl = data.ws_url;
 
-  const AudioCtor = window.AudioContext || window.webkitAudioContext;
-  micAudioContext = new AudioCtor();
-  if (micAudioContext.state === "suspended") {
-    await micAudioContext.resume();
+  // 显示模式选择器 + 音频源选择（Phase 1 完成）
+  const modeSelector = document.getElementById("realtimeModeSelector");
+  if (modeSelector) modeSelector.classList.remove("hidden");
+  if (captureControlsRowEl) captureControlsRowEl.classList.remove("hidden");
+
+  // Benchmark 测试模式面板：仅在模式二时显示（模式一是双人 DISC 分析，不需要标准答案）
+  const benchTogglePanel = document.getElementById("benchmarkTogglePanel");
+  if (benchTogglePanel) {
+    if (modeManualEl && modeManualEl.checked) {
+      benchTogglePanel.classList.remove("hidden");
+    } else {
+      benchTogglePanel.classList.add("hidden");
+    }
+  }
+  applyBenchmarkModeUI(); // 设置初始高亮状态
+
+  // 同步 Phase 1 checkboxes 与输入页 checkboxes
+  if (captureMicPhase1El) captureMicPhase1El.checked = Boolean(captureMicEl?.checked);
+  if (captureSystemPhase1El) captureSystemPhase1El.checked = Boolean(captureSystemEl?.checked);
+  console.log(`[startLiveAudioWs] Phase 1 完成: captureMicPhase1El.checked=${captureMicPhase1El?.checked}, captureSystemPhase1El.checked=${captureSystemPhase1El?.checked}`);
+
+  // 隐藏 realtimeStage（采集未开始，仪表盘先不显示）
+  const realtimeStage = document.getElementById("realtimeStage");
+  if (realtimeStage) realtimeStage.classList.add("hidden");
+}
+
+// ============================================================
+// Phase 2: 用户点击「开始采集音频」→ 请求音频流 → 连接 WS
+// ============================================================
+let _pendingWsUrl = null;
+
+async function doStartCapture() {
+  console.log(`[doStartCapture] 函数被调用, captureStarted=${captureStarted}, realtimeSessionId=${realtimeSessionId}, _pendingWsUrl=${_pendingWsUrl}`);
+  if (!realtimeSessionId || !_pendingWsUrl) {
+    showError("会话未初始化，请重试");
+    return;
+  }
+  if (captureStarted) return;
+  captureStarted = true;
+
+  const _setBtnState = (text, disabled = true) => {
+    if (startCaptureBtnEl) {
+      startCaptureBtnEl.disabled = disabled;
+      startCaptureBtnEl.textContent = text;
+    }
+  };
+
+  _setBtnState("正在请求音频权限...");
+  let audioStreamsOk = false;
+  let wsConnected = false;
+
+  try {
+    const wantMic = Boolean(captureMicPhase1El?.checked);
+    const wantSystem = Boolean(captureSystemPhase1El?.checked);
+    console.log(`[doStartCapture] captureMicPhase1El=${captureMicPhase1El}, checked=${captureMicPhase1El?.checked}`);
+    console.log(`[doStartCapture] captureSystemPhase1El=${captureSystemPhase1El}, checked=${captureSystemPhase1El?.checked}`);
+    console.log(`[doStartCapture] wantMic=${wantMic}, wantSystem=${wantSystem}`);
+    const streams = await _requestAudioStreamsWithOptions(wantMic, wantSystem);
+    micStream = streams.nextMicStream;
+    systemStream = streams.nextSystemStream;
+
+    if (!micStream && !systemStream) {
+      throw new Error("未获取到任何音频流，请至少选择一个音频来源。");
+    }
+
+    audioStreamsOk = true;
+    _setBtnState("正在连接服务器...");
+
+    const AudioCtor = window.AudioContext || window.webkitAudioContext;
+    micAudioContext = new AudioCtor();
+    if (micAudioContext.state === "suspended") {
+      await micAudioContext.resume();
+    }
+
+    const mixedAnalyser = micAudioContext.createAnalyser();
+    mixedAnalyser.fftSize = 2048;
+    audioAnalyserNodes.mixed = mixedAnalyser;
+    micProcessorNode = micAudioContext.createGain();
+    micProcessorNode.connect(mixedAnalyser);
+    micSilentGain = micAudioContext.createGain();
+    micSilentGain.gain.value = 0;
+    mixedAnalyser.connect(micSilentGain);
+    micSilentGain.connect(micAudioContext.destination);
+
+    const wsUrl = _pendingWsUrl;
+
+    // WebSocket 连接加 15 秒超时，防止 LocalRealtimeServer 未启动时永久卡住
+    await Promise.race([
+      openLiveSocket(wsUrl),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("连接服务器超时（15秒），请确认后端服务已启动。")), 15000)),
+    ]);
+
+    wsConnected = true;
+    meetingActive = true;
+    modeLocked = true;
+    _lockModeSelector();
+    sendSocketMessage({ type: "choose_speaker_mode", mode: currentSpeakerMode });
+
+    // Benchmark 测试模式：发送预置答案
+    if (benchmarkMode === "benchmark" && benchmarkReferenceTexts.length > 0) {
+      sendSocketMessage({
+        type: "benchmark.start",
+        reference_texts: benchmarkReferenceTexts,
+      });
+      const benchPanel = document.getElementById("benchmarkAnswerPanel");
+      if (benchPanel) benchPanel.classList.remove("hidden");
+      console.log(`[Benchmark] 已发送 benchmark.start，答案数量=${benchmarkReferenceTexts.length}`);
+    }
+
+    // 隐藏模式选择器，显示实时仪表盘
+    const modeSelector = document.getElementById("realtimeModeSelector");
+    if (modeSelector) modeSelector.classList.add("hidden");
+    const realtimeStage = document.getElementById("realtimeStage");
+    if (realtimeStage) realtimeStage.classList.remove("hidden");
+    setRealtimeControls(true, true);
+
+    connectStreamToProcessor(micStream, "mic");
+    connectStreamToProcessor(systemStream, "system");
+    startLevelMeter();
+
+    liveSourceEnabled = { mic: Boolean(micStream), system: Boolean(systemStream) };
+    refreshRouteButtons();
+
+    const sourceLabel = [micStream ? "麦克风" : null, systemStream ? "系统音频" : null].filter(Boolean).join(" + ");
+    setText("audioSourceState", sourceLabel || "未选择音频源");
+    statusEl.textContent = `实时 ASR 采集中: ${sourceLabel}`;
+    const hint = byId("audioDebugHint");
+    if (hint) hint.textContent = "实时模式已启动，仅显示监控、转录和推荐追问。";
+  } catch (err) {
+    // 清理已获取的资源
+    if (audioStreamsOk && !wsConnected) {
+      micStream?.getTracks().forEach((t) => t.stop());
+      systemStream?.getTracks().forEach((t) => t.stop());
+      micStream = null;
+      systemStream = null;
+    }
+
+    _setBtnState("开始采集音频", false);
+    captureStarted = false;
+    meetingActive = false;
+
+    const msg = err.message || "开始采集失败";
+    try { showError(msg); } catch (_) {}
+    console.error("[doStartCapture] 失败:", msg);
+  }
+}
+
+// 带选项的音频流请求（内部使用，不弹出确认框）
+async function _requestAudioStreamsWithOptions(wantMic, wantSystem) {
+  let nextMicStream = null;
+  let nextSystemStream = null;
+
+  if (wantMic) {
+    nextMicStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+    });
   }
 
-  const mixedAnalyser = micAudioContext.createAnalyser();
-  mixedAnalyser.fftSize = 2048;
-  audioAnalyserNodes.mixed = mixedAnalyser;
-  micProcessorNode = micAudioContext.createGain();
-  micProcessorNode.connect(mixedAnalyser);
-  micSilentGain = micAudioContext.createGain();
-  micSilentGain.gain.value = 0;
-  mixedAnalyser.connect(micSilentGain);
-  micSilentGain.connect(micAudioContext.destination);
+  console.log(`[_requestAudioStreamsWithOptions] wantMic=${wantMic}, wantSystem=${wantSystem}`);
+  if (wantSystem) {
+    try {
+      console.log(`[_requestAudioStreamsWithOptions] 正在调用 getDisplayMedia...`);
+      // video: true 让浏览器显示完整的分享界面，用户再选"分享标签页音频"或"分享系统音频"
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      const audioTracks = displayStream.getAudioTracks();
+      console.log(`[_requestAudioStreamsWithOptions] getDisplayMedia 返回, audioTracks.length=${audioTracks.length}`);
+      if (!audioTracks.length) {
+        throw new Error("No system audio track was shared. Please re-share and enable audio.");
+      }
+      nextSystemStream = new MediaStream(audioTracks);
+    } catch (error) {
+      console.error(`[_requestAudioStreamsWithOptions] getDisplayMedia 失败: ${error.name}: ${error.message}`);
+      if (nextMicStream) {
+        nextMicStream.getTracks().forEach((track) => track.stop());
+      }
+      if (error.name === "NotAllowedError") {
+        throw new Error(
+          "系统音频权限被拒绝。请先点击右侧「Capture System Audio」按钮，\n在弹窗中选择要共享的标签页/窗口并开启「分享音频」，\n然后再点击「开始采集音频」。"
+        );
+      }
+      throw error;
+    }
+  }
 
-  const wsUrl = `${data.ws_url}&language=${encodeURIComponent((audioLanguageEl?.value || "zh").trim() || "zh")}`;
-  await openLiveSocket(wsUrl);
-  connectStreamToProcessor(micStream, "mic");
-  connectStreamToProcessor(systemStream, "system");
-  startLevelMeter();
-
-  liveSourceEnabled = { mic: Boolean(micStream), system: Boolean(systemStream) };
-  refreshRouteButtons();
-
-  const sourceLabel = [micStream ? "\u9ea6\u514b\u98ce" : null, systemStream ? "\u7cfb\u7edf\u97f3\u9891" : null].filter(Boolean).join(" + ");
-  setText("audioSourceState", sourceLabel || "\u672a\u9009\u62e9\u97f3\u6e90");
-  statusEl.textContent = `\u963f\u91cc\u5b9e\u65f6 ASR \u91c7\u96c6\u4e2d: ${sourceLabel}`;
-  const hint = byId("audioDebugHint");
-  if (hint) hint.textContent = "\u5b9e\u65f6\u6a21\u5f0f\u5df2\u542f\u52a8\uff0c\u4ec5\u663e\u793a\u76d1\u63a7\u3001\u8f6c\u5f55\u548c\u63a8\u8350\u63d0\u95ee\u3002";
+  return { nextMicStream, nextSystemStream };
 }
 
 function stopRealtimePlayback() {
@@ -1243,6 +1582,7 @@ function setRealtimeControls(active, running = false) {
   byId("realtimeStage")?.classList.toggle("hidden", !active);
   realtimePauseBtn?.classList.toggle("hidden", !active);
   realtimeEndBtn?.classList.toggle("hidden", !active);
+  exportResultBtn?.classList.toggle("hidden", !active);
   if (active) {
     viewFullReportBtn?.classList.add("hidden");
   }
@@ -1252,19 +1592,58 @@ function setRealtimeControls(active, running = false) {
 }
 
 function resetRealtimeState() {
+  console.log("[Realtime] resetRealtimeState() 被调用，调用栈：");
+  console.trace();
   stopRealtimePlayback();
   stopLiveAudioCapture();
   realtimeSessionId = null;
+  _pendingWsUrl = null;
   realtimeSegments = [];
   realtimeSegmentIndex = 0;
   realtimeDemoMode = false;
   liveStreamingMode = false;
+  meetingActive = false;
+  modeLocked = false;
+  captureStarted = false;
+  captureControlsRowEl?.classList.add("hidden");
   realtimePartialBySpeaker = {};
   lastRenderedSegmentCount = 0;
   pendingFinalRealtimeReport = null;
   latestRealtimeSession = null;
+  // 重置 Benchmark 模式状态
+  benchmarkMode = "normal";
+  benchmarkReferenceTexts = [];
+  benchmarkResults = null;
+  benchmarkEvaluationDone = false;
+  // 隐藏 benchmark 相关面板
+  const benchTogglePanel = document.getElementById("benchmarkTogglePanel");
+  if (benchTogglePanel) benchTogglePanel.classList.add("hidden");
+  const benchAnswerPanel = document.getElementById("benchmarkAnswerPanel");
+  if (benchAnswerPanel) benchAnswerPanel.classList.add("hidden");
+  const benchResultsPanel = document.getElementById("benchmarkResultsPanel");
+  if (benchResultsPanel) benchResultsPanel.classList.add("hidden");
+  const benchSessionPanel = document.getElementById("realtimeBenchmarkPanel");
+  if (benchSessionPanel) {
+    benchSessionPanel.classList.add("hidden");
+    // 清空 benchmark 内容
+    const benchSummary = document.getElementById("realtimeBenchmarkSummary");
+    if (benchSummary) benchSummary.innerHTML = "";
+    const benchList = document.getElementById("realtimeBenchmarkList");
+    if (benchList) benchList.innerHTML = "";
+  }
+  const benchFileNameEl = document.getElementById("benchmarkFileName");
+  if (benchFileNameEl) benchFileNameEl.textContent = "";
+  const benchFileInput = document.getElementById("benchmarkFileInput");
+  if (benchFileInput) benchFileInput.value = "";
+  // 重置 benchmark 模式单选框
+  const benchNormalEl = document.getElementById("realtimeModeNormal");
+  const benchBenchmarkEl = document.getElementById("realtimeModeBenchmark");
+  if (benchNormalEl) benchNormalEl.checked = true;
+  if (benchBenchmarkEl) benchBenchmarkEl.checked = false;
   setRealtimeWorkspaceMode(false);
   setRealtimeControls(false, false);
+  // 重置声纹模式选择器为默认值（会议退出后可重新选择）
+  _unlockModeSelector();
   setText("realtimeSessionStatus", "\u672a\u5f00\u59cb");
   setText("realtimeRoleConfidence", "\u5f85\u5224\u65ad");
   setText("realtimeSegmentCount", 0, "0");
@@ -1309,10 +1688,10 @@ function parseRealtimeSegments(rawText) {
     const label = match ? match[1].trim() : `speaker_${nextSpeakerIndex}`;
     const text = (match ? match[2] : line).trim();
     if (!labelMap.has(label)) {
-      labelMap.set(label, nextSpeakerIndex === 0 ? "speaker_a" : "speaker_b");
+      labelMap.set(label, nextSpeakerIndex === 0 ? "interviewer" : "candidate");
       nextSpeakerIndex += 1;
     }
-    const speakerId = labelMap.get(label) || "speaker_b";
+    const speakerId = labelMap.get(label) || "candidate";
     const duration = Math.max(1200, Math.min(4800, text.length * 120));
     const segment = {
       speaker_id: speakerId,
@@ -1441,7 +1820,7 @@ function renderRealtimeDiscPanel(session, opts = {}) {
   setHtml("realtimeDiscRoles", roles ? `<div class="tag-list">${roles}</div>${roleReason}` : `<div class="panel-empty-note">Recommended roles will appear here.</div>`);
 }
 
-function renderRealtimeSessionPanel(session) {
+function renderRealtimeSessionPanel(session, opts) {
   latestRealtimeSession = session;
   console.log(`[Panel] renderRealtimeSessionPanel called: voice_registered=${session.voice_registered}, voice_mapping=${JSON.stringify(session.voice_mapping)}, sequential_roles=${JSON.stringify(session.sequential_roles)}, segment_count=${session.segment_count || 0}`);
   setText("realtimeSessionStatus", session.status || "\u672a\u77e5");
@@ -1452,10 +1831,13 @@ function renderRealtimeSessionPanel(session) {
   const voiceRegistered = session.voice_registered || false;
   const segments = session.segments || [];
 
-  const transcriptList = byId("realtimeLiveTranscript");
-  if (transcriptList && segments.length) {
-    transcriptList.innerHTML = buildRealtimeTranscriptRows(session).join("");
-    scrollRealtimeTranscriptToLatest();
+  // skipTranscript=true 时跳过转录列表渲染（由 transcript.completed 的增量追加处理）
+  if (!opts?.skipTranscript) {
+    const transcriptList = byId("realtimeLiveTranscript");
+    if (transcriptList) {
+      transcriptList.innerHTML = buildRealtimeTranscriptRows(session).join("");
+      scrollRealtimeTranscriptToLatest();
+    }
   }
 
   // 计算各角色的平均相似度（用于显示）
@@ -1505,6 +1887,15 @@ function renderRealtimeSessionPanel(session) {
       }
     }
     setHtml("realtimeRoleMap", roleLines.join("") || `<div class="bullet-item"><span class="bullet-dot"></span><span>\u8fdb\u884c\u4e2d\u58f0\u7eb9\u6ce8\u518c...</span></div>`);
+  }
+
+  // 恢复 benchmark 结果显示（如果评估已完成）
+  if (benchmarkMode === "benchmark" && benchmarkEvaluationDone && benchmarkResults) {
+    const benchSessionPanel = document.getElementById("realtimeBenchmarkPanel");
+    if (benchSessionPanel) benchSessionPanel.classList.remove("hidden");
+    const benchBadge = document.getElementById("realtimeBenchmarkBadge");
+    if (benchBadge) benchBadge.textContent = "评估完成";
+    renderBenchmarkResults(benchmarkResults);
   }
 
   renderRealtimeDiscPanel(session);
@@ -1570,12 +1961,13 @@ function renderRealtimeResponse(session, finalSource = null) {
   renderRealtimeSessionPanel(session);
 
   if (session.final_report) {
-    pendingFinalRealtimeReport = { report: session.final_report, source: finalSource || "\u5b9e\u65f6\u4f1a\u8bdd\u603b\u7ed3" };
-    statusEl.textContent = "\u5b9e\u65f6\u4f1a\u8bdd\u5df2\u7ed3\u675f";
+    pendingFinalRealtimeReport = { report: session.final_report, source: finalSource || "实时会话总结" };
+    statusEl.textContent = "实时会话已结束";
     setRealtimeControls(false, false);
     viewFullReportBtn?.classList.remove("hidden");
+    exportResultBtn?.classList.remove("hidden");
   } else {
-    statusEl.textContent = "\u5b9e\u65f6\u4f1a\u8bdd\u4e2d";
+    statusEl.textContent = "实时会话中";
   }
 }
 
@@ -1866,6 +2258,181 @@ async function runAnalysis() {
 
 sampleBtn.addEventListener("click", fillSelectedSample);
 analyzeBtn.addEventListener("click", runAnalysis);
+
+// ===== 麦克风与系统音频互斥选择 =====
+function _setupAudioSourceMutex() {
+  // Pair 1: 输入页面的 captureMic / captureSystem
+  if (captureMicEl && captureSystemEl) {
+    captureMicEl.addEventListener("change", () => {
+      if (captureMicEl.checked) captureSystemEl.checked = false;
+    });
+    captureSystemEl.addEventListener("change", () => {
+      if (captureSystemEl.checked) captureMicEl.checked = false;
+    });
+  }
+
+  // Pair 2: 结果页 Phase 1 的 captureMicPhase1 / captureSystemPhase1
+  if (captureMicPhase1El && captureSystemPhase1El) {
+    captureMicPhase1El.addEventListener("change", () => {
+      if (captureMicPhase1El.checked) captureSystemPhase1El.checked = false;
+    });
+    captureSystemPhase1El.addEventListener("change", () => {
+      if (captureSystemPhase1El.checked) captureMicPhase1El.checked = false;
+    });
+  }
+}
+_setupAudioSourceMutex();
+
+// ===== 会议中锁定模式选择 =====
+
+/**
+ * 锁定模式选择器（会议进行中禁止切换）
+ */
+function _lockModeSelector() {
+  if (modeAutoEl) modeAutoEl.disabled = true;
+  if (modeManualEl) modeManualEl.disabled = true;
+  const selector = document.getElementById("realtimeModeSelector");
+  if (selector) selector.classList.add("mode-locked");
+  // 模式切换提示文字
+  const label = document.getElementById("realtimeModeLockedHint");
+  if (!label && selector) {
+    const hint = document.createElement("div");
+    hint.id = "realtimeModeLockedHint";
+    hint.className = "mode-locked-hint";
+    hint.textContent = "会议进行中，模式已锁定";
+    selector.appendChild(hint);
+  }
+}
+
+/**
+ * 解锁模式选择器（会议退出后恢复）
+ */
+function _unlockModeSelector() {
+  if (modeAutoEl) modeAutoEl.disabled = false;
+  if (modeManualEl) modeManualEl.disabled = false;
+  const selector = document.getElementById("realtimeModeSelector");
+  if (selector) selector.classList.remove("mode-locked");
+  const hint = document.getElementById("realtimeModeLockedHint");
+  if (hint) hint.remove();
+  // 会议退出时重置为模式一
+  if (modeAutoEl) modeAutoEl.checked = true;
+  if (modeManualEl) modeManualEl.checked = false;
+  if (modeAutoCard) modeAutoCard.classList.add("active");
+  if (modeManualCard) modeManualCard.classList.remove("active");
+  if (multiSpeakerPanel) multiSpeakerPanel.classList.add("hidden");
+  // 退出会议后重置为模式一，右侧面板 + FOLLOW-UP 恢复， Benchmark 隐藏
+  const rightPanel = document.getElementById("dashboardMainRight");
+  if (rightPanel) rightPanel.classList.remove("hidden");
+  const followupPanel = document.getElementById("realtimeFollowupPanel");
+  if (followupPanel) followupPanel.classList.remove("hidden");
+  const benchmarkPanel = document.getElementById("realtimeBenchmarkPanel");
+  if (benchmarkPanel) benchmarkPanel.classList.add("hidden");
+  const benchTogglePanel = document.getElementById("benchmarkTogglePanel");
+  if (benchTogglePanel) benchTogglePanel.classList.add("hidden");
+}
+
+// ===== 模式选择事件 =====
+modeAutoEl?.addEventListener("change", () => {
+  if (modeLocked) return; // 会议进行中禁止切换
+  if (modeAutoEl.checked) {
+    currentSpeakerMode = "auto";
+    if (modeAutoCard) modeAutoCard.classList.add("active");
+    if (modeManualCard) modeManualCard.classList.remove("active");
+    if (multiSpeakerPanel) multiSpeakerPanel.classList.add("hidden");
+    // 模式一：显示右侧 DISC + 能力判断面板 + FOLLOW-UP，隐藏 Benchmark
+    const rightPanel = document.getElementById("dashboardMainRight");
+    if (rightPanel) rightPanel.classList.remove("hidden");
+    const followupPanel = document.getElementById("realtimeFollowupPanel");
+    if (followupPanel) followupPanel.classList.remove("hidden");
+    const benchmarkPanel = document.getElementById("realtimeBenchmarkPanel");
+    if (benchmarkPanel) benchmarkPanel.classList.add("hidden");
+    // 模式一：隐藏 Benchmark 标准答案输入面板
+    const benchTogglePanel = document.getElementById("benchmarkTogglePanel");
+    if (benchTogglePanel) benchTogglePanel.classList.add("hidden");
+    if (autoMultiDbCountEl) autoMultiDbCountEl.innerHTML = `已加载 <strong>${autoMultiDbSpeakers.length}</strong> 位员工`;
+    console.log("[模式] 切换到模式一：双人自动注册");
+  }
+});
+modeManualEl?.addEventListener("change", () => {
+  if (modeLocked) return; // 会议进行中禁止切换
+  if (modeManualEl.checked) {
+    currentSpeakerMode = "auto_multi";
+    if (modeManualCard) modeManualCard.classList.add("active");
+    if (modeAutoCard) modeAutoCard.classList.remove("active");
+    if (multiSpeakerPanel) multiSpeakerPanel.classList.remove("hidden");
+    // 模式二：隐藏右侧 DISC + 能力判断面板 + FOLLOW-UP，显示 Benchmark
+    const rightPanel = document.getElementById("dashboardMainRight");
+    if (rightPanel) rightPanel.classList.add("hidden");
+    const followupPanel = document.getElementById("realtimeFollowupPanel");
+    if (followupPanel) followupPanel.classList.add("hidden");
+    const benchmarkPanel = document.getElementById("realtimeBenchmarkPanel");
+    if (benchmarkPanel) benchmarkPanel.classList.remove("hidden");
+    // 模式二：显示 Benchmark 标准答案输入面板
+    const benchTogglePanel = document.getElementById("benchmarkTogglePanel");
+    if (benchTogglePanel) benchTogglePanel.classList.remove("hidden");
+    // 清空并显示加载状态
+    autoMultiDbSpeakers = [];
+    if (autoMultiDbCountEl) autoMultiDbCountEl.innerHTML = `已加载 <strong>0</strong> 位员工`;
+    if (autoMultiSpeakerListEl) autoMultiSpeakerListEl.innerHTML = `<div class="auto-multi-loading">正在从公司声纹数据库加载...</div>`;
+    console.log("[模式] 切换到模式二：多人自动识别");
+    // 真正从后端加载声纹数据
+    _loadAutoMultiSpeakers();
+  }
+});
+
+/**
+ * 从后端 /api/speakers 加载声纹数据库人员列表
+ */
+async function _loadAutoMultiSpeakers() {
+  if (!autoMultiSpeakerListEl) return;
+  try {
+    const resp = await fetch("/api/speakers");
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    const speakers = data.speakers || [];
+    autoMultiDbSpeakers = speakers;
+    if (autoMultiDbCountEl) {
+      autoMultiDbCountEl.innerHTML = `已加载 <strong>${speakers.length}</strong> 位员工`;
+    }
+    renderAutoMultiSpeakerList(speakers);
+    console.log(`[模式二] 声纹数据库加载完成，共 ${speakers.length} 位员工`);
+  } catch (err) {
+    console.error("[模式二] 加载声纹数据库失败:", err);
+    autoMultiDbSpeakers = [];
+    if (autoMultiDbCountEl) autoMultiDbCountEl.innerHTML = `已加载 <strong>0</strong> 位员工`;
+    if (autoMultiSpeakerListEl) {
+      autoMultiSpeakerListEl.innerHTML = `<div class="auto-multi-empty">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>加载失败，请检查服务器连接</span>
+      </div>`;
+    }
+  }
+}
+
+/**
+ * 渲染模式二：从 DB 加载的说话人列表
+ * @param {Array} speakers - [{speaker_id, name, role, department}]
+ */
+function renderAutoMultiSpeakerList(speakers) {
+  if (!autoMultiSpeakerListEl) return;
+  if (!speakers || speakers.length === 0) {
+    autoMultiSpeakerListEl.innerHTML = `<div class="auto-multi-empty">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>公司声纹数据库为空</span>
+    </div>`;
+    return;
+  }
+  autoMultiSpeakerListEl.innerHTML = speakers.map((s) => `
+    <div class="auto-multi-speaker-chip">
+      <div class="auto-multi-speaker-avatar">${(s.name || s.speaker_id || "?").charAt(0).toUpperCase()}</div>
+      <div class="auto-multi-speaker-info">
+        <strong>${s.name || s.speaker_id}</strong>
+        <span>${s.role || "员工"}${s.department ? " · " + s.department : ""}</span>
+      </div>
+    </div>
+  `).join("");
+}
+
 realtimeBtn?.addEventListener("click", async () => {
   try {
     await runRealtimeDemo();
@@ -1880,6 +2447,23 @@ audioRealtimeBtn?.addEventListener("click", async () => {
     showError(error.message || TEXT.requestFailed);
   }
 });
+// 双重保险：document 级事件委托，确保按钮无论何时都能响应
+document.addEventListener("click", (e) => {
+  if (e.target?.closest("#startCaptureBtn")) {
+    e.preventDefault();
+    if (!captureStarted && realtimeSessionId && _pendingWsUrl) {
+      doStartCapture().catch((err) => showError(err.message || "开始采集失败"));
+    }
+  }
+});
+
+startCaptureBtnEl.addEventListener("click", async () => {
+  try {
+    await doStartCapture();
+  } catch (error) {
+    showError(error.message || TEXT.requestFailed);
+  }
+});
 liveWsBtn?.addEventListener("click", async () => {
   try {
     await startLiveAudioWs();
@@ -1889,6 +2473,296 @@ liveWsBtn?.addEventListener("click", async () => {
 });
 toggleMicRouteBtn?.addEventListener("click", () => toggleLiveRoute("mic"));
 toggleSystemRouteBtn?.addEventListener("click", () => toggleLiveRoute("system"));
+
+// ===== Benchmark 测试模式切换监听器 =====
+const benchNormalEl = document.getElementById("realtimeModeNormal");
+const benchBenchmarkEl = document.getElementById("realtimeModeBenchmark");
+const benchAnswerPanel = document.getElementById("benchmarkAnswerPanel");
+const benchResultsPanel = document.getElementById("benchmarkResultsPanel");
+const benchAnswersEl = document.getElementById("benchmarkAnswers");
+
+function applyBenchmarkModeUI() {
+  const isBenchmark = benchmarkMode === "benchmark";
+  // 高亮卡片
+  document.getElementById("realtimeModeNormalCard")?.classList.toggle("active", !isBenchmark);
+  document.getElementById("realtimeModeBenchmarkCard")?.classList.toggle("active", isBenchmark);
+  // 显示/隐藏答案输入区
+  if (benchAnswerPanel) {
+    benchAnswerPanel.classList.toggle("hidden", !isBenchmark);
+  }
+  if (benchResultsPanel) {
+    benchResultsPanel.classList.toggle("hidden", !benchmarkEvaluationDone);
+  }
+}
+
+function parseBenchmarkAnswers(text) {
+  // 每行格式: speaker_id: 文本
+  // 例如: interviewer: 你好面试官
+  const lines = (text || "").split("\n");
+  const refs = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const colonIdx = trimmed.indexOf(":");
+    if (colonIdx <= 0) {
+      // 没有 speaker_id 前缀，整行作为纯文本
+      if (trimmed.length > 0) {
+        refs.push({ text: trimmed, speaker_id: "" });
+      }
+    } else {
+      const speaker_id = trimmed.substring(0, colonIdx).trim();
+      const text_content = trimmed.substring(colonIdx + 1).trim();
+      if (text_content.length > 0) {
+        refs.push({ speaker_id, text: text_content });
+      }
+    }
+  }
+  return refs;
+}
+
+function renderBenchmarkResults(results) {
+  if (!results) return;
+
+  // 渲染到会话内面板（始终可见）
+  const sessionSummaryEl = document.getElementById("realtimeBenchmarkSummary");
+  const sessionListEl = document.getElementById("realtimeBenchmarkList");
+  const sessionPanel = document.getElementById("realtimeBenchmarkPanel");
+  const sessionBadge = document.getElementById("realtimeBenchmarkBadge");
+
+  if (sessionPanel) sessionPanel.classList.remove("hidden");
+  if (sessionBadge) sessionBadge.textContent = "评估完成";
+
+  if (sessionSummaryEl) {
+    const acc = results.total_accuracy || 0;
+    const wer = results.total_wer || 0;
+    const cer = results.total_cer || 0;
+    const speakerAcc = results.speaker_accuracy || 0;
+    const accClass = acc >= 0.9 ? "excellent" : acc >= 0.7 ? "good" : acc >= 0.5 ? "medium" : "poor";
+    sessionSummaryEl.innerHTML = `
+      <div class="benchmark-results-summary">
+        <div class="bench-stat-card">
+          <span class="bench-stat-label">准确率</span>
+          <span class="bench-stat-value ${accClass}">${(acc * 100).toFixed(1)}%</span>
+          <span class="bench-stat-unit">Accuracy</span>
+        </div>
+        <div class="bench-stat-card">
+          <span class="bench-stat-label">词错误率</span>
+          <span class="bench-stat-value ${wer <= 0.1 ? "excellent" : wer <= 0.3 ? "good" : wer <= 0.5 ? "medium" : "poor"}">${(wer * 100).toFixed(1)}%</span>
+          <span class="bench-stat-unit">WER (越低越好)</span>
+        </div>
+        <div class="bench-stat-card">
+          <span class="bench-stat-label">字错误率</span>
+          <span class="bench-stat-value ${cer <= 0.1 ? "excellent" : cer <= 0.3 ? "good" : cer <= 0.5 ? "medium" : "poor"}">${(cer * 100).toFixed(1)}%</span>
+          <span class="bench-stat-unit">CER (越低越好)</span>
+        </div>
+        <div class="bench-stat-card">
+          <span class="bench-stat-label">说话人准确率</span>
+          <span class="bench-stat-value ${speakerAcc >= 0.9 ? "excellent" : speakerAcc >= 0.7 ? "good" : speakerAcc >= 0.5 ? "medium" : "poor"}">${(speakerAcc * 100).toFixed(1)}%</span>
+          <span class="bench-stat-unit">Speaker</span>
+        </div>
+      </div>
+    `;
+  }
+
+  // 涉及的所有说话人
+  const involved = results.involved_speakers || [];
+  const speakerNames = involved.join("、");
+
+  if (sessionListEl && results.results) {
+    const headerHtml = involved.length > 0
+      ? `<div class="bench-result-header">涉及说话人：${escapeHtml(speakerNames)}</div>`
+      : "";
+    sessionListEl.innerHTML = headerHtml + results.results.map((r, i) => {
+      const accPct = (r.accuracy || 0) * 100;
+      const rowClass = accPct >= 90 ? "success" : accPct >= 60 ? "partial" : "fail";
+      const spkCorrect = r.speaker_correct ? "✓" : "✗";
+      const refName = r.reference_speaker_name || r.reference_speaker || "";
+      const hypName = r.recognized_speaker_name || r.recognized_speaker || "";
+      return `
+        <div class="bench-result-row ${rowClass}">
+          <div class="bench-result-idx">${i + 1}</div>
+          <div class="bench-result-body">
+            <div class="bench-ref-outer">
+              <div class="bench-ref-label">标准答案 · ${escapeHtml(refName)}</div>
+              <div class="bench-ref-text">${escapeHtml(r.reference || "")}</div>
+            </div>
+            <div class="bench-result-hyp">${escapeHtml(r.hypothesis || "")}</div>
+            <div class="bench-result-scores">
+              <span class="bench-score-chip spk-hyp">识别: ${escapeHtml(hypName)}</span>
+              <span class="bench-score-chip wer">WER ${((r.wer || 0) * 100).toFixed(1)}%</span>
+              <span class="bench-score-chip cer">CER ${((r.cer || 0) * 100).toFixed(1)}%</span>
+              <span class="bench-score-chip acc">Acc ${accPct.toFixed(1)}%</span>
+              <span class="bench-score-chip spk">说话人 ${spkCorrect}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  // 渲染到模式选择器内的结果面板（仅在模式选择器可见时生效）
+  const benchResultsPanel = document.getElementById("benchmarkResultsPanel");
+  if (benchResultsPanel) {
+    benchResultsPanel.classList.remove("hidden");
+    const summaryEl = document.getElementById("benchmarkResultsSummary");
+    if (summaryEl) {
+      const acc = results.total_accuracy || 0;
+      const wer = results.total_wer || 0;
+      const cer = results.total_cer || 0;
+      const speakerAcc = results.speaker_accuracy || 0;
+      const accClass = acc >= 0.9 ? "excellent" : acc >= 0.7 ? "good" : acc >= 0.5 ? "medium" : "poor";
+      summaryEl.innerHTML = `
+        <div class="benchmark-results-summary">
+          <div class="bench-stat-card">
+            <span class="bench-stat-label">准确率</span>
+            <span class="bench-stat-value ${accClass}">${(acc * 100).toFixed(1)}%</span>
+            <span class="bench-stat-unit">Accuracy</span>
+          </div>
+          <div class="bench-stat-card">
+            <span class="bench-stat-label">词错误率</span>
+            <span class="bench-stat-value ${wer <= 0.1 ? "excellent" : wer <= 0.3 ? "good" : wer <= 0.5 ? "medium" : "poor"}">${(wer * 100).toFixed(1)}%</span>
+            <span class="bench-stat-unit">WER (越低越好)</span>
+          </div>
+          <div class="bench-stat-card">
+            <span class="bench-stat-label">字错误率</span>
+            <span class="bench-stat-value ${cer <= 0.1 ? "excellent" : cer <= 0.3 ? "good" : cer <= 0.5 ? "medium" : "poor"}">${(cer * 100).toFixed(1)}%</span>
+            <span class="bench-stat-unit">CER (越低越好)</span>
+          </div>
+          <div class="bench-stat-card">
+            <span class="bench-stat-label">说话人准确率</span>
+            <span class="bench-stat-value ${speakerAcc >= 0.9 ? "excellent" : speakerAcc >= 0.7 ? "good" : speakerAcc >= 0.5 ? "medium" : "poor"}">${(speakerAcc * 100).toFixed(1)}%</span>
+            <span class="bench-stat-unit">Speaker</span>
+          </div>
+        </div>
+      `;
+    }
+    const listEl = document.getElementById("benchmarkResultsList");
+    if (listEl && results.results) {
+      const headerHtml = involved.length > 0
+        ? `<div class="bench-result-header">涉及说话人：${escapeHtml(speakerNames)}</div>`
+        : "";
+      listEl.innerHTML = headerHtml + results.results.map((r, i) => {
+        const accPct = (r.accuracy || 0) * 100;
+        const rowClass = accPct >= 90 ? "success" : accPct >= 60 ? "partial" : "fail";
+        const spkCorrect = r.speaker_correct ? "✓" : "✗";
+        const refName = r.reference_speaker_name || r.reference_speaker || "";
+        const hypName = r.recognized_speaker_name || r.recognized_speaker || "";
+        return `
+          <div class="bench-result-row ${rowClass}">
+            <div class="bench-result-idx">${i + 1}</div>
+            <div class="bench-result-body">
+              <div class="bench-ref-outer">
+                <div class="bench-ref-label">标准答案 · ${escapeHtml(refName)}</div>
+                <div class="bench-ref-text">${escapeHtml(r.reference || "")}</div>
+              </div>
+              <div class="bench-result-hyp">${escapeHtml(r.hypothesis || "")}</div>
+              <div class="bench-result-scores">
+                <span class="bench-score-chip spk-hyp">识别: ${escapeHtml(hypName)}</span>
+                <span class="bench-score-chip wer">WER ${((r.wer || 0) * 100).toFixed(1)}%</span>
+                <span class="bench-score-chip cer">CER ${((r.cer || 0) * 100).toFixed(1)}%</span>
+                <span class="bench-score-chip acc">Acc ${accPct.toFixed(1)}%</span>
+                <span class="bench-score-chip spk">说话人 ${spkCorrect}</span>
+              </div>
+                <span class="bench-score-chip spk">说话人 ${spkCorrect}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+  }
+}
+
+function escapeHtml(str) {
+  return (str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+benchNormalEl?.addEventListener("change", () => {
+  if (benchNormalEl.checked) {
+    benchmarkMode = "normal";
+    applyBenchmarkModeUI();
+  }
+});
+
+benchBenchmarkEl?.addEventListener("change", () => {
+  if (benchBenchmarkEl.checked) {
+    benchmarkMode = "benchmark";
+    applyBenchmarkModeUI();
+  }
+});
+
+benchAnswersEl?.addEventListener("input", () => {
+  // 实时解析并验证格式
+  benchmarkReferenceTexts = parseBenchmarkAnswers(benchAnswersEl.value);
+  if (benchFileNameEl) benchFileNameEl.textContent = "";
+  console.log(`[Benchmark] 已解析 ${benchmarkReferenceTexts.length} 条答案`);
+});
+
+// ===== Benchmark JSON 文件上传 =====
+const benchFileInput = document.getElementById("benchmarkFileInput");
+const benchFileNameEl = document.getElementById("benchmarkFileName");
+
+benchFileInput?.addEventListener("change", async (e) => {
+  const file = e.target?.files?.[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const json = JSON.parse(text);
+    let refs = [];
+
+    if (Array.isArray(json)) {
+      // 格式1: 直接是数组 [{"text": "...", "speaker_id": "..."}, ...]
+      refs = json.map((item) => ({
+        text: String(item.text || item.content || item.transcript || "").trim(),
+        speaker_id: String(item.speaker_id || item.speaker || item.role || "").trim(),
+        speaker_name: String(item.speaker_name || item.speakerName || item.name || "").trim(),
+      })).filter((r) => r.text);
+    } else if (typeof json === "object" && json !== null) {
+      // 格式2: 对象包裹的数组，常见 key 包括 reference_texts / answers / data / items / sentences / speakers
+      const innerArray = json.reference_texts || json.answers || json.data || json.items
+        || json.sentences || json.speakers || json.transcripts || json.segments || json.test_data;
+      if (Array.isArray(innerArray)) {
+        refs = innerArray.map((item) => ({
+          text: String(item.text || item.content || item.transcript || item.ref_text || item.reference || "").trim(),
+          speaker_id: String(item.speaker_id || item.speaker || item.spk_id || item.speakerName || item.name || "").trim(),
+          speaker_name: String(item.speaker_name || item.speakerName || item.name || "").trim(),
+        })).filter((r) => r.text);
+      } else if (typeof innerArray === "object" && innerArray !== null) {
+        // 格式3: {"0": {...}, "1": {...}}
+        refs = Object.values(innerArray).map((item) => ({
+          text: String(item.text || item.content || item.transcript || item.ref_text || item.reference || "").trim(),
+          speaker_id: String(item.speaker_id || item.speaker || item.spk_id || item.speakerName || item.name || "").trim(),
+          speaker_name: String(item.speaker_name || item.speakerName || item.name || "").trim(),
+        })).filter((r) => r.text);
+      }
+    }
+
+    if (refs.length === 0) {
+      showError(`JSON 文件解析失败，请确认格式正确`);
+      return;
+    }
+
+    // 填充到 textarea 并更新状态
+    if (benchAnswersEl) {
+      benchAnswersEl.value = refs.map((r) => {
+        const label = r.speaker_name ? `${r.speaker_id}(${r.speaker_name})` : r.speaker_id;
+        return `${label}: ${r.text}`;
+      }).join("\n");
+    }
+    benchmarkReferenceTexts = refs;
+    if (benchFileNameEl) benchFileNameEl.textContent = `已加载 ${refs.length} 条答案`;
+    console.log(`[Benchmark] 文件导入成功: ${refs.length} 条`);
+  } catch (err) {
+    console.error("[Benchmark] 文件解析失败:", err);
+    showError(`文件解析失败: ${err.message}`);
+  }
+});
+
 retryBtn.addEventListener("click", () => {
   hideError();
   if (lastPayload) runAnalysis();
@@ -1923,9 +2797,909 @@ viewFullReportBtn?.addEventListener("click", () => {
   renderReport(pendingFinalRealtimeReport.report, pendingFinalRealtimeReport.source);
   viewFullReportBtn.classList.add("hidden");
 });
+
+/**
+ * 导出实时识别结果为 JSON 文件（标准答案格式，用于后期对比）
+ */
+const exportResultBtn = document.getElementById("exportResultBtn");
+exportResultBtn?.addEventListener("click", () => {
+  if (!latestRealtimeSession || !latestRealtimeSession.segments || latestRealtimeSession.segments.length === 0) {
+    showError("暂无识别结果可导出，请先运行一次实时分析");
+    return;
+  }
+  const segments = latestRealtimeSession.segments;
+  // 构建与标准答案格式完全对齐的结构
+  const payload = {
+    _meta: {
+      exported_at: new Date().toISOString(),
+      session_id: latestRealtimeSession.session_id || "",
+      mode: currentSpeakerMode,
+      total_segments: segments.length,
+      total_duration_sec: segments.length > 0
+        ? Math.round((segments[segments.length - 1].end_ms - segments[0].start_ms) / 1000 * 100) / 100
+        : 0,
+      source: "insighteye_recognized",
+    },
+    segments: segments.map((s, i) => ({
+      id:                i + 1,
+      speaker_id:        s.speaker_id       || null,
+      speaker_name:      s.speaker_name     || null,
+      start_ms:         s.start_ms          || 0,
+      end_ms:           s.end_ms            || 0,
+      duration_ms:      (s.end_ms || 0) - (s.start_ms || 0),
+      text:             (s.text || "").trim(),
+      final:            s.final !== false,
+      recognized_role:   s.recognized_role   || null,
+      speaker_confidence: s.speaker_confidence || 0,
+      interviewer_sim:   s.interviewer_sim   || 0,
+      candidate_sim:    s.candidate_sim    || 0,
+      speaker_candidates: s.speaker_candidates || null,
+      registered_speaker_sims: s.registered_speaker_sims || null,
+    })),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = `recognized_${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  console.log(`[导出] 已导出 ${segments.length} 个片段为 recognized JSON`);
+});
+
 modeQuickEl?.addEventListener("change", applyModeCards);
 modeFullEl?.addEventListener("change", applyModeCards);
 
+// ===== 视图切换：主导航 =====
+const navInterviewBtn = document.getElementById("navInterviewBtn");
+const navSpeakerDbBtn = document.getElementById("navSpeakerDbBtn");
+const speakerDbView = document.getElementById("speakerDbView");
+
+function switchMainView(view) {
+  console.log(`[Nav] switchMainView("${view}") 被调用`);
+  // 会议进行中禁止跳转到声纹数据库
+  if (view === "speakerdb" && meetingActive) {
+    showError("会议进行中，无法跳转至声纹数据库。请先结束会议。");
+    return;
+  }
+  inputView.classList.toggle("hidden", view !== "input");
+  loadingView.classList.toggle("hidden", view !== "loading");
+  resultView.classList.toggle("hidden", view !== "result");
+  speakerDbView.classList.toggle("hidden", view !== "speakerdb");
+  // 主导航按钮仅在 input 和 speakerdb 页面显示
+  if (mainNavLinks) mainNavLinks.classList.toggle("hidden", view !== "input" && view !== "speakerdb");
+  navInterviewBtn.classList.toggle("active", view !== "speakerdb");
+  navSpeakerDbBtn.classList.toggle("active", view === "speakerdb");
+  if (view === "speakerdb") {
+    loadSpeakerDb();
+  }
+}
+
+navInterviewBtn?.addEventListener("click", () => switchMainView("input"));
+navSpeakerDbBtn?.addEventListener("click", () => switchMainView("speakerdb"));
+
+// ===== 声纹数据库 =====
+let speakerDbList = [];
+let recordingSamples = []; // 存储多段录音：Float32Array[]
+let isRecording = false;
+let recordingStream = null;
+let isPreviewPlaying = false;
+let previewAudioEl = null;
+let previewAudioCtx = null;
+let recordingProcessor = null;
+let recordingSampleRate = 16000;
+let recordingChunks = [];
+let recordingTimerId = null;
+let recordingStartTime = 0;
+let currentPreviewIndex = -1; // 当前预览的样本索引
+
+// 姓名颜色映射
+const AVATAR_COLORS = [
+  "linear-gradient(135deg, #5b6cff, #8a7cff)",
+  "linear-gradient(135deg, #ff6b6b, #ffa06b)",
+  "linear-gradient(135deg, #38A169, #2fb67c)",
+  "linear-gradient(135deg, #ffbf3f, #ffa500)",
+  "linear-gradient(135deg, #59a7ff, #42c7ff)",
+  "linear-gradient(135deg, #a16bff, #7c3aed)",
+  "linear-gradient(135deg, #ff9f43, #ee5a24)",
+  "linear-gradient(135deg, #00cec9, #6c5ce7)",
+];
+
+function avatarColor(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function initials(name) {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function fmtDate(iso) {
+  if (!iso) return "-";
+  try {
+    const d = new Date(iso);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  } catch { return iso; }
+}
+
+async function loadSpeakerDb() {
+  const listEl = document.getElementById("speakerList");
+  if (!listEl) return;
+  listEl.innerHTML = `<div class="panel-empty-note">加载中...</div>`;
+  try {
+    const resp = await fetch("/api/speakers");
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    
+    // 调试：打印返回的数据结构
+    console.log("[SpeakerDB] API 返回数据:", {
+      speakersCount: (data.speakers || []).length,
+      stats: data.stats,
+      hasError: data.error
+    });
+    
+    // 处理错误响应
+    if (data.error) {
+      throw new Error(data.error);
+    }
+    
+    speakerDbList = data.speakers || [];
+    renderSpeakerList(speakerDbList);
+    
+    // 安全地更新计数
+    const speakerCount = speakerDbList.length;
+    const totalCount = data.stats?.total ?? speakerCount;
+    const activeCount = data.stats?.active ?? speakerCount;
+    
+    const badgeEl = document.getElementById("speakerCountBadge");
+    if (badgeEl) {
+      badgeEl.textContent = `${speakerCount} 人`;
+    }
+    
+    const statTotalEl = document.getElementById("statTotal");
+    if (statTotalEl) {
+      statTotalEl.textContent = (totalCount >= 0) ? totalCount : "0";
+    }
+    
+    const statActiveEl = document.getElementById("statActive");
+    if (statActiveEl) {
+      statActiveEl.textContent = (activeCount >= 0) ? activeCount : "0";
+    }
+    
+    // 增强统计
+    if (data.stats) {
+      const el = (id) => document.getElementById(id);
+      if (el("statIdents")) el("statIdents").textContent = data.stats.total_identifications ?? 0;
+      if (el("statToday")) el("statToday").textContent = data.stats.today_identifications ?? 0;
+      if (el("statQuality")) el("statQuality").textContent = data.stats.quality_avg != null
+        ? `${Math.min(100, Math.round(data.stats.quality_avg / 20 * 100))}%` : "-";
+      if (el("statSampleAvg")) el("statSampleAvg").textContent = data.stats.sample_avg != null
+        ? data.stats.sample_avg.toFixed(1) : "-";
+    }
+  } catch (err) {
+    console.error("[SpeakerDB] 加载失败:", err);
+    listEl.innerHTML = `<div class="panel-empty-note">加载失败：${err.message}</div>`;
+    // 出错时也重置计数
+    const badgeEl = document.getElementById("speakerCountBadge");
+    if (badgeEl) badgeEl.textContent = "加载失败";
+  }
+}
+
+function renderSpeakerList(speakers) {
+  const listEl = document.getElementById("speakerList");
+  if (!listEl) return;
+  if (!speakers.length) {
+    listEl.innerHTML = `<div class="panel-empty-note">暂无已注册人员</div>`;
+    return;
+  }
+  listEl.innerHTML = speakers.map(s => {
+    const rawQuality = parseFloat(s.quality) || 0;
+    // 数据库 quality 范围约 12-24，归一化到 0-1 显示
+    const quality = Math.min(1, Math.max(0, rawQuality / 20));
+    const stars = _qualityStars(quality);
+    const sampleCount = parseInt(s.sample_count) || 0;
+    const totalIdents = parseInt(s.total_identifications) || 0;
+    const avgConf = s.avg_confidence != null ? (parseFloat(s.avg_confidence)).toFixed(3) : null;
+    const lastSeen = s.last_recognized_at ? _formatRelativeTime(s.last_recognized_at) : null;
+    const stdMean = s.embedding_std_mean != null ? (parseFloat(s.embedding_std_mean)).toFixed(4) : null;
+    const regDate = s.registered_at ? fmtDate(s.registered_at) : "";
+    const updDate = s.updated_at ? fmtDate(s.updated_at) : "";
+    return `
+    <div class="speaker-list-item" data-id="${escHtml(s.speaker_id)}">
+      <div class="speaker-item-main">
+        <div class="speaker-name">${escHtml(s.name || s.speaker_id)} <span class="speaker-id-hint">(${escHtml(s.speaker_id)})</span></div>
+        <div class="speaker-meta">
+          ${s.role ? `<span class="meta-chip role-chip">${escHtml(s.role)}</span>` : ""}
+          ${s.department ? `<span class="meta-chip dept-chip">${escHtml(s.department)}</span>` : ""}
+        </div>
+        <div class="speaker-quality-row">
+          <span class="quality-stars" title="声纹质量 ${(quality * 100).toFixed(0)}%">${stars}</span>
+          <span class="quality-pct">${(quality * 100).toFixed(0)}%</span>
+        </div>
+        <div class="speaker-stats-chips">
+          <span class="sp-stat-chip" title="样本数">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+            ${sampleCount}段
+          </span>
+          ${totalIdents > 0 ? `<span class="sp-stat-chip" title="被识别次数">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            ${totalIdents}次
+          </span>` : ""}
+          ${avgConf != null ? `<span class="sp-stat-chip" title="平均识别置信度">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            ${avgConf}
+          </span>` : ""}
+          ${lastSeen ? `<span class="sp-stat-chip last-seen" title="最近一次被识别">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ${lastSeen}
+          </span>` : ""}
+          ${stdMean != null ? `<span class="sp-stat-chip" title="样本一致性（embedding_std均值，越低越一致）">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            σ=${stdMean}
+          </span>` : ""}
+        </div>
+        <div class="speaker-time-row">
+          <span class="sp-time-chip">注册: ${regDate}</span>
+          ${updDate && updDate !== regDate ? `<span class="sp-time-chip">更新: ${updDate}</span>` : ""}
+        </div>
+      </div>
+      <button class="speaker-del-btn" data-id="${escHtml(s.speaker_id)}" title="删除">&times;</button>
+    </div>`;
+  }).join("");
+
+  // 删除事件
+  listEl.querySelectorAll(".speaker-del-btn").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute("data-id");
+      if (!confirm(`确定要删除「${id}」的声纹数据吗？`)) return;
+      try {
+        const resp = await fetch("/api/speakers/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ speaker_id: id }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || "删除失败");
+        await loadSpeakerDb();
+      } catch (err) {
+        alert("删除失败：" + err.message);
+      }
+    });
+  });
+}
+
+function _qualityStars(quality) {
+  const q = Math.min(1, Math.max(0, quality || 0));
+  if (q <= 0) return `<span class="stars-empty">☆☆☆☆☆</span>`;
+  const filled = Math.round(q * 5);
+  return `<span class="stars-filled">${"★".repeat(filled)}${"☆".repeat(5 - filled)}</span>`;
+}
+
+function _formatRelativeTime(isoString) {
+  if (!isoString) return "";
+  try {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000);
+    if (diff < 60) return `${diff}s前`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m前`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h前`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)}d前`;
+    return fmtDate(isoString);
+  } catch {
+    return fmtDate(isoString);
+  }
+}
+
+// ===== 声纹相似度分析（管理员视图） =====
+document.getElementById("loadSimilarityBtn")?.addEventListener("click", async () => {
+  const listEl = document.getElementById("similarityList");
+  const summaryEl = document.getElementById("similaritySummary");
+  if (!listEl) return;
+  listEl.innerHTML = `<div class="panel-empty-note">加载中...</div>`;
+  try {
+    const resp = await fetch("/api/speakers/stats");
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const stats = await resp.json();
+    const pairs = stats.similarity_distribution || [];
+    const totalPairs = pairs.length;
+    const highSimPairs = pairs.filter(p => p.similarity >= 0.85);
+    const avgSim = totalPairs > 0
+      ? (pairs.reduce((s, p) => s + p.similarity, 0) / totalPairs).toFixed(4)
+      : "-";
+
+    if (summaryEl) {
+      summaryEl.innerHTML = `
+        <div class="sim-stat">
+          <span class="sim-stat-label">声纹对总数</span>
+          <strong>${totalPairs}</strong>
+        </div>
+        <div class="sim-stat">
+          <span class="sim-stat-label">平均相似度</span>
+          <strong>${avgSim}</strong>
+        </div>
+        <div class="sim-stat ${highSimPairs.length > 0 ? "sim-stat-warn" : "sim-stat-ok"}">
+          <span class="sim-stat-label">高相似对(≥0.85)</span>
+          <strong>${highSimPairs.length}</strong>
+        </div>
+      `;
+    }
+
+    if (!pairs.length) {
+      listEl.innerHTML = `<div class="panel-empty-note">数据不足（需要至少 2 位已注册员工）</div>`;
+      return;
+    }
+
+    listEl.innerHTML = pairs.slice(0, 20).map(p => {
+      const sim = p.similarity;
+      const simClass = sim >= 0.90 ? "sim-bar-danger" : sim >= 0.80 ? "sim-bar-warn" : sim >= 0.70 ? "sim-bar-info" : "sim-bar-ok";
+      const simPct = (sim * 100).toFixed(1);
+      const stdA = p.embedding_std_a != null ? `σ_a=${p.embedding_std_a}` : null;
+      const stdB = p.embedding_std_b != null ? `σ_b=${p.embedding_std_b}` : null;
+      const stdTip = [stdA, stdB].filter(Boolean).join(" | ");
+      return `
+      <div class="sim-pair-row">
+        <div class="sim-pair-names">
+          <span class="sim-name">${escHtml(p.speaker_a_name)}</span>
+          <span class="sim-vs">vs</span>
+          <span class="sim-name">${escHtml(p.speaker_b_name)}</span>
+        </div>
+        <div class="sim-bar-wrap" title="${stdTip}">
+          <div class="sim-bar ${simClass}" style="width:${simPct}%"></div>
+          <span class="sim-val">${sim.toFixed(4)}</span>
+        </div>
+      </div>`;
+    }).join("");
+  } catch (err) {
+    listEl.innerHTML = `<div class="panel-empty-note">加载失败：${err.message}</div>`;
+  }
+});
+
+function escHtml(s) {
+  if (!s) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// 搜索
+document.getElementById("speakerSearchBtn")?.addEventListener("click", async () => {
+  const kw = document.getElementById("speakerSearchInput")?.value?.trim() || "";
+  const listEl = document.getElementById("speakerList");
+  listEl.innerHTML = `<div class="panel-empty-note">搜索中...</div>`;
+  try {
+    const url = kw ? `/api/speakers/search?name=${encodeURIComponent(kw)}` : "/api/speakers";
+    const resp = await fetch(url);
+    const data = await resp.json();
+    renderSpeakerList(data.speakers || []);
+    document.getElementById("speakerCountBadge").textContent = `${(data.speakers||[]).length} 人`;
+  } catch {
+    listEl.innerHTML = `<div class="panel-empty-note">搜索失败</div>`;
+  }
+});
+
+document.getElementById("speakerSearchInput")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") document.getElementById("speakerSearchBtn")?.click();
+});
+
+// ===== 录音功能 =====
+const regAudioArea = document.getElementById("regAudioArea");
+const regAudioIdle = document.getElementById("regAudioIdle");
+const regAudioRecording = document.getElementById("regAudioRecording");
+const regAudioDone = document.getElementById("regAudioDone");
+const regRecordingTime = document.getElementById("regRecordingTime");
+const regWaveform = document.getElementById("regWaveform");
+const regAudioDoneText = document.getElementById("regAudioDoneText");
+const regAudioRetryBtn = document.getElementById("regAudioRetryBtn");
+const regSuccessMsg = document.getElementById("regSuccessMsg");
+const regErrorMsg = document.getElementById("regErrorMsg");
+const regAudioErrorEl = document.getElementById("regAudioError");
+const regCaptureMic = document.getElementById("regCaptureMic");
+const regCaptureSystem = document.getElementById("regCaptureSystem");
+const regFileArea = document.getElementById("regFileArea");
+const regFileInput = document.getElementById("regFileInput");
+const regFileName = document.getElementById("regFileName");
+
+let currentUploadedFile = null; // { file, arrayBuffer }
+
+function showRegAudioState(state) {
+  regAudioIdle?.classList.toggle("hidden", state !== "idle");
+  regAudioRecording?.classList.toggle("hidden", state !== "recording");
+  regAudioDone?.classList.toggle("hidden", state !== "done");
+  regAudioArea?.classList.toggle("recording", state === "recording");
+  regAudioArea?.classList.toggle("done", state === "done");
+}
+
+// ===== 声纹注册音频来源切换（麦克风 / 系统音频 / 上传文件）=====
+function getRegAudioSource() {
+  const el = document.querySelector('input[name="regAudioSource"]:checked');
+  return el ? el.value : "mic";
+}
+
+function updateRegAudioSourceUI() {
+  const source = getRegAudioSource();
+  if (source === "file") {
+    regAudioArea?.classList.add("hidden");
+    regFileArea?.classList.remove("hidden");
+  } else {
+    regAudioArea?.classList.remove("hidden");
+    regFileArea?.classList.add("hidden");
+  }
+}
+
+// 点击文件区触发文件选择
+regFileArea?.addEventListener("click", () => {
+  regFileInput?.click();
+});
+
+// 监听音频来源切换
+document.querySelectorAll('input[name="regAudioSource"]').forEach(el => {
+  el.addEventListener("change", () => {
+    updateRegAudioSourceUI();
+    if (isRecording) stopRecording();
+    currentRecordingAudio = null;
+    currentUploadedFile = null;
+    showRegAudioState("idle");
+    if (regFileName) regFileName.textContent = "点击或拖拽上传音频文件";
+    if (regFileInput) regFileInput.value = "";
+  });
+});
+
+// 文件选择后
+regFileInput?.addEventListener("change", async () => {
+  const file = regFileInput?.files?.[0];
+  if (!file) return;
+  try {
+    const buffer = await file.arrayBuffer();
+    currentUploadedFile = { file, arrayBuffer: buffer };
+    if (regFileName) regFileName.textContent = file.name;
+    hideRegMsgs();
+  } catch (err) {
+    showRegError("文件读取失败：" + err.message);
+  }
+});
+
+// 拖拽文件到文件区
+regFileArea?.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  regFileArea.style.borderColor = "rgba(91,108,255,0.6)";
+  regFileArea.style.background = "rgba(91,108,255,0.08)";
+});
+regFileArea?.addEventListener("dragleave", () => {
+  regFileArea.style.borderColor = "";
+  regFileArea.style.background = "";
+});
+regFileArea?.addEventListener("drop", async (e) => {
+  e.preventDefault();
+  regFileArea.style.borderColor = "";
+  regFileArea.style.background = "";
+  const file = e.dataTransfer?.files?.[0];
+  if (!file || !file.type.startsWith("audio/")) {
+    showRegError("请拖拽音频文件");
+    return;
+  }
+  try {
+    const buffer = await file.arrayBuffer();
+    currentUploadedFile = { file, arrayBuffer: buffer };
+    if (regFileName) regFileName.textContent = file.name;
+    hideRegMsgs();
+  } catch (err) {
+    showRegError("文件读取失败：" + err.message);
+  }
+});
+
+function startWaveform() {
+  if (!regWaveform) return;
+  regWaveform.innerHTML = "";
+  for (let i = 0; i < 20; i++) {
+    const bar = document.createElement("div");
+    bar.className = "reg-waveform-bar";
+    bar.style.animationDelay = `${(i * 0.05).toFixed(2)}s`;
+    regWaveform.appendChild(bar);
+  }
+}
+
+function stopWaveform() {
+  if (!regWaveform) return;
+  regWaveform.innerHTML = "";
+}
+
+async function startRecording() {
+  // 防重入：已经在请求中则忽略
+  if (isRecording || startRecording._pending) return;
+  startRecording._pending = true;
+  hideRegMsgs();
+
+  const source = getRegAudioSource();
+  if (source === "file") {
+    showRegError("请切换到麦克风或系统音频模式进行录音");
+    return;
+  }
+
+  const wantMic = source === "mic";
+  const wantSystem = source === "system";
+
+  if (!wantMic && !wantSystem) {
+    showRegError("请至少选择一个音频来源（麦克风或系统音频）");
+    return;
+  }
+
+  try {
+    const streams = [];
+
+    if (wantMic) {
+      const micStream = await navigator.mediaDevices.getUserMedia({
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      });
+      streams.push(micStream);
+    }
+
+    if (wantSystem) {
+      try {
+        const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        const audioTracks = displayStream.getAudioTracks();
+        const videoTracks = displayStream.getVideoTracks();
+        videoTracks.forEach(t => t.stop());
+        if (!audioTracks.length) {
+          throw new Error("No system audio track was shared. Please re-share your screen/window and enable audio.");
+        }
+        streams.push(new MediaStream(audioTracks));
+      } catch (sysErr) {
+        if (sysErr.name === "NotAllowedError") {
+          showRegError("系统音频需要屏幕共享权限，请在弹窗中选择「共享标签页/窗口」并开启音频。");
+        } else {
+          showRegError("系统音频获取失败：" + sysErr.message);
+        }
+        return;
+      }
+    }
+
+    // 合并多个音频流
+    recordingStream = new MediaStream();
+    for (const s of streams) {
+      s.getAudioTracks().forEach(t => recordingStream.addTrack(t));
+    }
+
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    recordingSampleRate = ctx.sampleRate;
+    const source = ctx.createMediaStreamSource(recordingStream);
+    recordingProcessor = ctx.createScriptProcessor(4096, 1, 1);
+    recordingChunks = [];
+    recordingProcessor.onaudioprocess = (ev) => {
+      const input = ev.inputBuffer.getChannelData(0);
+      const chunk = new Float32Array(input.length);
+      chunk.set(input);
+      recordingChunks.push(chunk);
+    };
+    source.connect(recordingProcessor);
+    recordingProcessor.connect(ctx.destination);
+    isRecording = true;
+    recordingStartTime = Date.now();
+    showRegAudioState("recording");
+    startWaveform();
+
+    recordingTimerId = setInterval(() => {
+      const elapsed = ((Date.now() - recordingStartTime) / 1000).toFixed(1);
+      if (regRecordingTime) regRecordingTime.textContent = `${elapsed}s`;
+    }, 150);
+  } catch (err) {
+    showRegError("无法访问麦克风：" + err.message);
+  } finally {
+    startRecording._pending = false;
+  }
+}
+
+async function stopRecording() {
+  if (!isRecording) return;
+  stopPreview();
+  isRecording = false;
+  startRecording._pending = false;
+  clearInterval(recordingTimerId);
+  recordingTimerId = null;
+  stopWaveform();
+
+  if (recordingProcessor) {
+    recordingProcessor.disconnect();
+    recordingProcessor = null;
+  }
+  if (recordingStream) {
+    recordingStream.getTracks().forEach(t => t.stop());
+    recordingStream = null;
+  }
+
+  // 合并所有 chunks → Float32Array
+  const totalLen = recordingChunks.reduce((s, c) => s + c.length, 0);
+  if (totalLen === 0) {
+    showRegError("未录制到音频，请重试");
+    showRegAudioState("idle");
+    return;
+  }
+  const audioBuffer = new Float32Array(totalLen);
+  let offset = 0;
+  for (const c of recordingChunks) {
+    audioBuffer.set(c, offset);
+    offset += c.length;
+  }
+
+  const duration = audioBuffer.length / recordingSampleRate;
+  if (duration < 0.5) {
+    showRegError("音频时长过短（需至少 0.5 秒），请重试");
+    showRegAudioState("idle");
+    return;
+  }
+
+  // 添加到样本列表
+  recordingSamples.push(audioBuffer);
+  updateSampleProgress();
+
+  // 显示完成状态
+  if (recordingSamples.length >= 5) {
+    if (regAudioDoneText) regAudioDoneText.textContent = `已完成 ${recordingSamples.length} 段录音，可以开始注册了`;
+  } else {
+    if (regAudioDoneText) regAudioDoneText.textContent = `已录制 ${recordingSamples.length}/5 段，继续添加或开始注册`;
+  }
+  showRegAudioState("done");
+}
+
+function updateSampleProgress() {
+  // 更新进度点
+  const dots = document.querySelectorAll('.progress-dot');
+  dots.forEach((dot, idx) => {
+    if (idx < recordingSamples.length) {
+      dot.classList.add('filled');
+    } else {
+      dot.classList.remove('filled');
+    }
+  });
+
+  // 更新计数
+  const countEl = document.getElementById('regSampleCount');
+  if (countEl) {
+    countEl.textContent = `${recordingSamples.length}/5`;
+  }
+}
+
+regAudioRetryBtn?.addEventListener("click", async (e) => {
+  e.stopPropagation();
+  if (isRecording) await stopRecording();
+  if (isPreviewPlaying) stopPreview();
+  recordingSamples = [];
+  updateSampleProgress();
+  showRegAudioState("idle");
+  hideRegMsgs();
+});
+
+// 添加更多样本按钮
+document.getElementById("regAddSampleBtn")?.addEventListener("click", async (e) => {
+  e.stopPropagation();
+  if (isPreviewPlaying) stopPreview();
+  // 自动开始下一段录音
+  await startRecording();
+});
+
+function stopPreview() {
+  if (previewAudioEl) {
+    try { previewAudioEl.stop(); } catch {}
+    previewAudioEl = null;
+  }
+  if (previewAudioCtx) {
+    try { previewAudioCtx.close(); } catch {}
+    previewAudioCtx = null;
+  }
+  isPreviewPlaying = false;
+  updatePlayBtnState(false);
+}
+
+function updatePlayBtnState(playing) {
+  const btn = document.getElementById("regAudioPlayBtn");
+  if (!btn) return;
+  btn.textContent = playing ? "■ 停止播放" : "▶ 播放预览";
+}
+
+regAudioPlayBtn?.addEventListener("click", async (e) => {
+  e.stopPropagation();
+  if (!recordingSamples.length) return;
+
+  if (isPreviewPlaying) {
+    stopPreview();
+    return;
+  }
+
+  // 如果只有一段，直接播放
+  if (recordingSamples.length === 1) {
+    await playRecordingSample(0);
+    return;
+  }
+
+  // 多段时，播放第一段
+  await playRecordingSample(0);
+});
+
+async function playRecordingSample(index) {
+  if (index < 0 || index >= recordingSamples.length) return;
+
+  stopPreview();
+  currentPreviewIndex = index;
+
+  const audioBuffer = recordingSamples[index];
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    previewAudioCtx = audioCtx;
+    const sampleRate = recordingSampleRate;
+    const numSamples = audioBuffer.length;
+    const buffer = audioCtx.createBuffer(1, numSamples, sampleRate);
+    buffer.getChannelData(0).set(audioBuffer);
+
+    previewAudioEl = audioCtx.createBufferSource();
+    previewAudioEl.buffer = buffer;
+    previewAudioEl.connect(audioCtx.destination);
+    previewAudioEl.onended = () => {
+      isPreviewPlaying = false;
+      previewAudioEl = null;
+      previewAudioCtx = null;
+      updatePlayBtnState(false);
+      audioCtx.close();
+    };
+    previewAudioEl.start();
+    isPreviewPlaying = true;
+
+    // 更新按钮文字显示当前播放的样本
+    const btn = document.getElementById("regAudioPlayBtn");
+    if (btn) btn.textContent = `▶ 播放第${index + 1}段`;
+    updatePlayBtnState(true);
+  } catch (err) {
+    console.error("播放预览失败:", err);
+  }
+}
+
+// 点击录音区：正在录音则停止，否则开始录音
+regAudioArea?.addEventListener("click", async (e) => {
+  e.stopPropagation();
+  if (isPreviewPlaying) stopPreview();
+  if (isRecording) {
+    await stopRecording();
+    return;
+  }
+  // 仅在麦克风模式时检查权限
+  if (getRegAudioSource() === "mic") {
+    try {
+      const perm = await navigator.permissions.query({ name: "microphone" });
+      if (perm.state === "denied") {
+        showRegError("请允许麦克风权限后重试");
+        return;
+      }
+    } catch {}
+  }
+  await startRecording();
+  // 手动结束：点击任意位置停止，或点停止按钮
+});
+
+function showRegSuccess(msg) {
+  hideRegMsgs();
+  if (regSuccessMsg) {
+    regSuccessMsg.textContent = msg;
+    regSuccessMsg.classList.remove("hidden");
+  }
+}
+
+function showRegError(msg) {
+  hideRegMsgs();
+  if (regErrorMsg) {
+    regErrorMsg.textContent = msg;
+    regErrorMsg.classList.remove("hidden");
+  }
+}
+
+function hideRegMsgs() {
+  regSuccessMsg?.classList.add("hidden");
+  regErrorMsg?.classList.add("hidden");
+  regAudioErrorEl?.classList.add("hidden");
+}
+
+function floatTo16BitPcm(floatBuffer) {
+  const pcm = new Int16Array(floatBuffer.length);
+  for (let i = 0; i < floatBuffer.length; i++) {
+    const s = Math.max(-1, Math.min(1, floatBuffer[i]));
+    pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+  }
+  return new Uint8Array(pcm.buffer);
+}
+
+// 注册表单提交
+document.getElementById("speakerRegForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  hideRegMsgs();
+
+  const name = document.getElementById("regSpeakerName")?.value?.trim();
+  if (!name) {
+    showRegError("请输入姓名");
+    return;
+  }
+
+  const source = getRegAudioSource();
+
+  if (source === "file") {
+    if (!currentUploadedFile) {
+      showRegError("请先上传音频文件");
+      return;
+    }
+  } else {
+    // 改为支持多段音频
+    if (recordingSamples.length === 0) {
+      showRegError("请先录制声纹音频（至少 1 段）");
+      return;
+    }
+  }
+
+  const submitBtn = document.getElementById("regSubmitBtn");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "注册中...";
+
+  try {
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("speaker_id", document.getElementById("regSpeakerId")?.value?.trim() || "");
+    formData.append("role", document.getElementById("regRole")?.value || "");
+    formData.append("department", document.getElementById("regDepartment")?.value?.trim() || "");
+
+    if (source === "file") {
+      // 上传文件模式：直接发送原始文件
+      formData.append("audio", currentUploadedFile.file);
+    } else {
+      // 麦克风/系统音频模式：发送多段 PCM
+      for (let i = 0; i < recordingSamples.length; i++) {
+        const pcmBytes = floatTo16BitPcm(recordingSamples[i]);
+        formData.append("audio", new Blob([pcmBytes], { type: "audio/pcm" }), `voice_${i}.pcm`);
+      }
+    }
+
+    const resp = await fetch("/api/speakers/register", { method: "POST", body: formData });
+    const data = await resp.json();
+
+    if (!resp.ok) throw new Error(data.error || "注册失败");
+
+    const rawQ = parseFloat(data.quality) || 0;
+    const qualityPct = data.quality != null ? `（质量 ${Math.min(100, Math.round(rawQ / 20 * 100))}%）` : "";
+    const sampleInfo = data.sample_count ? `，样本数: ${data.sample_count}` : "";
+    showRegSuccess(`「${name}」声纹注册成功！${qualityPct}${sampleInfo}`);
+    stopPreview();
+    recordingSamples = [];
+    updateSampleProgress();
+    currentUploadedFile = null;
+    showRegAudioState("idle");
+    if (regFileName) regFileName.textContent = "点击或拖拽上传音频文件";
+    if (regFileInput) regFileInput.value = "";
+    // 重置为麦克风模式
+    const micRadio = document.querySelector('input[name="regAudioSource"][value="mic"]');
+    if (micRadio) micRadio.checked = true;
+    updateRegAudioSourceUI();
+    document.getElementById("speakerRegForm").reset();
+    await loadSpeakerDb();
+  } catch (err) {
+    showRegError(err.message);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> 注册声纹`;
+  }
+});
+
+document.getElementById("regResetBtn")?.addEventListener("click", () => {
+  document.getElementById("speakerRegForm")?.reset();
+  stopPreview();
+  recordingSamples = [];
+  updateSampleProgress();
+  showRegAudioState("idle");
+  hideRegMsgs();
+});
+
+// ===== 初始化 =====
 transcriptEl.value = DEFAULT_TRANSCRIPT;
 jobHintEl.value = "\u540e\u7aef\u5de5\u7a0b\u5e08";
 renderLoading(0);

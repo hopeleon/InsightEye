@@ -42,6 +42,8 @@ class RealtimeSessionStore:
             "final_report": None,
             "ws_clients": [],
             "analysis_update_needed": False,
+            "speaker_database": None,
+            "test_mode": False,
         }
         with self._lock:
             self._sessions[session_id] = session
@@ -63,6 +65,15 @@ class RealtimeSessionStore:
             session = self._sessions.get(session_id)
             if session:
                 session["speaker_recognizer"] = recognizer
+
+    def set_test_mode(self, session_id: str, enabled: bool) -> bool:
+        """Set test mode for a session. Returns True if changed, False if session not found."""
+        with self._lock:
+            session = self._sessions.get(session_id)
+            if not session:
+                return False
+            session["test_mode"] = bool(enabled)
+            return True
 
     def register_ws_client(self, session_id: str, websocket: Any) -> None:
         """注册实时 WS 客户端，用于后台分析完成后主动推送 session.update"""
@@ -164,6 +175,10 @@ class RealtimeSessionStore:
                 "speaker_confidence": float(payload.get("speaker_confidence") or 0.0),
                 "interviewer_sim": float(payload.get("interviewer_sim") or 0.0),
                 "candidate_sim": float(payload.get("candidate_sim") or 0.0),
+                # Mode 2 扩展字段
+                "speaker_name": payload.get("speaker_name") or None,
+                "speaker_candidates": payload.get("speaker_candidates") or None,
+                "registered_speaker_sims": payload.get("registered_speaker_sims") or None,
             }
             if not segment["text"]:
                 raise ValueError("Segment text cannot be empty")
@@ -202,6 +217,43 @@ class RealtimeSessionStore:
         session["final_report"] = run_final_analysis(session)
         session["status"] = "completed"
         return session
+
+    def close_session(self, session_id: str) -> None:
+        """
+        完全关闭并销毁一个会话，释放其占用的所有内存。
+        从 _sessions 字典中移除，清理大对象引用。
+        """
+        # 取消后台分析任务
+        with self._analysis_task_lock:
+            for key in [session_id, f"disc:{session_id}"]:
+                task = self._analysis_tasks.pop(key, None)
+                if task and not task.done():
+                    task.cancel()
+
+        # 清理大对象并从字典移除
+        with self._lock:
+            session = self._sessions.pop(session_id, None)
+            if not session:
+                return
+
+            # 清理占用大量内存的字段
+            session.pop("segments", None)
+            session.pop("partial_transcripts", None)
+            session.pop("pending_audio", None)
+            session.pop("rolling_analysis", None)
+            session.pop("rolling_disc_analysis", None)
+            session.pop("final_report", None)
+            session.pop("display_transcript", None)
+            session.pop("speaker_recognizer", None)
+            session.pop("multi_speaker_registry", None)
+            session.pop("multi_participants", None)
+            session.pop("speaker_database", None)
+            # 保留 minimal metadata（session_id, status）以便调试
+            session["status"] = "closed"
+            session["closed_at"] = time.time()
+
+        print(f"[Store] 会话 {session_id} 已关闭并清理，"
+              f"segments/pending_audio 等大对象已释放")
 
     def _schedule_rolling_analysis(self, session_id: str) -> None:
         with self._analysis_task_lock:

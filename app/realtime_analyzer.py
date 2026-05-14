@@ -13,8 +13,21 @@ from workflow.helpers import build_llm_followup_messages, call_openai_compatible
 
 logger = logging.getLogger("insighteye.realtime_analyzer")
 
+# LLM 追问缓存最大条目数（超过则淘汰最旧的）
+_LLM_FOLLOWUP_CACHE_MAX_SIZE = 200
 _LLM_FOLLOWUP_CACHE: dict[tuple[str, str, str, str, str], list[dict]] = {}
 _LLM_FOLLOWUP_CACHE_LOCK = threading.Lock()
+_LLM_FOLLOWUP_CACHE_ACCESS_ORDER: list[tuple[str, str, str, str, str]] = []  # 用于 LRU 淘汰
+
+def _cache_write(key: tuple, value: list) -> None:
+    """向 LLM 缓存写入，自动淘汰最旧的条目，保持上限。"""
+    with _LLM_FOLLOWUP_CACHE_LOCK:
+        if key not in _LLM_FOLLOWUP_CACHE:
+            _LLM_FOLLOWUP_CACHE_ACCESS_ORDER.append(key)
+            if len(_LLM_FOLLOWUP_CACHE) >= _LLM_FOLLOWUP_CACHE_MAX_SIZE:
+                oldest = _LLM_FOLLOWUP_CACHE_ACCESS_ORDER.pop(0)
+                _LLM_FOLLOWUP_CACHE.pop(oldest, None)
+        _LLM_FOLLOWUP_CACHE[key] = value
 _LLM_FOLLOWUP_RUNNING = False
 _LLM_FOLLOWUP_LAST_RUN_AT = 0.0
 _LLM_FOLLOWUP_MIN_INTERVAL = 8.0
@@ -186,15 +199,13 @@ def generate_llm_followups(
 
         if not config.OPENAI_API_KEY:
             logger.warning("[实时分析] OPENAI_API_KEY 未配置，无法调用 LLM")
-            with _LLM_FOLLOWUP_CACHE_LOCK:
-                _LLM_FOLLOWUP_CACHE[cache_key] = []
+            _cache_write(cache_key, [])
             return []
 
         result = call_openai_compatible(config.OPENAI_ANALYSIS_MODEL, messages)
         if not result:
             logger.warning("[实时分析] LLM 调用返回空结果")
-            with _LLM_FOLLOWUP_CACHE_LOCK:
-                _LLM_FOLLOWUP_CACHE[cache_key] = []
+            _cache_write(cache_key, [])
             return []
 
         questions = result.get("follow_up_questions") or result.get("questions") or []
@@ -213,14 +224,12 @@ def generate_llm_followups(
 
         _elapsed = time.perf_counter() - _llm_start
         logger.info(f"[实时分析] LLM 追问生成完成，共 {len(followups)} 条，耗时 {_elapsed * 1000:.2f}ms")
-        with _LLM_FOLLOWUP_CACHE_LOCK:
-            _LLM_FOLLOWUP_CACHE[cache_key] = list(followups)
+        _cache_write(cache_key, list(followups))
         return followups
     except Exception as exc:
         _elapsed = time.perf_counter() - _llm_start
         logger.warning(f"[实时分析] LLM 追问生成失败，耗时 {_elapsed * 1000:.2f}ms: {exc}")
-        with _LLM_FOLLOWUP_CACHE_LOCK:
-            _LLM_FOLLOWUP_CACHE[cache_key] = []
+        _cache_write(cache_key, [])
         return []
     finally:
         with _LLM_FOLLOWUP_CACHE_LOCK:

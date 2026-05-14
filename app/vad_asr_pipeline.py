@@ -17,7 +17,7 @@ VAD_SAMPLE_RATE = 16000
 VAD_WINDOW_SIZE = 512  # 毫秒
 VAD_THRESHOLD = 0.5
 VAD_MIN_SPEECH_DURATION_MS = 250  # 最小语音持续时间
-VAD_MIN_SILENCE_DURATION_MS = 300  # 最小静音持续时间（判断语音结束）
+VAD_MIN_SILENCE_DURATION_MS = 2000  # 静音持续时间（判断语音结束），改为2秒以减少静音分段
 
 
 class VADState(Enum):
@@ -177,43 +177,38 @@ class ASRProcessor:
         self.asr_model = asr_model
         self.sample_rate = 16000
     
-    def transcribe(self, audio_data: np.ndarray) -> TranscriptionResult:
+    def transcribe(self, audio_data: np.ndarray):
         """
-        转录音频数据
-        
+        转录音频数据（流式模式，增量结果实时 yield）。
+
         Args:
             audio_data: 音频数据，float32，16kHz
-        
-        Returns:
-            TranscriptionResult 转录结果
+
+        Yields:
+            TranscriptionResult 每产生一个增量结果就立即 yield
         """
         try:
-            # FunASR 可以直接接收 numpy array
-            result = self.asr_model.generate(
+            result_iter = self.asr_model.generate(
                 input=audio_data,
                 batch_size_s=300,
-                return_raw_text=True,
-                is_streaming=False,
+                is_streaming=True,
             )
-            
-            # 解析结果
-            if isinstance(result, list) and len(result) > 0:
-                item = result[0]
+
+            for item in result_iter:
                 if isinstance(item, dict):
                     text = item.get("text", "")
-                    print(f"[ASR] 转录: '{text}'")
-                    return TranscriptionResult(
-                        text=text,
-                        start_ms=0,
-                        end_ms=0,
-                        confidence=1.0
-                    )
-            
-            return TranscriptionResult(text="", start_ms=0, end_ms=0)
-            
+                    if text:
+                        result = TranscriptionResult(
+                            text=text,
+                            start_ms=0,
+                            end_ms=0,
+                            confidence=1.0,
+                        )
+                        print(f"[ASR] 增量: '{text}'")
+                        yield result
+
         except Exception as e:
             print(f"[ASR] 转录失败: {e}")
-            return TranscriptionResult(text="", start_ms=0, end_ms=0)
 
 
 class VADASRPipeline:
@@ -351,21 +346,18 @@ class VADASRPipeline:
                     if self._pending_audio_callback:
                         await self._pending_audio_callback(segment)
                     
-                    # 在线程池中执行 ASR 转录（CPU 密集型）
-                    result = await loop.run_in_executor(
-                        None,
-                        self.asr.transcribe,
-                        segment.audio_data
-                    )
-                    
-                    # 更新时间戳
-                    result.start_ms = segment.start_ms
-                    result.end_ms = segment.end_ms
-                    
-                    # 回调转录结果
-                    if self._pending_result_callback and result.text.strip():
-                        print(f"[VADASRPipeline] 转录结果: {result.text}")
-                        await self._pending_result_callback(result)
+                    # 在线程池中执行 ASR 转录（CPU 密集型），流式增量实时回调
+                    def _do_transcribe():
+                        return list(self.asr.transcribe(segment.audio_data))
+
+                    all_results = await loop.run_in_executor(None, _do_transcribe)
+
+                    for result in all_results:
+                        result.start_ms = segment.start_ms
+                        result.end_ms = segment.end_ms
+                        if self._pending_result_callback and result.text.strip():
+                            print(f"[VADASRPipeline] 转录结果: {result.text}")
+                            await self._pending_result_callback(result)
                 
             except asyncio.CancelledError:
                 break

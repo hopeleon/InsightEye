@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
@@ -8,6 +8,24 @@
   </head>
   <body>
     <main class="app-shell">
+      <!-- 顶部导航 -->
+      <nav class="top-nav">
+        <div class="nav-brand">
+          <span class="nav-brand-text">慧眼识人</span>
+          <span class="nav-brand-sub">Interview Intelligence</span>
+        </div>
+        <div class="nav-links" id="mainNavLinks">
+          <button class="nav-link-btn active" id="navInterviewBtn" data-view="input">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            面试分析
+          </button>
+          <button class="nav-link-btn" id="navSpeakerDbBtn" data-view="speakerdb">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            声纹数据库
+          </button>
+        </div>
+      </nav>
+
       <section id="inputView" class="view view-input active">
         <header class="input-header">
           <p class="eyebrow">INSIGHTEYE / INTERVIEW INTELLIGENCE</p>
@@ -26,29 +44,11 @@
                 <p class="section-kicker">INPUT PAGE</p>
                 <h2>开始一次分析</h2>
               </div>
-              <span class="subtle-pill">localhost:8000</span>
+              <span class="subtle-pill">localhost:8001</span>
             </div>
 
 
 
-            <div class="field-block mode-selector-wrap">
-              <label>&#x5206;&#x6790;&#x6A21;&#x5F0F;</label>
-              <div class="mode-toggle-row">
-                <label class="mode-toggle-card active" id="modeQuickCard">
-                  <input id="modeQuick" type="radio" name="analysisMode" value="quick" checked />
-                  <div class="mode-toggle-inner">
-                    <strong>&#x5FEB;&#x901F;&#x5206;&#x6790;&#x6A21;&#x5F0F;</strong>
-                    <p>&#x4FDD;&#x7559;&#x4E3B;&#x7EBF; DISC &#x4E0E; MBTI &#x67B6;&#x6784;&#xFF0C;&#x4EC5;&#x5728;&#x5FC5;&#x8981;&#x65F6;&#x8C03;&#x7528;&#x6A21;&#x578B;&#x589E;&#x5F3A;&#x5206;&#x6790;&#x3002;</p>
-                  </div>
-                </label>
-                <label class="mode-toggle-card" id="modeFullCard">
-                  <input id="modeFull" type="radio" name="analysisMode" value="full" />
-                  <div class="mode-toggle-inner">
-                    <strong>&#x5B8C;&#x6574;&#x4EBA;&#x683C;&#x6A21;&#x5F0F;</strong>
-                    <p>&#x52A0;&#x5165; STAR&#x3001;&#x4E94;&#x5927;&#x4EBA;&#x683C;&#x3001;&#x4E5D;&#x578B;&#x4EBA;&#x683C;&#x4E0E;&#x8DE8;&#x6A21;&#x578B;&#x7EFC;&#x5408;&#x5224;&#x65AD;&#x3002;</p>
-                  </div>
-                </label>
-              </div>
             <div class="input-grid">
               <div class="field-block field-inline">
                 <div class="field-item">
@@ -85,7 +85,7 @@
                   <label class="source-check"><input id="captureMic" type="checkbox" checked /> Capture Mic</label>
                 </div>
                 <div class="field-item audio-source-option">
-                  <label class="source-check"><input id="captureSystem" type="checkbox" checked /> Capture System Audio</label>
+                  <label class="source-check"><input id="captureSystem" type="checkbox" /> Capture System Audio</label>
                 </div>
               </div>
             </div>
@@ -117,7 +117,6 @@
             </article>
           </aside>
         </section>
-        </div>
       </section>
 
       <section id="loadingView" class="view view-loading hidden">
@@ -145,10 +144,102 @@
           <div class="result-actions">
             <button id="realtimePauseBtn" type="button" class="secondary-btn hidden">Pause Stream</button>
             <button id="realtimeEndBtn" type="button" class="primary-btn hidden">End Session</button>
-            <button id="viewFullReportBtn" type="button" class="secondary-btn hidden">&#x67E5;&#x770B;&#x5B8C;&#x6574;&#x5206;&#x6790;</button>
+            <button id="viewFullReportBtn" type="button" class="secondary-btn hidden">查看完整分析</button>
+            <button id="exportResultBtn" type="button" class="secondary-btn hidden">导出识别结果</button>
             <button id="editAgainBtn" type="button" class="secondary-btn">返回修改输入</button>
           </div>
         </header>
+
+        <!-- 声纹识别模式选择（实时模式入口才显示） -->
+        <div id="realtimeModeSelector" class="realtime-mode-selector hidden">
+          <label class="realtime-mode-label">声纹识别模式</label>
+          <div class="mode-toggle-row">
+            <label class="mode-toggle-card active" id="realtimeModeAutoCard">
+              <input id="realtimeModeAuto" type="radio" name="realtimeSpeakerMode" value="auto" checked />
+              <div class="mode-toggle-inner">
+                <strong>模式一：双人自动注册</strong>
+                <p>系统自动识别两位说话人，无需手动操作。适合面试等双人对话场景。</p>
+              </div>
+            </label>
+            <label class="mode-toggle-card" id="realtimeModeMultiCard">
+              <input id="realtimeModeMulti" type="radio" name="realtimeSpeakerMode" value="auto_multi" />
+              <div class="mode-toggle-inner">
+                <strong>模式二：多人自动识别</strong>
+                <p>无需手动注册，系统自动从公司声纹数据库识别进入会议的员工。</p>
+              </div>
+            </label>
+          </div>
+          <div id="realtimeMultiSpeakerPanel" class="field-block hidden">
+            <label>自动识别状态</label>
+            <div id="realtimeAutoMultiStatus" class="auto-multi-status">
+              <div class="auto-multi-header">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>正在从公司声纹数据库加载...</span>
+              </div>
+              <div id="realtimeAutoMultiDbCount" class="auto-multi-count">已加载 <strong>0</strong> 位员工</div>
+              <div id="realtimeAutoMultiSpeakerList" class="auto-multi-list"></div>
+            </div>
+            <div id="realtimeMultiSpeakerHint" class="field-hint">模式二无需手动注册，系统将自动识别参会人员。未注册的人员将显示为"未知"。</div>
+          </div>
+          <!-- Benchmark 测试模式开关 -->
+          <div id="benchmarkTogglePanel" class="field-block benchmark-toggle-panel hidden">
+            <label class="realtime-mode-label" style="margin-top:8px">测试模式</label>
+            <div class="mode-toggle-row">
+              <label class="mode-toggle-card" id="realtimeModeNormalCard">
+                <input id="realtimeModeNormal" type="radio" name="realtimeBenchmarkMode" value="normal" checked />
+                <div class="mode-toggle-inner">
+                  <strong>正常模式</strong>
+                  <p>普通语音转录，不进行准确率评估。</p>
+                </div>
+              </label>
+              <label class="mode-toggle-card" id="realtimeModeBenchmarkCard">
+                <input id="realtimeModeBenchmark" type="radio" name="realtimeBenchmarkMode" value="benchmark" />
+                <div class="mode-toggle-inner">
+                  <strong>测试模式</strong>
+                  <p>提供标准答案文本，系统自动计算 WER/CER/准确率。</p>
+                </div>
+              </label>
+            </div>
+            <div id="benchmarkAnswerPanel" class="field-block hidden" style="margin-top:12px">
+              <label for="benchmarkAnswers">标准答案（每行一段，格式：说话人ID: 文本）</label>
+              <textarea id="benchmarkAnswers" rows="6" placeholder="例如：
+interviewer: 面试官请介绍一下你自己。
+candidate: 我叫张三，毕业于某大学。"></textarea>
+              <div id="benchmarkAnswerHint" class="field-hint">每行一段，格式：<strong>说话人ID: 文本</strong>，例如 <code>interviewer: 请介绍一下你自己</code></div>
+              <div id="benchmarkFileUpload" class="benchmark-file-upload">
+                <span>或</span>
+                <label for="benchmarkFileInput" class="secondary-btn benchmark-upload-btn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  上传 JSON 文件
+                </label>
+                <input type="file" id="benchmarkFileInput" accept=".json" class="hidden" />
+                <span id="benchmarkFileName" class="benchmark-file-name"></span>
+              </div>
+            </div>
+            <div id="benchmarkResultsPanel" class="field-block hidden" style="margin-top:12px">
+              <label>评估结果</label>
+              <div id="benchmarkResultsSummary" class="benchmark-results-summary"></div>
+              <div id="benchmarkResultsList" class="benchmark-results-list"></div>
+            </div>
+          </div>
+          <!-- 音频源选择 + 开始采集按钮（Phase 1 完成后的入口） -->
+          <div id="captureControlsRow" class="capture-controls-row hidden">
+            <div class="capture-source-row">
+              <label class="source-check">
+                <input id="captureMicPhase1" type="checkbox" checked />
+                <span>麦克风</span>
+              </label>
+              <label class="source-check">
+                <input id="captureSystemPhase1" type="checkbox" />
+                <span>系统音频（窗口捕获）</span>
+              </label>
+            </div>
+            <button id="startCaptureBtn" type="button" class="primary-btn start-capture-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              开始采集音频
+            </button>
+          </div>
+        </div>
 
         <section id="realtimeStage" class="dashboard-realtime hidden">
           <article class="panel realtime-status-panel">
@@ -195,6 +286,8 @@
             <div id="audioDebugHint" class="audio-monitor-note">&#x7B49;&#x5F85;&#x97F3;&#x9891;&#x8F93;&#x5165;</div>
           </article>
 
+          <!-- Benchmark 评估结果区（模式二下显示，替换 FOLLOW-UP 位置） -->
+
           <article class="panel realtime-transcript-panel">
             <div class="panel-head compact-head realtime-transcript-head">
               <div>
@@ -210,7 +303,20 @@
             <div id="realtimeLiveTranscript" class="live-transcript-list"></div>
           </article>
 
-          <article class="panel realtime-followup-panel">
+          <!-- Benchmark 评估结果区（模式二下显示，紧跟转录区） -->
+          <article id="realtimeBenchmarkPanel" class="panel realtime-benchmark-panel hidden">
+            <div class="panel-head compact-head">
+              <div>
+                <p class="section-kicker">BENCHMARK</p>
+                <h3>&#x8BC4;&#x4F30;&#x7ED3;&#x679C;</h3>
+              </div>
+              <span id="realtimeBenchmarkBadge" class="realtime-transcript-badge">&#x6B63;&#x5728;&#x8BC6;&#x522B;</span>
+            </div>
+            <div id="realtimeBenchmarkSummary" class="benchmark-results-summary"></div>
+            <div id="realtimeBenchmarkList" class="benchmark-results-list"></div>
+          </article>
+
+          <article id="realtimeFollowupPanel" class="panel realtime-followup-panel">
             <div class="panel-head compact-head realtime-followup-head">
               <div>
                 <p class="section-kicker">FOLLOW-UP</p>
@@ -345,7 +451,7 @@
             </section>
           </div>
 
-          <aside class="dashboard-main-right">
+          <aside id="dashboardMainRight" class="dashboard-main-right">
             <article class="panel disc-focus-card">
               <div class="panel-head compact-head">
                 <div>
@@ -636,6 +742,233 @@
         </div>
       </section>
     </main>
+
+    <!-- 声纹数据库页面 -->
+    <section id="speakerDbView" class="view view-speaker-db hidden">
+      <div class="speakerdb-layout">
+        <!-- 左侧：已注册人员列表 -->
+        <aside class="speakerdb-sidebar">
+          <div class="speakerdb-sidebar-head">
+            <div>
+              <p class="section-kicker">VOICEPRINT DATABASE</p>
+              <h3>已注册人员</h3>
+            </div>
+            <span id="speakerCountBadge" class="subtle-pill">0 人</span>
+          </div>
+          <div class="speakerdb-search-row">
+            <input id="speakerSearchInput" type="text" placeholder="搜索姓名..." />
+            <button id="speakerSearchBtn" class="secondary-btn" type="button">搜索</button>
+          </div>
+          <div id="speakerList" class="speaker-list">
+            <!-- 动态渲染 -->
+          </div>
+          <div class="speakerdb-stats-row">
+            <div class="speaker-stat-chip">
+              <span>总人数</span>
+              <strong id="statTotal">0</strong>
+            </div>
+            <div class="speaker-stat-chip active-chip">
+              <span>在职</span>
+              <strong id="statActive">0</strong>
+            </div>
+          </div>
+          <div class="speakerdb-stats-row secondary-stats" id="speakerDbSecondaryStats">
+            <div class="speaker-stat-chip secondary-chip">
+              <span>识别次数</span>
+              <strong id="statIdents">-</strong>
+            </div>
+            <div class="speaker-stat-chip secondary-chip">
+              <span>今日</span>
+              <strong id="statToday">-</strong>
+            </div>
+            <div class="speaker-stat-chip secondary-chip">
+              <span>平均质量</span>
+              <strong id="statQuality">-</strong>
+            </div>
+            <div class="speaker-stat-chip secondary-chip">
+              <span>平均样本</span>
+              <strong id="statSampleAvg">-</strong>
+            </div>
+          </div>
+        </aside>
+
+        <!-- 右侧：注册表单 + 操作面板 -->
+        <main class="speakerdb-main">
+          <!-- 注册表单卡片 -->
+          <article class="panel speaker-reg-card">
+            <div class="panel-head panel-head-space">
+              <div>
+                <p class="section-kicker">REGISTRATION</p>
+                <h3>新员工声纹注册</h3>
+              </div>
+              <span class="subtle-pill">本地 CAM++</span>
+            </div>
+            <form id="speakerRegForm" class="speaker-reg-form">
+              <div class="reg-field-row">
+                <div class="field-block">
+                  <label for="regSpeakerName">姓名 <span class="required-star">*</span></label>
+                  <input id="regSpeakerName" type="text" name="name" placeholder="输入员工姓名，如：张三" required />
+                </div>
+                <div class="field-block">
+                  <label for="regSpeakerId">声纹ID（可选）</label>
+                  <input id="regSpeakerId" type="text" name="speaker_id" placeholder="留空则自动生成" />
+                </div>
+              </div>
+              <div class="reg-field-row">
+                <div class="field-block">
+                  <label for="regRole">角色（可选）</label>
+                  <select id="regRole" name="role">
+                    <option value="">请选择</option>
+                    <option value="工程师">工程师</option>
+                    <option value="产品经理">产品经理</option>
+                    <option value="设计师">设计师</option>
+                    <option value="运营">运营</option>
+                    <option value="HR">HR</option>
+                    <option value="访客">访客</option>
+                    <option value="其他">其他</option>
+                  </select>
+                </div>
+                <div class="field-block">
+                  <label for="regDepartment">部门（可选）</label>
+                  <input id="regDepartment" type="text" name="department" placeholder="如：研发部" />
+                </div>
+              </div>
+              <div class="reg-audio-block">
+                <div class="reg-audio-source-row">
+                  <label class="reg-source-option">
+                    <input type="radio" name="regAudioSource" value="mic" checked />
+                    <span>麦克风</span>
+                  </label>
+                  <label class="reg-source-option">
+                    <input type="radio" name="regAudioSource" value="system" />
+                    <span>系统音频</span>
+                  </label>
+                  <label class="reg-source-option">
+                    <input type="radio" name="regAudioSource" value="file" />
+                    <span>上传文件</span>
+                  </label>
+                </div>
+
+                <!-- 麦克风 / 系统音频 录音区 -->
+                <div class="reg-audio-area" id="regAudioArea">
+                  <div class="reg-sample-progress" id="regSampleProgress">
+                    <span>样本进度：</span>
+                    <div class="reg-progress-dots" id="regProgressDots">
+                      <span class="progress-dot" data-idx="1"></span>
+                      <span class="progress-dot" data-idx="2"></span>
+                      <span class="progress-dot" data-idx="3"></span>
+                      <span class="progress-dot" data-idx="4"></span>
+                      <span class="progress-dot" data-idx="5"></span>
+                    </div>
+                    <span id="regSampleCount">0/5</span>
+                  </div>
+                  <div id="regAudioIdle" class="reg-audio-idle">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                    <p>点击开始录音，朗读下方文字</p>
+                    <span class="reg-audio-hint">建议录制 5 段不同内容的语音，每段 3~5 秒</span>
+                  </div>
+                  <div id="regAudioRecording" class="reg-audio-recording hidden">
+                    <div class="reg-recording-indicator">
+                      <div class="reg-rec-dot"></div>
+                      <span>正在录音</span>
+                      <strong id="regRecordingTime">0.0s</strong>
+                    </div>
+                    <div class="reg-waveform" id="regWaveform"></div>
+                    <p class="reg-recording-text">请朗读："我是XXX，我的声音独一无二"</p>
+                  </div>
+                  <div id="regAudioDone" class="reg-audio-done hidden">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    <p id="regAudioDoneText">录音完成，已录制 1 段音频</p>
+                    <div class="reg-audio-done-actions">
+                      <button type="button" id="regAudioPlayBtn" class="secondary-btn">▶ 播放预览</button>
+                      <button type="button" id="regAddSampleBtn" class="primary-btn">+ 添加下一段</button>
+                      <button type="button" id="regAudioRetryBtn" class="secondary-btn">重新开始</button>
+                    </div>
+                  </div>
+                </div>
+                <div id="regAudioError" class="field-error hidden"></div>
+
+                <!-- 上传文件区 -->
+                <div id="regFileArea" class="reg-file-area hidden">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <p id="regFileName">点击或拖拽上传音频文件</p>
+                  <span class="reg-audio-hint">支持 WAV / MP3 / OGG / FLAC / AAC / M4A，建议 16kHz 以上</span>
+                  <input type="file" id="regFileInput" accept="audio/*,.wav,.mp3,.ogg,.flac,.aac,.m4a,.wma" class="hidden" />
+                </div>
+              </div>
+              <div class="reg-actions">
+                <button type="submit" class="primary-btn" id="regSubmitBtn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  注册声纹
+                </button>
+                <button type="button" class="secondary-btn" id="regResetBtn">重置</button>
+              </div>
+            </form>
+            <div id="regSuccessMsg" class="reg-success-msg hidden"></div>
+            <div id="regErrorMsg" class="reg-error-msg hidden"></div>
+          </article>
+
+          <!-- 使用说明 -->
+          <article class="panel speaker-guide-card">
+            <div class="panel-head compact-head">
+              <div>
+                <p class="section-kicker">GUIDE</p>
+                <h3>注册说明</h3>
+              </div>
+            </div>
+            <div class="speaker-guide-steps">
+              <div class="guide-step">
+                <div class="guide-step-num">1</div>
+                <div class="guide-step-body">
+                  <strong>填写信息</strong>
+                  <p>输入员工姓名，选择角色和部门（可选）</p>
+                </div>
+              </div>
+              <div class="guide-step">
+                <div class="guide-step-num">2</div>
+                <div class="guide-step-body">
+                  <strong>录制声纹</strong>
+                  <p>点击录音按钮，对麦克风清晰朗读提示文字。建议录制 <strong>5 段</strong>不同内容的语音，每段 3~5 秒，识别效果更好。</p>
+                </div>
+              </div>
+              <div class="guide-step">
+                <div class="guide-step-num">3</div>
+                <div class="guide-step-body">
+                  <strong>添加更多样本</strong>
+                  <p>每段录音完成后，点击「+ 添加下一段」继续录制。录制越多样本，声纹识别越准确。</p>
+                </div>
+              </div>
+              <div class="guide-step">
+                <div class="guide-step-num">4</div>
+                <div class="guide-step-body">
+                  <strong>完成注册</strong>
+                  <p>录制完成后点击「注册声纹」按钮，系统将提取声纹特征并存入数据库。</p>
+                </div>
+              </div>
+            </div>
+            <div class="speaker-tip-row">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span>声纹数据仅存储 192 维特征向量，不存储原始音频，保护隐私安全</span>
+            </div>
+          </article>
+
+          <!-- 声纹相似度分布（管理员视角） -->
+          <article class="panel speaker-similarity-card" id="speakerSimilarityCard">
+            <div class="panel-head panel-head-space">
+              <div>
+                <p class="section-kicker">ADMIN VIEW</p>
+                <h3>声纹相似度分析</h3>
+              </div>
+              <button type="button" class="secondary-btn" id="loadSimilarityBtn">刷新</button>
+            </div>
+            <div class="similarity-summary" id="similaritySummary">
+              <span class="sim-hint">点击「刷新」加载相似度分析</span>
+            </div>
+            <div id="similarityList" class="similarity-list"></div>
+          </article>
+        </main>
+      </div>
+    </section>
     <script src="/static/app.js"></script>
   </body>
 </html>

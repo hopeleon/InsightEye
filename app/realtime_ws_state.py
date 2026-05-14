@@ -1,9 +1,15 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+import asyncio
+import time
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Optional, Callable
 
 from .realtime_analyzer import build_realtime_transcript
 from .realtime_session import store as realtime_store
+
+# 声纹识别专用线程池（CPU 密集型操作）
+_SPEAKER_EXECUTOR = ThreadPoolExecutor(max_workers=2, thread_name_prefix="speaker-id")
 
 
 def build_session_update(session_id: str, corrections: list | None = None) -> dict[str, Any] | None:
@@ -17,8 +23,9 @@ def consume_local_transcript_event(session_id: str, vad_speaker_id: str, event: 
     """
     处理本地 FunASR 转录完成事件，更新会话状态。
 
-    策略：注册前用 enrollment_source 标签存储 segment；注册后用 CAM++ 识别结果。
-    注册完成后通过 _retroactive_identify 批量修正之前存储的 segment 角色。
+    策略：
+    - 注册期间：先存储为 enrollment_source，后台异步声纹识别，完成后修正角色
+    - 注册后：CAM++ 直接给角色，用识别结果存储
     """
     event_type = str(event.get("type") or "")
 
@@ -38,69 +45,55 @@ def consume_local_transcript_event(session_id: str, vad_speaker_id: str, event: 
     campp_speaker_id = event.get("speaker_id")  # CAM++ 识别的 speaker_id
     interviewer_sim = float(event.get("interviewer_sim") or 0.0)
     candidate_sim = float(event.get("candidate_sim") or 0.0)
+    speaker_name       = event.get("speaker_name") or None
+    speaker_candidates = event.get("speaker_candidates") or None
+    registered_sims   = event.get("registered_speaker_sims") or None
 
-    # pending_audio 存在说明还在注册期间，用 enrollment_source 标签存储
-    if not voice_registered or not recognized_role:
-        # 注册期间：存储为 enrollment_source，立即用对应音频做声纹比对修正
-        pending_audio: list = session.get("pending_audio", [])
+    # Mode 2 标志：有 speaker_candidates 说明多人识别模式已有声纹结果
+    is_mode2 = bool(speaker_candidates)
 
+    # ============ 情况1：注册后或有 CAM++ 结果 - 直接存储 ============
+    if voice_registered or is_mode2:
         try:
+            realtime_store.clear_partial_transcript(session_id, campp_speaker_id or recognized_role)
             session = realtime_store.append_segment(
                 session_id,
                 {
-                    "speaker_id": "enrollment_source",
+                    "speaker_id": campp_speaker_id or recognized_role or vad_speaker_id,
                     "text": text,
                     "start_ms": int(event.get("start_ms") or 0),
                     "end_ms": int(event.get("end_ms") or 0),
                     "final": True,
-                    "recognized_role": "enrollment_source",
+                    "recognized_role": recognized_role,
                     "speaker_confidence": float(event.get("speaker_confidence") or 0.0),
                     "interviewer_sim": interviewer_sim,
                     "candidate_sim": candidate_sim,
+                    "speaker_name": speaker_name,
+                    "speaker_candidates": speaker_candidates,
+                    "registered_speaker_sims": registered_sims,
                 },
             )
         except ValueError:
             return None
 
-        # 用对应音频做声纹比对，修正刚存的 segment
-        recognizer: Optional[Any] = session.get("speaker_recognizer")
-        if recognizer and pending_audio:
-            audio = pending_audio[0]["audio_samples"]
-            match = recognizer.identify_speaker(audio)
-            if match:
-                role = match.role or match.speaker_id
-                int_sim = match.similarity if role == "interviewer" else 0.0
-                cand_sim = match.similarity if role == "candidate" else 0.0
-            else:
-                role = "interviewer"
-                int_sim = 0.0
-                cand_sim = 0.0
-
-            segments = session.get("segments", [])
-            if segments:
-                seg = segments[-1]
-                seg["speaker_id"] = role
-                seg["recognized_role"] = role
-                seg["interviewer_sim"] = float(int_sim)
-                seg["candidate_sim"] = float(cand_sim)
-                print(f"[AutoReg] fixed enrollment_source segment[{len(segments)-1}] -> {role}")
-            pending_audio.pop(0)
-
         realtime_store.mark_analysis_update_needed(session_id)
-        return build_session_update(session_id, [])
+        return _build_session_update(session_id, session.get("segments", []), [])
 
-    # 注册后：CAM++ 直接给角色，用识别结果存储
+    # ============ 情况2：注册期间 - 先存储，后台异步识别 ============
+    # pending_audio 队列：存储待识别的音频样本
+    pending_audio: list = session.get("pending_audio", [])
+
     try:
-        realtime_store.clear_partial_transcript(session_id, campp_speaker_id or recognized_role)
+        # 存储为 enrollment_source（待识别状态）
         session = realtime_store.append_segment(
             session_id,
             {
-                "speaker_id": campp_speaker_id or recognized_role,
+                "speaker_id": "enrollment_source",
                 "text": text,
                 "start_ms": int(event.get("start_ms") or 0),
                 "end_ms": int(event.get("end_ms") or 0),
                 "final": True,
-                "recognized_role": recognized_role,
+                "recognized_role": "enrollment_source",
                 "speaker_confidence": float(event.get("speaker_confidence") or 0.0),
                 "interviewer_sim": interviewer_sim,
                 "candidate_sim": candidate_sim,
@@ -109,8 +102,71 @@ def consume_local_transcript_event(session_id: str, vad_speaker_id: str, event: 
     except ValueError:
         return None
 
+    # 立即提交后台异步声纹识别任务（不阻塞主流程）
+    _SPEAKER_EXECUTOR.submit(_do_speaker_identification_sync, session_id)
+
+    # 标记需要推送更新
     realtime_store.mark_analysis_update_needed(session_id)
     return _build_session_update(session_id, session.get("segments", []), [])
+
+
+def _do_speaker_identification_sync(session_id: str) -> None:
+    """
+    同步声纹识别函数，在线程池中执行。
+    从 pending_audio 取音频进行识别，修正已存储片段的角色。
+    """
+    session = realtime_store.get(session_id)
+    if not session:
+        return
+
+    recognizer = session.get("speaker_recognizer")
+    if not recognizer:
+        return
+
+    pending_audio: list = session.get("pending_audio", [])
+    if not pending_audio:
+        return
+
+    # 获取最新的待识别音频
+    audio_item = pending_audio[0]
+    audio = audio_item.get("audio_samples")
+    if audio is None:
+        pending_audio.pop(0)
+        return
+
+    try:
+        match = recognizer.identify_speaker(audio)
+        if match:
+            role = match.role or match.speaker_id
+            int_sim = match.similarity if role == "interviewer" else 0.0
+            cand_sim = match.similarity if role == "candidate" else 0.0
+        else:
+            role = "interviewer"
+            int_sim = 0.0
+            cand_sim = 0.0
+
+        # 修正最新一个 enrollment_source segment 的角色
+        segments = session.get("segments", [])
+        corrected = False
+        for seg in reversed(segments):
+            if seg.get("speaker_id") == "enrollment_source" or seg.get("recognized_role") == "enrollment_source":
+                seg["speaker_id"] = role
+                seg["recognized_role"] = role
+                seg["interviewer_sim"] = float(int_sim)
+                seg["candidate_sim"] = float(cand_sim)
+                print(f"[AutoReg] fixed enrollment_source segment -> {role}, sim={max(int_sim, cand_sim):.3f}")
+                corrected = True
+                break
+
+        # 从 pending_audio 移除已处理的音频
+        pending_audio.pop(0)
+
+        if corrected:
+            # 标记需要推送更新
+            realtime_store.mark_analysis_update_needed(session_id)
+
+    except Exception as e:
+        print(f"[AutoReg] 声纹识别失败: {e}")
 
 
 def _build_session_update(session_id: str, segments: list, corrections: list) -> dict[str, Any]:

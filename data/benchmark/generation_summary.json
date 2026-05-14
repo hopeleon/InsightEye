@@ -1,0 +1,75 @@
+{
+  "output_dir": "D:\\InsightEye\\data\\benchmark",
+  "wav": "D:\\InsightEye\\data\\benchmark\\test_meeting_spliced.wav",
+  "gt_json": "D:\\InsightEye\\data\\benchmark\\test_ground_truth.json",
+  "name_map": "D:\\InsightEye\\data\\benchmark\\speaker_name_map.json",
+  "num_speakers": 8,
+  "total_duration_sec": 257.43,
+  "num_segments": 32,
+  "speakers": [
+    {
+      "speaker_id": "pw_1183",
+      "name": "胡明",
+      "uid": "1183",
+      "reg_audio": "D:\\InsightEye\\data\\benchmark\\registration_audio\\pw_1183\\reg_audio.wav",
+      "num_reg": 5,
+      "num_test": 20
+    },
+    {
+      "speaker_id": "pw_1107",
+      "name": "郑鹏",
+      "uid": "1107",
+      "reg_audio": "D:\\InsightEye\\data\\benchmark\\registration_audio\\pw_1107\\reg_audio.wav",
+      "num_reg": 5,
+      "num_test": 20
+    },
+    {
+      "speaker_id": "pw_320",
+      "name": "林峰",
+      "uid": "320",
+      "reg_audio": "D:\\InsightEye\\data\\benchmark\\registration_audio\\pw_320\\reg_audio.wav",
+      "num_reg": 5,
+      "num_test": 20
+    },
+    {
+      "speaker_id": "pw_1219",
+      "name": "梁芬",
+      "uid": "1219",
+      "reg_audio": "D:\\InsightEye\\data\\benchmark\\registration_audio\\pw_1219\\reg_audio.wav",
+      "num_reg": 5,
+      "num_test": 10
+    },
+    {
+      "speaker_id": "pw_468",
+      "name": "朱敏",
+      "uid": "468",
+      "reg_audio": "D:\\InsightEye\\data\\benchmark\\registration_audio\\pw_468\\reg_audio.wav",
+      "num_reg": 5,
+      "num_test": 20
+    },
+    {
+      "speaker_id": "pw_1044",
+      "name": "郭小华",
+      "uid": "1044",
+      "reg_audio": "D:\\InsightEye\\data\\benchmark\\registration_audio\\pw_1044\\reg_audio.wav",
+      "num_reg": 5,
+      "num_test": 20
+    },
+    {
+      "speaker_id": "pw_1045",
+      "name": "高伟",
+      "uid": "1045",
+      "reg_audio": "D:\\InsightEye\\data\\benchmark\\registration_audio\\pw_1045\\reg_audio.wav",
+      "num_reg": 5,
+      "num_test": 20
+    },
+    {
+      "speaker_id": "pw_1016",
+      "name": "周建华",
+      "uid": "1016",
+      "reg_audio": "D:\\InsightEye\\data\\benchmark\\registration_audio\\pw_1016\\reg_audio.wav",
+      "num_reg": 5,
+      "num_test": 20
+    }
+  ]
+}
